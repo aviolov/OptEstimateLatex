@@ -1,0 +1,14 @@
+\BOOKMARK [1][-]{section.1}{Problem Formulation}{}
+\BOOKMARK [1][-]{section.2}{Spike-Only Optimal Design - Exploration}{}
+\BOOKMARK [2][-]{subsection.2.1}{the nitty-gritty analysis of the Optimal Control, }{section.2}
+\BOOKMARK [3][-]{subsubsection.2.1.1}{Introducing more states}{subsection.2.1}
+\BOOKMARK [3][-]{subsubsection.2.1.2}{An Aside: a moment of sanity}{subsection.2.1}
+\BOOKMARK [3][-]{subsubsection.2.1.3}{Augmenting the objective}{subsection.2.1}
+\BOOKMARK [1][-]{section.3}{Big Questions}{}
+\BOOKMARK [1][-]{section.4}{The Bayesian Approach}{}
+\BOOKMARK [1][-]{section.5}{Working with the transition density to reduce the number of states}{}
+\BOOKMARK [1][-]{section.6}{Intuition check}{}
+\BOOKMARK [1][-]{section.7}{Using particles}{}
+\BOOKMARK [1][-]{section.8}{Parametrizing the controls}{}
+\BOOKMARK [1][-]{section.9}{Basic Test}{}
+\BOOKMARK [1][-]{appendix.A}{The basic idea of optimal design for SDEs of Lin et al.}{}

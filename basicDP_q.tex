@@ -1,0 +1,83 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+
+\usepackage{circuitikz}
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,snakes,backgrounds}
+% \usetikz
+\usepackage{subfig}
+
+\usepackage[super]{nth}
+% \usepackage{appendix}
+% \usepackage{listings}
+% \usepackage{color}
+\usepackage{ulem}
+\usepackage{hyperref}
+%\usepackage{url}
+\usepackage{cancel}
+\usepackage{cleveref}
+ 
+\usepackage{aviolov_style}
+\usepackage{local_style} 
+
+
+\begin{document}
+
+
+\title{Basic Stochastic Control Question}
+
+\maketitle
+
+\section{Are $J$ and $\tilde J$ the same thing?}
+
+Suppose  we have a contolled SDE 
+\begin{equation}
+dX = U(x,\a(x,t);) \intd{t} + \sqrt{2D} dW
+\label{eq:SDE_evolution} 
+\end{equation}
+where $\a(x,t)$ is the feedback control, and are trying to optimize some
+criterion:
+\begin{equation}
+J(x_0, t_0; \a) = \Exp_X \Bigg[ \int_0^T r(X_t) \intd{t}\Bigg]
+\label{eq:expectation_objective}
+\end{equation}
+Is \cref{eq:expectation_objective} the same as: as $\tilde{J}$ is that the same
+as optimizing
+\begin{equation}
+\tilde J(x_0, t_0; \a) = \int_0^T \int_{\Omega_X} r(x)\cdot f(x,t| x_0, t_0)
+\intd{x} \intd{t}
+\label{eq:transition_objective}
+\end{equation}
+where $f(x,t| x_0, t_0)$ is the transition density associated with the SDE,
+\cref{eq:SDE_evolution}?
+
+I.e.\ are $J$ and $\tilde J$ the same thing?
+
+Recall that $f$ satisfies a Fokker-Planck PDE with delta initial
+conditions.
+\begin{equation}
+\begin{gathered}
+\di_t f(x,t) = -\di_x [ U(x;  \a) \cdot f(x,t)] + D
+\di_x^2 f(x,t)
+\\
+\begin{array}{ll}
+	& 
+	\left\{ \begin{array}{lcll}
+	 f(x,t_0) &=& \delta(x-x_0)  &\textrm{delta function at } x_0
+\end{array} \right.
+\end{array}
+\label{eq:forward_density_double_well}
+\end{gathered}
+\end{equation}
+ 
+\end{document}

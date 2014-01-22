@@ -1,0 +1,16 @@
+\BOOKMARK [1][-]{section.1}{Problem Formulation}{}
+\BOOKMARK [1][-]{section.2}{Optimal Design}{}
+\BOOKMARK [2][-]{subsection.2.1}{Simple illustration}{section.2}
+\BOOKMARK [2][-]{subsection.2.2}{Experiment}{section.2}
+\BOOKMARK [2][-]{subsection.2.3}{Bang-Bang?}{section.2}
+\BOOKMARK [3][-]{subsubsection.2.3.1}{Optimal Switching for Optimal Design}{subsection.2.3}
+\BOOKMARK [2][-]{subsection.2.4}{Framing the Problem as a Dynamic Program}{section.2}
+\BOOKMARK [3][-]{subsubsection.2.4.1}{Updating the Prior on the fly}{subsection.2.4}
+\BOOKMARK [3][-]{subsubsection.2.4.2}{The Value function}{subsection.2.4}
+\BOOKMARK [3][-]{subsubsection.2.4.3}{Cts-time observations}{subsection.2.4}
+\BOOKMARK [3][-]{subsubsection.2.4.4}{the value function in cts. time}{subsection.2.4}
+\BOOKMARK [3][-]{subsubsection.2.4.5}{Value function approximation}{subsection.2.4}
+\BOOKMARK [1][-]{section.3}{Gauss-Hermite Integration}{}
+\BOOKMARK [1][-]{appendix.A}{Mutual Info calculation}{}
+\BOOKMARK [1][-]{appendix.B}{Relation between Mutual Information and Fisher Information}{}
+\BOOKMARK [1][-]{appendix.C}{Hooker et al. Lin take on the prior}{}
