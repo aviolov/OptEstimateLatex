@@ -1,0 +1,69 @@
+This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
+The top-level auxiliary file: logMI_naive.aux
+The style file: plain.bst
+I couldn't open database file local.bib
+---line 90 of file logMI_naive.aux
+ : \bibdata{library,local
+ :                       }
+I'm skipping whatever remains of this command
+Database file #1: library.bib
+Repeated entry---line 10820 of file library.bib
+ : @article{Lin
+ :             ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 11097 of file library.bib
+ : @article{Lin
+ :             ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 11106 of file library.bib
+ : @article{Myung2013
+ :                   ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 11122 of file library.bib
+ : @article{Lewi2009
+ :                  ,
+I'm skipping whatever remains of this entry
+Warning--empty journal in Lin
+Warning--empty year in Lin
+You've used 4 entries,
+            2118 wiz_defined-function locations,
+            527 strings with 4664 characters,
+and the built_in function-call counts, 1426 in all, are:
+= -- 135
+> -- 77
+< -- 1
++ -- 30
+- -- 26
+* -- 113
+:= -- 244
+add.period$ -- 12
+call.type$ -- 4
+change.case$ -- 24
+chr.to.int$ -- 0
+cite$ -- 6
+duplicate$ -- 50
+empty$ -- 101
+format.name$ -- 26
+if$ -- 286
+int.to.chr$ -- 0
+int.to.str$ -- 4
+missing$ -- 5
+newline$ -- 23
+num.names$ -- 8
+pop$ -- 29
+preamble$ -- 1
+purify$ -- 21
+quote$ -- 0
+skip$ -- 32
+stack$ -- 0
+substring$ -- 80
+swap$ -- 8
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 14
+warning$ -- 2
+while$ -- 15
+width$ -- 5
+write$ -- 43
+(There were 5 error messages)

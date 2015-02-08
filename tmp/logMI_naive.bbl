@@ -1,0 +1,26 @@
+\begin{thebibliography}{1}
+
+\bibitem{Lewi2009}
+Jeremy Lewi, Robert Butera, and Liam Paninski.
+\newblock {Sequential optimal design of neurophysiology experiments.}
+\newblock {\em Neural computation}, 21(3):619--87, March 2009.
+
+\bibitem{Lin}
+Kevin~K Lin, Giles Hooker, and Bruce Rogers.
+\newblock {Control Theory and Experimental Design in Diffusion Processes}.
+\newblock pages 1--23.
+
+\bibitem{Myung2013}
+Jay~I Myung, Daniel~R Cavagnaro, and Mark~a Pitt.
+\newblock {A Tutorial on Adaptive Design Optimization.}
+\newblock {\em Journal of mathematical psychology}, 57(3-4):53--67, January
+  2013.
+
+\bibitem{Press1992}
+William~H. Press, Brian~P. Flannery, Saul~A. Teukolsky, and William~T.
+  Vetterling.
+\newblock {\em {Numerical Recipes in C: The Art of Scientific Computing, Second
+  Edition}}.
+\newblock Cambridge University Press, 1992.
+
+\end{thebibliography}

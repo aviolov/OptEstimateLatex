@@ -35,9 +35,14 @@
 
 
 \title{Optimal Design for estimation in stochastic LIF models - \\ Mutual
+<<<<<<< HEAD
 Information + Maximum Principle / Dynamic Programing Approach} 
 \author{Alexandre
 Iolov, Susanne Ditlevsen, Andr\'e Longtin \\ $<$\href{mailto:aiolo040@uottawa.ca}
+=======
+Information + Dynamic Programing Approach} \author{Alexandre Iolov, Susanne
+Ditlevsen, Andr\'e Longtin \\ $<$\href{mailto:aiolo040@uottawa.ca}
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 		{aiolo040 at uottawa dot ca}$>$}
 
 \date{\today}
@@ -518,7 +523,14 @@ $$ where the weights $w_\th$ approximate the density $\rho(\th)$.
 If one assumes a discrete prior this is just a different way of writing the
 integral, if the prior is assumed continuous, then this is an approximation.
 Then $J$ reads like:
+<<<<<<< HEAD
 
+=======
+\def \ft {{ f_\th}}
+\def \pt {{ p_\th}}
+\def \dft {{ \delta f_\th}}
+\def \wt {{ w_\th }}
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 $$
 J =  \Exp_\th
 \left[ \int_0^T\int_{\O_X} \log\left(f_\th\right)\cdot \ft - 
@@ -566,6 +578,7 @@ out to:
 in our gradient search for the most informative perturbation $\a^*(x,t) =
 \argmax J(\a)$.
 
+<<<<<<< HEAD
 
 \subsubsection{Stationary Maximum Principle with a Prior}
 \label{sec:StatMP_with_a_prior}
@@ -660,6 +673,8 @@ out to:
 \Cref{eq:differential_objective_stationary_wrt_control_final} forms the key ingredient
 in our gradient search for the most informative {\sl stationary} perturbation
 $\a^*(x) = \argmax J(\a)$.
+=======
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 % \subsection{Forward-Backward coupling}
 % Consider just the inner expectation 
 % \begin{equation}
@@ -717,8 +732,12 @@ $\a^*(x) = \argmax J(\a)$.
 % the Fisher Information as in \cite{Lin}. 
 
 \section{Illustrative Example - Double Well Potential}
+<<<<<<< HEAD
 \subsection{Maximum Principle Approach - Time-Dependent Case}
 \label{sec:MP_Doublewell_TimeDependent}
+=======
+\subsection{Maximum Principle Approach}
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 We now follow up the theoretical developments from \cref{sec:MP_with_a_prior}
 with a concrete example.
 
@@ -733,15 +752,26 @@ $\{\ft, \pt\}$ for the double-well problem.
 Let's explicitly state the evolution equations for $\ft,\pt$
 \begin{equation}
 \begin{gathered}
+<<<<<<< HEAD
 \di_t \ft(x,t; \th, \a(\cdot)) = -\di_x [ U(x;A, \a) \cdot \ft(x,t)] + D \di_x^2
 \ft(x,t)
+=======
+\di_t f(x,t; \th, \a(\cdot)) = -\di_x [ U(x;A, \a) \cdot f(x,t)] + D \di_x^2
+f(x,t)
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 \\
 \begin{array}{ll}
 	&
 	\left\{ \begin{array}{lcll}
+<<<<<<< HEAD
 	 \ft(x,0) &=& \delta(x-x_0)  &\textrm{delta function at some } x_0
 	\\
 	U \ft - D \di_x \ft \big|_{x=\xmin,\xmax} &\equiv& 0 & \textrm{reflecting BCs
+=======
+	 f(x,0) &=& \delta(x-x_0)  &\textrm{delta function at some } x_0
+	\\
+	U f - D \di_x f \big|_{x=\xmin,\xmax} &\equiv& 0 & \textrm{reflecting BCs
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 	at some } \xmin, \xmax \end{array} \right.
 \end{array}
 \label{eq:forward_density_double_well}
@@ -752,22 +782,34 @@ Let's explicitly state the evolution equations for $\ft,\pt$
 \begin{gathered}
 -\di_t \pt(x,t) =
 D \di_x^2 \pt(x,t) +
+<<<<<<< HEAD
 U(x;A, \a(x,t))\cdot \di_x \pt(x,t) \\
 + 1 - \frac{  w_\th \ft }{\sum_\th \pt_\th\ft} 
+=======
+U(x;A, \a(x,t))\cdot \di_x w(x,t) \\
++ 1 - \frac{  w_\th \ft }{\sum_\th w_\th\ft} 
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 + \log\left(\frac{f_\th} {\sum_\th \wt \ft }\right)
 \\
 \begin{array}{ll}
 	&
 	\left\{ \begin{array}{lcll}
+<<<<<<< HEAD
 	\di_x \pt(x, t)|_{x = \xmin, \xmax}  &=& 0  \quad &\textrm{BCs}
 	\\
 	\pt(x,\T)  &=& 0 \,& \textrm{TCs}
+=======
+	\di_x p(x, t)|_{x = \xmin, \xmax}  &=& 0  \quad &\textrm{BCs}
+	\\
+	p(x,\T)  &=& 0 \,& \textrm{TCs}
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 \end{array} \right.
 \end{array}
 \label{eq:backward_adjoint_double_well}
 \end{gathered}
 \end{equation}
 where,  
+<<<<<<< HEAD
 \begin{eqnarray*}
 U(x; A, \a) &= -\left( 4x^3 - 4x -A \frac xc e^{-(x/c)^2/2} \right) + \a(x,t)
 \\
@@ -775,6 +817,11 @@ U(x; A, \a) &= -\left( 4x^3 - 4x -A \frac xc e^{-(x/c)^2/2} \right) + \a(x,t)
 \\
 &= -\grad_x \left(\mathcal V(x) + \mathcal{A}(x) \right)
 \end{eqnarray*}
+=======
+$$
+U(x; A, \a) = -\left( 4x^3 - 4x -A \frac xc e^{-(x/c)^2/2} \right) + \a(x,t) 
+$$
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 
 Having computed $\ft, \pt$, we compute the gradient $\delta J / \delta \a$
 as
@@ -840,11 +887,18 @@ iteration of the gradient descent.
   \caption[labelInTOC]{Solution to the test Double Well potential problem using
   $\a \equiv 0$. On the left, the density $f$, in the middle the adjoint $p$, 
   on the right the gradient $\delta J/ \delta \a$, sampled at different times
+<<<<<<< HEAD
   $t=.0, .01, 1.0,\ldots5.0$} 
   \label{fig:FBSoln_doublewell_alpha_null}
 \end{center}
 \end{figure}
 
+=======
+  $t=.0, .01, 1.0,\ldots5.0$}
+  \label{fig:FBSoln_doublewell_alpha_null}
+\end{center}
+\end{figure}
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
  \clearpage
 
 \subsubsection{Going through a full gradient descent iteration}
@@ -876,6 +930,7 @@ The $\a_k$ iterates and the evolution of $J$ are shown in resp.
 
 \clearpage
 
+<<<<<<< HEAD
 \subsection{MP Approach - Stationary}
 \label{sec:MP_Doublewell_Statinoary}
 Unfortunately, we saw that the gradient ascent procedure used in
@@ -983,6 +1038,8 @@ $$
 
 
 
+=======
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 
 \subsection{DP appraoch}
 I DON''T THINK THIS IS FEASBILE - AT LEAST I HAVEN''T FIGURED OUT HOW TO DO IT
@@ -1151,6 +1208,7 @@ YET, SEE \cref{sec:DP_4_OptEstimate} for DISCUSSION OF PROBLEMS.
 % 
 % We will run the solver until $T = 5$.
 
+<<<<<<< HEAD
 \clearpage
 
 \section{Second Illustrative Example - the time-constant for the OU model}
@@ -1320,6 +1378,12 @@ The $\a_k$ iterates and the evolution of $J$ are shown in resp.
 
 \clearpage
 \appendix
+=======
+
+\section{Second Illustrative Example - the time-constant for the OU model}
+
+\clearpage \appendix
+>>>>>>> 6d1ee3c9eb52b6bed66343a6488d0f9a4ca3aef0
 \section{Mutual Info calculation}
 \label{sec:mutual_info_defn} 
 Here we show why \cref{eq:mutual_info_with_posterior} for

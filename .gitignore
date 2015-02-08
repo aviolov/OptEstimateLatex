@@ -2,5 +2,6 @@
 \.texlipse
 tmp/
 *.gz
-##*.pdf
+*.pdf
 *.log
+*.aux
