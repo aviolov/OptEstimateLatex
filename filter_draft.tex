@@ -1,0 +1,166 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass{article}
+
+\usepackage{amsmath} 
+\usepackage{amscd}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+
+\usepackage{circuitikz}
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,snakes,backgrounds}
+% \usetikz
+\usepackage{subfig}
+
+\usepackage[super]{nth}
+% \usepackage{appendix}
+% \usepackage{listings}
+% \usepackage{color}
+\usepackage{ulem}
+\usepackage{hyperref}
+%\usepackage{url}
+\usepackage{cancel}
+\usepackage{cleveref}
+ 
+\usepackage{aviolov_style}
+\usepackage{local_style} 
+
+
+\begin{document}
+
+
+\title{Filtering in 1-D SDEs}
+ \author{Alexandre Iolov, Susanne
+Ditlevsen, Andr\'e Longtin  \\ $<$\href{mailto:aiolo040@uottawa.ca}
+		{aiolo040 at uottawa dot ca}$>$, alongtin at uottawa dot ca}
+
+\date{\today}
+
+\maketitle
+
+\abstract{Infer an unknown, but assumed smooth signal driving an observed
+SDE.}
+
+\tableofcontents
+
+\section{SDE Filtering}
+Having observed the realization of an SDE we want to know what kind of
+stimulation 'drove' it. 
+
+Consider the generic parametrized and perturbed SDE system 
+\begin{equation}
+dX = U(x, u(t); \th) \intd{t} + \sqrt{2D} dW
+\label{eq:SDE_evolution} 
+\end{equation}
+and, for illustration case, specialize \cref{eq:SDE_evolution} to the OU
+system:
+\begin{equation}
+dX = (\underbrace{-\b(X) + u(t)}_{U(x,\a; \th)}) \intd{t} +
+\underbrace{\s}_{\sqrt{2D}} dW
+\label{eq:OU_evolution} 
+\end{equation}
+where we know $\b, \s$, but do not know the perturbation: $u(t)$. We want to get
+an estimate of $u(t)$ given only observations of $X$.  
+
+
+\subsection{Some basic concepts/notation}
+% We will call $f$ the probability transition density associated with $X_t$, 
+% \begin{equation}
+% f(x,t| x_0 ;\th, \a(\cdot)) dx = \Prob[ X_t \in x + dx | x_0, \a, \th]
+% \end{equation} 
+% 
+% For a fixed parameter set, $\th$, and control policy, $\a(\cdot)$, $f$ is the
+% solution to a Fokker-Planck equation:
+% \begin{equation}
+% \di_t f = \L_{\th, \a(\cdot)}[f] 
+% \label{eq:fokker_planck_forward_density}
+% \end{equation}
+% where the differential operator $\L$ is given by:
+% $$
+% \L_{\th, \a(\cdot)}[f] = D \cdot \di_x^2 [f] - \di_x[U(x,\a(x,t); \th) \cdot f]
+% $$
+% We will call $\L$ the forward operator and its adjoint, $\Lstar$, the backward
+% operator.
+
+If the process $X$ is observed continuously, its log 'likelihood' $l$
+can be obtained directly via the Radon-Nikodym theorem (\cite{Phillips2009}
+eq. 15 e.g.) as
+
+\begin{equation}
+l(X|u) = \int_0^T \frac{U(X,u; \th )}{\s^2} dX - \frac{1}{2}\int_0^T
+\frac{U^2(X,u; \th )}{\s^2	}dt 
+\label{eq:log_likelihood_Girsanov}
+\end{equation}
+\section{Specifying the problem via the log-likelihood of the cts. trajectory}
+In general the problem of determining $u(t)$ given knowledge of $X_t$  
+can be tackled in several ways. One, following
+\cite{Rogers2013},\cite{Phillips2009} but also work of Susanne++ (Anders'
+dissertation) is to determine $u$ as the solution to the cts.
+log-likelihood.
+
+$$
+u(t) = \argmax_u l(X|u)
+$$
+
+In fact, if we assume that $u(t) = \int \dot{u}dt$ i.e that $u$ is some $C^1$
+function for example, we have a classical Calculus of Variations problem (I
+follow Rogers here, b/c I'm a little uncertain on some of the derivations, I
+need to recheck them, but it seems right)  
+
+Basically, Rogers re-writes the log-likelihood as:
+\begin{equation}
+l(X|u) = - \frac{1}{2} 
+\int_0^T \frac{\big( \dot{x} - U(x,u; \th )\big)^2}{\s}dt
+\label{eq:log_likelihood_C2}
+\end{equation}
+
+where $\dot{x}$ is obtained by smoothing a fine, but discrete skeleton of $X_t$
+with a $C^2$ spline, such that the time-derivative exists (of course the
+idealized stochastic process $X$ is not cts. differentiable)
+
+Note that in this case, $\dot{x}$ is actually given data to the problem and the
+goal is to minimize \cref{eq:log_likelihood_C2} wrt. $u$.
+
+if we drop irrelevant constants and let 
+$$
+\psi(u, \dot{u}, t) = \frac{\big( \dot{x} - U(x,u; \th )\big)^2}{\s}$$ be the
+'action', then we have the standard Calculus of Variations problem:
+
+$$
+u = \argmin_{u \in C^1} \bigg \{ \int_0^T \psi(u, \dot{u} , t) \intd{t} \bigg\}
+$$
+
+In principle this will result in a pair of BVPs (ODEs) arising from the
+Euler-Lagrange equations those can be solved using any Optimal Control software
+(there are many). One can also avoid the Calculus of Variations (indirect
+methods) and go for direct (numerical Optimal Control) methods. The important
+thing is that one is solving ODEs, not PDEs!!!
+
+For my reminder, the EL equations look like ($p = \dot{u}$)
+\begin{align}
+\di_u \psi = \di_t \di_p \psi = 0!!!
+\end{align}
+
+Ok, here we have a problem, as in since the derivative $\dot{u}$ does not enter
+the equation, we have that it does not matter what $\dot{u}$ is, ok, this
+obvious, we just set 
+
+$$
+\di_u \psi = 0  \implies \big( \dot{x} - U(x,u; \th ) =0 
+$$
+and we are done\ldots Well, that's the Maximum Likelihood Approach to
+finding $u$ \ldots
+
+It would be more interesting if $u$ was another Stochastic Process, then we are
+really looking into Anders' dissertation. (for the Fitzhugh-Nagumo system)
+
+
+\bibliographystyle{plain} 
+\bibliography{library,local}
+
+\end{document}

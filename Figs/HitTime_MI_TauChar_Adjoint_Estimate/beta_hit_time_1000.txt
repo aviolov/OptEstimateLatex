@@ -1,0 +1,1 @@
+control type & mean($\hat\beta$) & std($\hat\beta$) \\ \hline opt & 1.090 & 0.14 \\crit & 1.144 & 0.12 \\max & 1.168 & 0.13 \\

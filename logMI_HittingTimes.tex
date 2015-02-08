@@ -1,0 +1,1029 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass{article}  
+
+\usepackage{amsmath} 
+\usepackage{amscd}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+
+\usepackage{circuitikz}
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,snakes,backgrounds}
+% \usetikz
+\usepackage{subfig}
+
+\usepackage[super]{nth}
+% \usepackage{appendix}
+% \usepackage{listings}
+% \usepackage{color} 
+\usepackage{ulem}
+\usepackage{hyperref}
+%\usepackage{url}
+\usepackage{cancel}
+\usepackage{cleveref}
+
+\usepackage{aviolov_style}
+\usepackage{local_style} 
+
+
+\begin{document}
+
+
+\title{Mutual Information-based Optimal Design for estimation in 1-D SDEs -
+Hitting Times Observation Case (LIF MOdels)} 
+\author{Alexandre Iolov, Susanne Ditlevsen, Andr\'e Longtin  \\
+$<$\href{mailto:aiolo040@uottawa.ca}
+		{aiolo040 at uottawa dot ca}$>$, alongtin at uottawa dot ca}
+
+\date{\today}
+
+\maketitle 
+
+\abstract{Given a leaky, noisy integrate-and-fire neuronal model - we discuss
+optimal design-type questions on what is the best external perturbation in order
+to facilitate parameter estimation using inter-spike intervals data only}
+ 
+\tableofcontents
+
+\section{Problem Formulation}
+The basic goal of 'Optimal Design' is to perturb a dynamical system in an
+'optimal' way such as to 'best' estimate its structural parameters. 
+
+As such the problem is a blend of optimal control and estimation, where the
+objective of the optimal control is to improve the estimation, for example by
+minimizing the variance of the estimators. 
+
+For illustration sake we return to our favourite LIF model
+Given a noisy LIF neuronal model:
+\begin{equation}
+\begin{gathered}
+dX_s = (\underbrace{\a(t)}_{\textrm{control}} + \b(\m %\g \sin(\o t)
+ - {X_s} ) \intd{s} + \s\intd{W_s},
+\\
+X(0) = .0,
+\\
+X(\ts) = \xth \implies  
+\begin{cases}
+X(\ts^+) &= .0   
+\\
+t_k &=  \ts
+\\
+k  &= k+1
+\end{cases}
+\end{gathered}
+\label{eq:X_evolution_uo}
+\end{equation}
+where (a subset of) the parameter set $\th = \{\m, \b, \s\}$ is unknown.
+
+Our goal is to choose $\a(t)$ as to estimate $\b$ 'best' given only that the
+spike times $\{t_k\}$ are observed 
+ 
+\section{Notation}
+The probability density of the $n$th interval,
+conditional on some applied control $\a$:
+\begin{equation} 
+\begin{array}{rcll} 
+g_n(\t) \intd{\t} &:=& \Prob(I_{n} \in [\t, \t + \intd{\t})  \,|\,
+ \a(t)) &
+ \textrm{(probability density)} 
+\\ 
+G_{n}(t) &:=& \Prob \left[I_{n} \leq t  \,|\,
+ \a(t) \right] = \int_0^t g_{\phi}(\t) \intd{\t} &
+ \textrm{(cumulative distribution)}
+\\
+\G_{n}(t) &:= & \Prob(I_{n}>t \,|\, \a(t) ) = 1 - G_{\phi}(t)
+&
+ \textrm{(survivor distribution)}
+\end{array}
+\label{eq:ISI_distribution_functions}
+\end{equation}
+We'll drop the $n$ subscript when there is no confusion. 
+There is also the transition distribution for $X_t$ for $t \in [0,
+I_{n})$:
+\begin{equation}
+f(x,t) := \Prob \left[X_{t} \in x+ \intd{x}  \,|\,
+ X_0 = 0, X_{s < t} < 1  \right]  \quad
+ \textrm{(transition distribution)}
+ \label{eq:transition_distribution}
+\end{equation} 
+\begin{equation}
+\begin{gathered}
+\begin{array}{lcl}
+	\di_t f (x,t) &=&
+					\underbrace{\frac{\b^2 }{2}}_{D}\cdot \di^2_x f 
+					+ \di_x \Bigg(  
+					\underbrace{\Big( \b (x-\m) - \a(t) \Big)}_{U(x,t)}  \cdot  f \Bigg)
+					\\
+					&=&
+					D \cdot \di^2_x f +
+					\di_x  \Big( U(x,t) \cdot f \Big)
+					\\
+					&=&
+					- \di_x \phi(x,t)
+					\\
+					&=&
+					\L[f] 
+					\end{array}
+	\\
+	\left\{ \begin{array}{lcl}
+	 f (x,0) &=& \delta(x)
+	\\
+	D \di_xf + U f |_{x=\xmin} &\equiv& 0 
+	\\
+	f |_{x=\xth} &\equiv& 0.
+	\end{array} \right.
+\label{eq:FP_pde_OU_absorbBC_CDF}
+\end{gathered}
+\end{equation}
+
+The probability flux-out at the threshold boundary $$\phi(\xth, s) = D
+\di_xf |_{x=\xth}$$ is very important as it is related to the spike-time density
+via $$g( t)  = \phi(\xth, t) = D\cdot \di_x f|_{x=\xth}$$
+ 
+% 
+% In a typical (maximum likelihood) estimation experiment, we will see a lot of
+% spikes and form the likelihood as
+% $$
+% L(\th| t_n ) = \prod_n g_n(t_n)
+% $$
+% We will then take logs and proceed as usual:
+% $$
+% l(\th| t_n ) = \sum_n \log (g_n(t_n)) =  \sum_n \log ( -\di_t F(1,t_n)) 
+% $$
+% and then maximize $l$ over the parameters $\th$. 
+% 
+% The associated {\sl score} function is
+% $$
+% S(\th | \ts ) = \grad_\th l(\th | \ts)
+% $$
+% The score function is a vector\footnote{We write $\grad$ for the vector
+% differential and $\di$ for its scalar components, i.e.\ $\grad_\th =
+% [\di_{\th_1},\ldots\di_{\th_i}],\ldots$}.
+% 
+% The typical Maximum Likelihood process is to 
+% maximize the likelihood, $l$ which, if one uses a gradient-based approach
+% amounts to finding the roots of the score, $S$.
+
+In a Bayesian approach, we have some {\sl a priori} belief over the possible
+values of $\th$.
+
+Let us call the prior over the parameters $\th = \{\m, \b, \s\}$:
+$$\rho(\th)$$.
+
+Given a single observation $\ts$, the posterior of the parameter belief dist'n
+is 
+\begin{equation}
+p(\th| \ts; \a) =
+\frac{g(\ts |\th; \a)\cdot \rho(\th)}{\int_\Theta g(\ts|\th; \a)\cdot \rho(\th)
+\intd{\th}}
+\label{eq:parameter_posterior_defn}
+\end{equation} 
+Where $ g( \ts |\th; \a)$ is the likelihood of $X$ given in
+\cref{eq:ISI_distribution_functions}.
+
+The idea now, is to choose $\a$ such that the mutual information $I$ between the
+two random variables is maximized. Here the Mutual Information is given by
+\begin{equation}
+I[\a]= 
+\int_\Theta \int_{[0, \infty]} g(t|\th)\rho(\th) \cdot 
+\log \left( \frac{g(t|\th)}
+{\int_\Theta g(t|\th)\rho(\th) \intd{\th}   } \right)
+\intd{t}\intd{\th}.
+\label{eq:J_mutual_info_objective}
+\end{equation}
+
+See \cref{sec:mutual_info_defn} for why. 
+Naturally for different controls, $\a(\cdot)$, the mutual info, $I$, will
+be different since $g$, the hitting time density depends on the shape of $\a$.
+($\rho$ does NOT).
+
+However, there is an added complication b/c we actually will observe many
+hitting times, and having less informative hitting times happen more often might
+be better than hitting times which are informative but happen less often. 
+
+The rigorous way to deal with this is to consider the mutual information between
+the parameters and the set of hitting times $\{t_n\}$, however this seems
+incredibly complicated, so instead we will maximize the 'Mutual Information
+rate, $J$, which we define as 
+\begin{align}
+J[\a]= & \Exp[\ts]^{-1} \cdot I[\a]
+\\
+= & \frac{
+\int_\Theta \int_{[0, \infty]} g(t|\th)  \rho(\th) \cdot 
+\log \left( \frac{g(t|\th)}{\int_\Theta g(t|\th)\rho(\th) \intd{\th} } \right)
+\intd{t}\intd{\th}}
+{ \int_\Theta \int_{[0, \infty]} \t g(t|\th)\rho(\th) \intd{t}\intd{\th}}
+\label{eq:J_mutual_info_rate_objective}
+\end{align}
+
+Well, this does NOT look any less complicated\ldots, Note that $g$ (and thus
+implicitly $\a$) appears 4 times in this expression. Recall that $g$ is related
+to $\a$ via the solution of the Fokker-Planck equation and thus we can also
+write
+
+\begin{align}
+J[\a] 
+= & \frac{
+\int_\Theta \int_{[0, \infty]} \di_xf(1, t)  \rho(\th) \cdot 
+\log \left( \frac{\di_xf(1, t)}{\int_\Theta \di_xf(1, t)\rho(\th) \intd{\th} } \right)
+\intd{t}\intd{\th}}
+{ \int_\Theta \int_{[0, \infty]} t \di_xf(1, t)\rho(\th) \intd{t}\intd{\th}}
+\label{eq:J_mutual_info_rate_objective_in_terms_of_dixf} 
+\end{align}
+  
+We want to find the control input $\a(t)$, which maximizes $J$ in
+\cref{eq:J_mutual_info_rate_objective_in_terms_of_dixf}. 
+
+\section{Gradient Ascent using Maximum Principle in order to maximize 
+\cref{eq:J_mutual_info_rate_objective_in_terms_of_dixf} or rather the simpler 
+\cref{eq:J_mutual_info_objective}} 
+
+Let us discuss the optimization problem
+
+$$
+\a(\cdot) = \argmax_{\a \sim \textrm{admissible}} J[\a]
+$$ 
+   
+
+\subsection{The nitty-grity of calculating the (infinite-dimensional) gradient
+$\grad_{\a} J$ } We would like to maximize
+\cref{eq:J_mutual_info_rate_objective_in_terms_of_dixf}, but now we realize that
+doing so is very difficult, b/c we have a ratio of integrals. (The standard
+theory always works with just one integral).
+
+Let's then drop the denominator integral and focus on the numerator. (i.e. we
+just go back to \cref{eq:J_mutual_info_objective})
+\begin{equation}
+I[\a] 
+=  -
+\int_\Theta \int_{[0, \infty]} \di_xf(1, t)  \rho(\th) \cdot 
+\log \left( \frac{ \di_xf(1, t)}{\int_\Theta \di_xf(1, t)\rho(\th) \intd{\th}
+} \right)
+\intd{t}\intd{\th}
+\label{eq:I_mutual_info_objective_in_terms_of_dixf} 
+\end{equation}
+
+To proceed, we apply a Maximum Principle type derivation, in which we first seek
+the differential of the objective $I$ in
+\cref{eq:I_mutual_info_objective_in_terms_of_dixf} wrt.\
+$\a(\cdot)$ and proceed from there.   
+
+As always, we start by augmenting our objective functional with the
+dynamics:
+\begin{align}
+I=&  
+\int_\Theta \int_{[0, \infty]} \di_xf_\th(1, t)  \rho(\th) \cdot 
+\log \left( \frac{\di_xf_\th(1, t)}{\int_\Theta \di_xf_\th(1, t)\rho(\th)
+\intd{\th} } \right)
+\intd{t}\intd{\th} 
+\\
+	  &- \int_\Theta \int_0^\infty <p_\th, (\di_t f_\th - \L[f_\th])> \intd{s} 
+\end{align}
+where the inner product, $<f, g>$ is just the space integral $\int f\cdot g
+\intd{x}$ and we write $\L$ for the spatial differential operator in 
+\cref{eq:FP_pde_OU_absorbBC_CDF}.
+
+This is exactly the same problem as we faced in the spike-time optimal control,
+except there the integrand looked something like $(t-t^*)D\di_xf$. Thus the
+equations for the adjoint look exactly the same as there, with the exception of the Terminal
+Conditions (here assumed 0) and the BCs at the threshold:
+
+
+
+In short, the equation for the adjoint function, $p$, is
+\begin{equation}
+\begin{gathered}
+\begin{aligned}
+\di_t p =& - \Lstar[p]
+\\
+		=&
+			- \Big[ D\cdot \di^2_x p +
+			 U(x,t,\th)   \cdot \di_x p \Big].
+\end{aligned}
+\\
+\begin{cases}
+	p_\th \big|_{x=\xth} &=  \log\left(\frac{\di_xf_\th}{\int_\Th
+	\di_xf_\th \rho(\th)\intd{\th})}\right) +
+	 1 -
+	  \frac{\di_xf_\th}{\int_\Th
+	\di_xf_\th \rho(\th)\intd{\th})}
+	\\
+	\di_x p_\th  \big|_{x=\xmin} &= 0
+	\\
+	p_\th(x,\infty) &= 0
+\end{cases}
+\label{eq:adjoint_pde_OU}
+\end{gathered}
+\end{equation}
+
+In practice of-course, we will set the terminal conditions for $p_\th$ at some
+finite value of $t$
+
+\vskip10pt The whole goal of this exercise is to calculate the differential of
+$I$ in \cref{eq:I_mutual_info_objective_in_terms_of_dixf},
+wrt.\ the control $\a(t)$, i.e.\ to calculate $\delta I / \delta \a$. After the
+introduction of the adjoint state, $p_\th$, that is just:
+
+ 
+\begin{align*}
+\delta I =&   
+\int_\Theta  \rho(\th) \cdot \Bigg(  
+- \int_\xmin^{1} \di_x p_\th f_\th \intd{x} + 
+   p_\th f_\th \Big|_\xmin 
+    \Bigg) \intd{\th}
+\end{align*}
+
+I.e for a given $\alpha(t)$, we solve for $p,f$ and a few values of $\th$ from
+the current belief distribution $\rho(\th)$ and their corresponding
+probabilities/weights. Compute the above expression and increment $\alpha$ in
+the direction of increasing $\delta I$.
+
+In practice, we usually take a very simple prior, something like three values
+with equal probability, something like:.
+\begin{equation}
+\rho(\b) = 
+\begin{cases}
+	\tfrac 13 & \textrm{if } \b= \in \{.5,    1 ,  2 \}\\
+	0   &\textrm{o/w }
+\end{cases}
+\label{eq:basic_prior_over_tau}
+\end{equation} 
+
+\subsection{Effect of the Prior}
+
+Here we show that the optimal control is sensitive to the {\sl spread} of the
+prior, for example if we have a tightly clustered vs. loosely spread prior, both
+centred at roughly the same mean (the log-prior has the same mean). 
+
+Very interestingly, we see that while for a wide prior, the optimal control has
+its characteristic double hump shape, that we have seen already, for a tight
+prior, that is no longer the case
+
+Thus we see that the shape of the prior {\sl has!}
+an effect on the optimal control.
+
+\begin{figure}[h]
+\begin{center}
+\subfloat[Wide Prior]
+{
+\label{fig:prior_spread_wide}
+\includegraphics[width=0.48\textwidth]
+{Figs/FP_Adjoint/PriorBox_wide_prior.pdf}
+}
+\subfloat[Tight Prior]
+{
+\label{fig:prior_spread_tight}
+\includegraphics[width=0.48\textwidth]
+{Figs/FP_Adjoint/PriorBox_concentrated_prior.pdf}
+}
+\caption[labelInTOC]{The effect of the spread (variance) of the prior on the
+resulting optimal control}
+\label{fig:prior_spread}
+\end{center}
+\end{figure}
+
+Let's look at it another way, we will consider our basic prior as a function of
+$w$
+\begin{equation}
+\rho(\b) = 
+\begin{cases}
+	\tfrac 12 & \textrm{if } \b= \in \{1- w, 1/(1-w) \}\\
+	0   &\textrm{o/w }
+\end{cases} 
+\end{equation} 
+and sweep for $w = .1:.1:.9$ (in matlab notation).
+
+The results are in \cref{fig:effect_of_prior_width}. Looking at
+\cref{fig:effect_of_prior_width}, we might be optimistic to hypothesize that we
+should be doing this online and as the uncertainty (roughly speaking $w$) of the
+parameter decreases, we should be changing the applied control\ldots This
+brings us to {\sl adaptive } versions of our scheme which is NOT something we
+have yet implemented. 
+ 
+\begin{figure}[h]
+\begin{center} 
+\includegraphics[width=\textwidth]
+{Figs/FP_Adjoint/Effect_of_prior_spread.pdf} 
+\caption[labelInTOC]{The effect of the width ($w$, a measure
+of uncertainty) of the prior on the resulting optimal control}
+\label{fig:effect_of_prior_width}
+\end{center}
+\end{figure}
+
+
+\clearpage
+\section{Basic Estimation Experiment}
+
+We will run the following test:
+
+Assume the true parameters
+$$
+ \m = 0; \b = 1; \s = 1.;
+$$
+We will assume we know $\s, \m$ and don't know $\b$ so we are trying to
+maximize the Mutual Information between $\ts$ and $\b$.
+ 
+Let's assume a very simple uniform prior on $\b$, $\b_i = \{.5, 1. 2\},$
+each with probability 1/3. 
+
+Then running the gradient ascent (details of the gradient ascent are omitted) we
+get the controls, objective and hitting time densities shown in 
+\cref{fig:hitting_time_density_g_aopt_bprior}. The optimal control seems to be
+independent of the # of pts in the prior (i.e. instead of 3 we could use 5 pts
+with weight 1/5 and get the same opt. control as in
+\cref{fig:hitting_time_density_g_aopt_bprior}).
+
+
+
+\begin{figure}[htp] 
+\begin{center}
+  \includegraphics[width=1\textwidth]{Figs/FP_Adjoint/ExampleOptControl_MI_HT.pdf}
+  \caption[labelInTOC]{The gradient ascent for the optimization of $I$ in
+  \cref{eq:I_mutual_info_objective_in_terms_of_dixf}. Top panel, the initial and
+  the optimal optimal controls, $\a_{0}(t), \a_{opt}(t)$
+   true' density $
+  g_{\a}(s|\b = 1.)$, ) given various controls (top panel) and the resulting Mutual Information ($I$ ) i.e using \cref{eq:J_mutual_info_objective} NOT \cref{eq:J_mutual_info_rate_objective}.
+  The bottom plot shows the hitting times $g(t| \tc)$ corresponding to the 3
+  distinct values of $\tc$ in the prior $\rho(\tc)$}
+  \label{fig:hitting_time_density_g_aopt_bprior}  
+\end{center}
+\end{figure} 
+
+\subsubsection{Aside: the nitty-gritty of the estimation procedure}
+We have posed a fairly-simple estimation objective, in that it amounts to single
+variable optimization. The negative log-likelihood of an observed hitting-time
+set $\{t_n\}$ is
+\begin{equation}
+l(\b) = - \sum_n \log ( g(t_n | \b) ) =  - \sum_n \log ( -D \di_x f(t_n |
+\b) |_{\xth} )
+\end{equation}
+
+The distributions are exemplified in
+\cref{fig:log_likelihood_beta_examples_1000,fig:log_likelihood_beta_examples_10000,fig:log_likelihood_beta_examples_100000},
+for three different values of $N_s = 1e3, 1e4, 1e5$ respectively. We see that in
+principle it is very hard to distinguish between different values of $\b$. In
+\cref{fig:log_likelihood_beta_examples_10000}, we see the first indications that
+the Opt Control, might have some superiority over the 'Crit' Control (for
+example) as it seems to estimate a $\b$ closer to 1 (the 'true' value). However,
+on average, the different shapes of $\a(t)$ seems to have a very limited impact
+on the estimates for $\b$ (even though it has a very obvious impact on the shape
+of the hitting time dist'n $g(t)$).
+
+
+\begin{figure}[h]
+\begin{center} 
+\subfloat[opt]  
+{
+\includegraphics[width=.75\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a0.pdf}
+}
+\\   
+\subfloat[crit]
+{
+\includegraphics[width=.75\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a1.pdf}
+}
+\\
+\subfloat[max] 
+{
+\includegraphics[width=.75\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a2.pdf}
+}
+\caption[labelInTOC]{Example of Empirical vs. Analytical Hitting time
+distributions and the associated log-likelihoods. $N_s = 1e3$}
+\label{fig:log_likelihood_beta_examples_1000}
+\end{center}
+\end{figure} 
+
+
+\begin{figure}[h]
+\begin{center}
+\subfloat[opt]
+{
+\includegraphics[width=.75\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a0.pdf}
+}
+\\
+\subfloat[crit]
+{
+\includegraphics[width=.75\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a1.pdf}
+}
+\\ 
+\subfloat[max]
+{
+\includegraphics[width=.75\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a2.pdf}
+}
+\caption[labelInTOC]{Same as \cref{fig:log_likelihood_beta_examples_1000}, but
+with  $N_s = 1e4$. Notice that ( but only slightly ) the 'opt' control tilts in
+the right direction for the $\b$ estimate (i.e. towards 1). }
+\label{fig:log_likelihood_beta_examples_10000}  
+\end{center}
+\end{figure}
+
+\begin{figure}[h] 
+\begin{center}
+\subfloat[opt]
+{
+\includegraphics[width=.75\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a0.pdf}
+}
+\\
+\subfloat[crit]
+{
+\includegraphics[width=.75\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a1.pdf}
+}
+\\
+\subfloat[max]
+{
+\includegraphics[width=.75\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a2.pdf}
+}
+\caption[labelInTOC]{Same as  
+\cref{fig:log_likelihood_beta_examples_1000,fig:log_likelihood_beta_examples_10000}
+but with $N_s = 1e5$ hits}
+\label{fig:log_likelihood_beta_examples_100000}
+\end{center}
+\end{figure}  
+ -
+\clearpage
+
+\subsubsection{Batch Performance of the perturbations over the estimators.}
+As is we have 3 candidates for perturbing the hitting times: 
+\begin{enumerate}
+  \item 
+the optimal gradient-ascent-based  control $\a_{opt}$ (see
+\cref{fig:hitting_time_density_g_aopt_bprior} top panel)
+\item   the 'critical' constant control
+$\a_{crit}$, ($\a_{crit}(t) = 1/\b$)
+\item  the max constant control, $\amax$ ($=2$)
+\end{enumerate} 
+
+We now simulate $N_b = 100$ blocks of $N_s=1000$ hitting times each for the
+3 alphas and then estimate $\b$ over each set using MaxLikelihood over our
+computed expression for the density, $g(t|\tc; \a(t) )$). Examples for
+differnt $N_s$ of the hitting time empirical
+distribution are shown in \cref{fig:log_likelihood_beta_examples_1000} etc..
+Naturally, for each control, we use the same gaussian random draws per block of $N_s$ Hitting of times).
+%\usepackage{graphics} is needed for \includegraphics
+% \begin{figure}[htp]
+% \begin{center}
+%   \includegraphics[width=\textwidth]{Figs/HitTime_MI_TauChar_Adjoint_Estimate/three_pt_prior_thits_distn.pdf}
+%   \caption[labelInTOC]{Empirical Hitting-TIme distributions for the different
+%   choices of $\a$}
+%   \label{fig:empirical_hitting_times_3alphas}
+% \end{center}
+% \end{figure}
+
+The estimation results are tabulated in in
+\cref{tab:beta_estimates_from_hitting_times_different_alphas}.
+
+\begin{table}
+\subfloat[$N_b=1000, N_s = 1e2$]{
+\begin{tabular}{ccc}
+\input{Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_100.txt}
+\end{tabular}
+}
+\subfloat[$N_b=100, N_s = 1e3$]{
+\begin{tabular}{ccc}
+\input{Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_1000.txt}
+\end{tabular}
+}\\
+\subfloat[$N_b=10, N_s = 1e4$]{
+\begin{tabular}{ccc}
+\input{Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_10000.txt}
+\end{tabular}
+} 
+\subfloat[$N_b=1, N_s = 1e5$]{
+\begin{tabular}{ccc}
+\input{Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_100000.txt}
+\end{tabular}
+}
+\caption{Results for the estimates arising from simulations using various values
+of $\a$ (opt, crit, max). In each sub-table there are $N_b$
+parameter estimates for each distinct $\a$, with $N_s$ hitting times used to form an $\b-$estimate.
+The 'true' value of $\b$ is $\b=1$. }
+\label{tab:beta_estimates_from_hitting_times_different_alphas}
+\end{table}     
+% \begin{table} 
+% \caption{$N_b=10$, $N_s = 1e4$  }
+% \label{tab:beta_estimates_from_hitting_times_different_alphas_Nhits10000}
+% \end{table}   
+% \begin{table}
+% \begin{tabular}{ccc}
+% \input{Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_100000.txt}
+% \end{tabular}   
+% \caption{$N_b=1$, $N_s = 1e5$ (estimator variance is irrelevant here as there is only 1 estimate per alpha)}
+% \label{tab:beta_estimates_from_hitting_times_different_alphas_Nhits100000}
+% \end{table}  
+
+Comments: It looks like there is a marginal advantage to using the 
+Optimal Control, $\a_{opt}$ over the simpler, constant controls. In particular
+the bias of the estimates seems to be reduced. The variance of the estimates
+seems to be independent of the perturbation\ldots 
+ 
+\clearpage
+
+
+\section{Online MI Optimization}
+Hеre we outline a tentative approach to {\sl online} optimization of the MI,
+which means
+
+\begin{enumerate}
+  \item Find $\aopt$ using the gradient ascent, for the prior $\rho$
+  \item Apply $\aopt$ and measure several $1,2\ldots,N_{s,1}$ hitting times
+  $t_k$
+  \item Update the $\rho$ into a posterior conditional on the observed $\{t_k\}$
+  \item Recalibrate $\aopt$ using the new $\rho$, i.e. go back to 1. 
+\end{enumerate}
+
+ Efficiency considerations aside, we have all the tools to do pts. 1,2,4, it
+ is only the prior update that needs to be discussed. 
+
+Of course we start by restating Bayes' formula
+
+$$
+\rho(\th| \{t_k\} ) = 
+\frac{  \rho(\th) \cdot \prod_k g(t_k|\th ; \a) }
+	 { \int_\Th  \rho(\th) \cdot \prod_k g(t_k|\th ; \a)  \intd{\th}}
+$$
+
+In practice, exact calculation of $\rho(\th|\t_k)$ would not be possible in our
+context, so an approximation approach needs to be made.
+
+I know that Susanne has done some work on a Bayesian approach to param.
+estimation, so I shall first discuss with her. 
+
+\clearpage
+\appendix
+\section{The basic idea of optimal design for SDEs of Lin et al.}
+Here we sketch the basic idea of Lin et al. \cite{Lin}. 
+
+Let us write the dynamics as such
+\begin{equation}
+dX = \underbrace{f(X,\th, \a)}_{\textrm{controlled drift}}dt
++ \b dW
+\end{equation}
+Then given an observed path $\{x_t\}_0^\tf$, the log-likelihood, $l$ wrt.\ the
+parameter set $\th$ is
+\begin{align}
+l(\th | x_t) =&  \frac 12 \int_0^\tf \frac{f^2(x_t,\th, \a)}{\b^2} \intd{t}
+\notag
+\\
+&- \int_0^\tf  \frac{f(x_t,\th, \a)}{\b^2} \intd{W}
+\label{eq:log_likelihood_cts_time}
+\end{align}
+
+The goal then is to choose $\a$ in order to facilitate the estimation. The idea
+in \cite{Lin} is to to choose $\a$ by maximizing the Fisher Information
+\begin{equation}
+\FI(\th, \a) = \Exp \left[ \int_0^\tf \frac{ \left( \di_\th f(x_t,\th, \a)
+\right)^2}{\b^2}
+\intd{t}
+\right]
+\label{eq:Fisher_Information}
+\end{equation}
+
+Note that there are two optimizations intertwined. One, to maximize
+the likelihood $l$ in order to obtain the actual estimate $\th$, the other - to
+maximize the Fisher Information evaluated at the (a priori unknown!) estimator $\th$.
+
+The authors in Lin et al. \cite{Lin} acknowledge that clearly one cannot form
+the Fisher Information directly since its evaluation requires the very
+parameter being sought! To remedy this, they apply a prior of $\th$. I
+still need to understand exactly what they do, but as far as I understand, they
+augment $\FI$ by an outer expectation over the prior for $\th$, i.e.\ (I think!) 
+the objective determining the control $\a$ becomes
+\begin{equation}
+\tilde{I}(\th, \a) = \underbrace{\Exp_\th \left [
+\underbrace{\Exp_{X} \left[ \int_0^\tf
+\frac{ \left( \di_\th f(x_t,\th, \a) \right)^2}{\b^2}
+\intd{t}
+\right]}_{\textrm{average over trajectories}}
+\right]}_{\textrm{average over prior}}
+\label{eq:Fisher_Information}
+\end{equation}
+and then they show that the estimator so obtained, i.e.\ the one which uses the
+optimal $\a$, is still better than a naive estimator (without any control)
+
+% THis makes me wonder whether a more appropriate selection wouldn't be to fully
+% accept the Bayesian approach and from the start seek to minimize the variance of
+% the posterior distribution, while still maintaining the consistency of the
+% estimator (how?)
+% 
+% In general the ultimate goal is to have a scheme where a control is applied in
+% order to obtain new estimates, and these estimates are then fed back in order to
+% form a new control.
+
+
+\section{Aside - an intuition check}
+\label{sec:alpha_crit_is_best_hypothesis}
+This is in reply to Susanne's suggestion that the 'optimal' thing to do is
+likely to be to stimulate maximally $\a = \amax$. 
+
+Consider in the simplest case, the linear deterministic ODE:
+$$
+\dot{x} = \a - \b  x; \quad x_0 = 0
+$$
+then
+$$
+x(t) =  \frac\a\b (1 - \exp(- \b t))
+$$
+which, of course, goes to $\a/ \b$ in the long run. 
+Assume $\a/\b > 1$. Then the time $\ts$ to reach $x = \xth = 1$
+is given by
+$$
+\ts (\t; \a) = -\frac 1\b  \log( 1- \frac{\b}{\a })
+$$
+Thus if we know
+$\a$ and $\ts$ we can determine $\b$. Suppose we could choose $\a$. What would
+be the value of $\a$ that would make $\l$ 'most identifiable'?
+
+Let us equate 'identifiability' with the magnitude of the derivative of $\ts$
+wrt. $\b$.
+$$
+\ts'(\b) = \frac{\a}{\b ( \a - \b)}  + \frac{1}{\b^2}\log(1-\frac{\b}{\a })   
+$$
+Let us check the asymptotics:
+$$
+\lim_{\a \uparrow \infty} \ts'(\b) = \frac 1\b
+$$
+and 
+$$
+\lim_{\a \downarrow \b} \ts'(\b) =  \infty
+$$
+ 
+As I read this, this means that the 'best' thing to do is let $\a \approx \b$.
+
+Now of course, in the noisy case, 
+$$
+dX = (\a - \frac{X}\t) \intd{t} + \s dW 
+$$
+things might not be so simple\ldots, but it does raise the possibility that the
+best thing to do if you want to identify $\t$ is {\itshape not} to excite
+maximally, $\a \ra \infty$, but to excite {\itshape critically}.
+
+\section{Mutual Info calculation}
+\label{sec:mutual_info_defn} 
+
+Here we show why \cref{eq:J_mutual_info_objective} for the Mutual Information
+agrees with the usual definition of the Mutual Information, which for the random variables, $X,\th$ is
+\begin{equation}
+I(X,\th) = \int_\Theta \int_X p(x,\th) \cdot \log \left(
+\frac{p(x,\th)}{p(x)p(\th)}\right) \intd{x} \intd{\th}
+\label{eq:mutual_info_defn}
+\end{equation}
+ 
+First of all, the marginal distribution, $p(\th)$,  is just the prior of $\th$,
+$$p(\th) = \rho(\th)$$ The joint distribution is $$p(x,y) = L(x|\th)\rho(\th)$$ while the $x$
+marginal is $$p(x) = \int_\Theta L(x|\th)\rho(\th) \intd{\th}$$
+Plugging the three expressions into the definition in
+\cref{eq:mutual_info_defn} gives:
+\begin{equation}
+I = \int_\Theta \int_X L(x|\th)\rho(\th) \cdot 
+\log \left( \frac{L(x|\th)\rho(\th) }{\int_\Theta L(x|\th)\rho(\th) \intd{\th}
+\cdot \rho(\th) } \right)
+\intd{x}\intd{\th}.
+\label{eq:mutual_info_prior_trajectory}
+\end{equation}
+And after canceling $\rho(\th)$ inside the $\log$, we get
+\cref{eq:J_mutual_info_objective} .
+
+
+\section{Why should we maximize the Mutual Information in the first place}
+Here we take a step back and discuss some properties of the Mutual Information
+Functional in order to justify using it as an objective for Optimal Design.
+
+\subsection{2013 Math Psych paper: \cite{Myung2013}}
+We start with a tutorial paper from the Journal of Math. Psychology (2013),
+which begins as follows: { \sl ``Imagine an experiment in which each and every
+stimulus was custom tailored to be maximally informative about the question of
+interest, so that there were no wasted trials, participants, or redundant data
+points.''} 
+
+Their work focuses on both parameter estimation and the larger task of model
+selection, let's just discuss the parameter estimation bit. 
+
+In their terminology, the task of the {\sl experimenter}
+ is to find a { \sl design, $d$ } (this is the stimulation $\a(t)$ in our
+ context) that will best facilitate the estimation of the model parameters.
+ After introducing a prior on the parameters $\rho(\th)$, and denoting the
+ {\sl outcome} of the experiment as $t$, they state that the design selection
+ can be formalized by optimizing the following expression: $$
+d^* =  \argmax_d \int \int u(\th, t; d) L(t| \th, d) \rho (\th) \intd{t}
+\intd{\th}
+$$
+where $u$ is some utility function. For example one could maximize the inverse
+sum of CVs:
+$$
+u() = \sum_i \frac{\Exp[\th_i]}{STD[\th_i]}
+$$
+where 
+$\Exp[\th_i], STD[\th_i]$ are the posterior mean/std. dev of the estimates, e.g.
+
+$$
+\Exp[\th_i] = \int_{\th_i} \th_i p(\th_i| t, d) \intd{\th_i} = 
+\int_{\th_i} \th_i \frac{ L(t| \th, d) \rho (\th) }
+					    {\int_\th L(t| \th, d) \rho (\th)\intd{\th_i} } \intd{\th_i} 
+$$
+(An aside, if the parameter estimate is on average zero, or negative I think
+this will not work at all, but I think they just suggest it as an obvious, but
+problematic utility function)
+
+They then state that the most common utility function, $u$, in the
+literature is the Mutual Information b/w the random variables $\Th$ and $T$. 
+
+Again, quote, {\sl (The Mutual Information)  measures the reduction in
+uncertainty about the values of the parameters that would be provided by the
+observation of an experimental outcome under design $d$. In other words, the
+optimal design is the one that extracts the maximum information about the
+model's parameters.}
+
+So as far as I can tell, the fact that Mutual Information maximization equates
+to reduction of parameter uncertainty is here taken dogmatically!
+
+They then go on to talk about { \sl sequential } optimal design, which is the
+same as above, but then you Bayes-update the prior of $\th$ while the experiment
+continues and then roll forward. 
+
+In our context this could mean that after $N_{s,1}$ spikes, we update the prior
+of $\b$ and redo the calculation of the optimal perturbation $\a(t)$, then
+observe for $N_{s_2}$ spikes, then recompute $\a(t)$ and so on. At this point,
+one can get creative - instead of optimizing $\a(t)$ we can just take 1(or 2 or
+whatever) steps in the gradient descent. In practice, this is probably
+not very realistic due to computational costs, but in principle very cool.
+
+\subsection{Mackay book on Information Theory, Entropy, Mutual
+Information}
+
+The classic on Info Theory is probably, \cite{Cover2006}, and a popular
+alternative is \cite{MacKay2003}. Here we give a quick summary of Chs 2,3 in
+\cite{MacKay2003} on Probability, Entropy and INference. HOpefully these will
+give a more rigorous explanation for why maximizing Mutual Information is a
+'good' thing. 
+
+Start from first principles, the information content of an outcome, $x$ (of a
+  R.V. $X$) is measured as:
+  $$ h(x) = -\log_2 p(x)$$
+
+And the entropy of an ensemble is 
+$$ H(X) = -\sum p(x) \log_2 p(x)$$
+Mackay postulates that 'entropy' is synonymous with 'uncertainty'
+
+Joint entropy is 
+$$ H(X,Y) = \sum p(x,y) \log_2 p(X,Y)$$ and for independent RVs it is additive
+(iff). 
+$$
+H(X,Y) =  H(X) + H(Y) \iff P(X)P(Y) = P(X,Y)
+$$
+
+There is then the KL divergence  and the Gibbs inequality:
+
+$$D_{KL} (P||Q) = \sum p(x) \log \frac{p(x)}{q(x)}$$
+$$D_{KL} (P||Q)  \geq 0$$ with equality iff $p \equiv q$
+
+Then there is a long section on Shannon Entropy\ldots showing how it is a very
+sensible measure of the informtion in an experiment / outcome. 
+
+IN Ch. 8. Mackay says that the mutual info, $I(X,Y)$ represents the average
+reduction in uncertainty about $x$ that results from learning the value of $y$
+or vice versa! 
+
+Since 
+$$I(\Th, T) = H(\Th) - H(\Th|T)$$ and $H(\Th)$ in our case is indepenednet of
+both $\a$ and the observed spike times $T$, we could alternatively maximize
+$-H(\Th|T)$, i.e.
+$$
+\a* = \argmax \int_{\Th, T}  L(t|\th) \rho(\th) \cdot
+ \log \left( \frac{L(t|\th) \rho(\th)}{ \int L(t|\th) \rho(\th) \intd{\th}}\right) 
+ \, \intd{t} \intd{\th}$$
+
+Never mind, that's a tautology. This expression is equivalent to what we had
+earlier (of course) and does not seem to be any more
+convenient.
+
+\subsection{Further Literature Review}	
+In principle OPtimal Design for Dynamic Systems is a subset of System
+Identification, which is a very researched topic in the control community.
+Here's a review paper \cite{Gevers2011} from the Control Theory Community. 
+They talk about things like Transfer Functions etc. usually things are in
+Discrete time. There is no notion of SDEs although there is a=often a white
+noise error term, so in a sense these are discretized SDEs, although without ay
+of the formalism of Ito Calculus etc. 
+
+The papers on Adaptive Optimal Design from the Myung et al group in Ohio is well
+cited (the main 2010 \cite{Cavagnaro2010} article has 45 citations) 
+
+Оh, cool,  \cite{Cavagnaro2010} says in its lit. review leading into the paper
+that 
+\begin{quote}
+the desirability and usefulness of (using Mutual Information as the objective
+functional) was formally justified by Paninski (2005) who proved that under
+acceptably weak modeling conditions, the adaptive approach with a utility function
+based on mutual information leads to consistent and efficient parameter
+estimates. 
+\end{quote}
+
+Ok, so we just need to dig up Paninsky2005 and insert here:) Here it is:
+\cite{Paninski2005}. Here is its abridged abstract:
+\begin{quote}
+... on any given trial,
+we want to adaptively choose the input in such a way that the mutual information
+between the (unknown) state of the system and the (stochastic)
+output is maximal, given any prior information (including data collected
+on any previous trials). We prove a theorem that quantifies the effectiveness
+of this strategy\ldots and demonstrate that
+this method is in a well-defined sense never less efficient—and is generically
+more efficient—than the non-adaptive strategy\ldots  
+\end{quote}
+
+Here's another good quote from 
+\begin{quote}
+\ldots several attempts have been made to devise algorithms
+to find the “optimal stimulus” of a neuron, where optimality is
+defined in terms of firing rate (Tzanakou, Michalak, & Harth, 1979; Nelken,
+Prut, Vaadia, & Abeles, 1994; Foldiak, 2001), but we should emphasize that
+the two concepts of optimality are not related in general and turn out to be
+typically at odds (maximizing the firing rate of a cell does not maximize—
+and in fact often minimizes—the amount we can expect to learn about the
+cell; see sections 3 and 4).
+\end{quote}
+Again the punch line in \cite{Paninski2005} is:
+\begin{quote}
+Our main result (in section 2) states that under
+acceptably weak conditions on the models $p(t| \a, \th)$ (our notation, not
+his) the information maximization strategy leads to consistent and
+efficient estimates of the true underlying model, in a natural sense. 
+In particular, the information maximization
+strategy is never less efficient, in a well-defined sense—and
+is generically more efficient—than the simpler, non-adaptive, i.i.d. x strategy.
+\end{quote}
+
+
+
+The experimental/computational Lewi, Buttera et Paninsky paper from 2009 is
+very popular, `` Sequential
+optimal design of neurophysiology experiments'', \cite{Lewi2009}. It has 64
+citations, although its main citing authors are Paninsky himself
+(self-references) + the Myung et Cavagnaro group above :). Another very popular
+paper from Paninsky (117 cites) is \cite{Paninski2006a}, which deals with
+several things including 'Optimal Stimulus'. Reading Paninsky can be pleasant or
+unpleasant, the 2009 \cite{Lewi2009}paper is 73 pages of dense Convex
+Optimization, which hurts my eyes:) but the 2006 paper is much more fluent, at
+only 14 pages. 
+
+Let's review it and in paritcular let's review the part about 'Optimal
+Stimulus', this starts in Sec. 3 (p.11)
+
+\begin{quote}
+If we use the entropy of the posterior
+distribution on the model parameters ( what we call $L(t|\th)
+\rho(\th)$) to quantify this uncertainty, we arrive at the [\ldots] 
+mutual information between the response (for us this is $t_s$) and the model
+parameters $\th$ given the stimulus and past data.  
+\end{quote}
+
+They then acknowledge that optimizing $I$ is problematic, and even just
+computing it quickly becomes hard for multi-dimensional params\ldots
+
+They then suggest to approximate the posterior of $\th$ with a Gaussian. They
+self-quote (\cite{Paninski2005}, which seems to be the main theoretical
+justification paper for using MI).
+
+With that the Mutual Information calculation is reduced to determinig the
+log-Determinant of the Hessian matrix (the Gaussian Covariance)\ldots
+
+They then do a very smart observation that for online optimization this Hessian
+recuses very nicely with itself over observations and so updating it is very
+cheap (computationally). Thus one can optimize-stimulate-update online, meaning;
+
+\begin{enumerate}
+  \item Optimize the MI for a given param prior
+  \item stimulate the system with the MI-optimal stimulus
+  \item update the prior given the new observation
+  \item Reoptimize the MI using the new prior (the posterior)
+  \item roll on\ldots
+\end{enumerate}
+
+OK! Now I understand the rough idea of the 76 page 2009 paper\cite{Lewi2009}.
+
+\subsection{Cool (Waterloo) Physics paper}
+\cite{Granade2012} describe something that is in principle very close to what we
+aim at. They are trying to estimate the 'Hamiltonian' of a quantum experiment
+(its parameters) and they talk about all the things we talk about - optimal
+stimulus, belief distn over the params. In Algos, 1-7 of their paper they give a
+very readable summary of particle filtering! (which in turn sources
+\cite{Liu2001})
+
+\bibliographystyle{plain}
+\bibliography{library,local}
+
+
+\end{document}

@@ -1,0 +1,135 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass{article}
+
+\usepackage{amsmath} 
+\usepackage{amscd}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+
+\usepackage{circuitikz}
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,snakes,backgrounds}
+% \usetikz
+\usepackage{subfig}
+
+\usepackage[super]{nth}
+% \usepackage{appendix}
+% \usepackage{listings}
+% \usepackage{color}
+\usepackage{ulem}
+\usepackage{hyperref}
+%\usepackage{url}
+\usepackage{cancel}
+\usepackage{cleveref}
+ 
+\usepackage{aviolov_style}
+\usepackage{local_style} 
+
+
+\begin{document}
+
+
+\title{Estimating the Double WEll} \author{Alexandre Iolov, Susanne
+Ditlevsen, Andr\'e Longtin  \\ $<$\href{mailto:aiolo040@uottawa.ca}
+		{aiolo040 at uottawa dot ca}$>$, alongtin at uottawa dot ca}
+
+\date{\today}
+
+\maketitle
+
+\abstract{Supposed we have a double --well potential SDE, how do we estimate
+its parameters}
+
+\tableofcontents
+
+\section{The Double Well}
+Consider the generic, parametrized,  Double-Well System 
+\begin{equation}
+dX = U(X; \th) \intd{t} + \sqrt{2D(X; \th)} dW
+\label{eq:SDE_evolution} 
+\end{equation}
+where $U$ is a potential field gradient, $U = -\grad V$ for example something
+like
+\begin{equation}
+dX = \underbrace{-\left( aX^3 - bX -A \frac Xc e^{-(X/c)^2/2} \right) }_{U(X;
+\th)} \intd{t} + \underbrace{\s}_{\sqrt{2D}} dW
+\label{eq:OU_evolution} 
+\end{equation}
+Whose parameter set is:
+$$
+\th = \{a, b, A, c, \s\}
+$$
+or a subset thereof.
+
+We want to estimate $\th$  from observations $\{ X_t \}$. Now assume that we
+have very high frequency (cts.!) observations, $\{X_{k\Delta t}\}_0^K$ such that
+$\Delta t \ra 0, K\Delta t \ra T$, i.e.\ we know the full realization
+$\{X_t\}_0^T$ over some interval $[0,T]$.
+
+We want to estimate the values of $\th$. 
+
+\subsection{Estimating $\s$ for cts. observations}
+
+We now discuss why the estimation of $\s$ can be fairly accurate in the
+high-frequency (cts.) context. 
+
+Suppose, for illustration sake that $\s$ is constant. 
+
+Then recall that the quadratic variation formula for an Ito Diffusion (such as
+$X_t$) states that:
+\begin{equation}
+\lim_{\Delta \ra 0} \sum_{k\geq 1} (X_k - X_{k-1})^2 = \int_0^T \sigma(X_t)
+\intd{t}   
+\label{eq:sigma_est_quad_variation}
+\end{equation}
+i.e for $\Delta$ very small and $\s$ constant, we will have:
+
+\begin{equation}
+\sigma \approx \frac 1T \sum_{k\geq 1} (X_k - X_{k-1})^2
+\label{eq:sigma_est_quad_variation_sigma_constant}
+\end{equation}
+and the probability of estimating $\s$ incorrectly due to $X$ fluctuations goes
+to zero.
+
+Note that this formula does not depend on the other possibly unknown parameters
+in the drift.
+% Furthermore, this does not depend on the exact nature of $U$, only on the
+% observations $X_t$. Although, in the finite $\Delta$ case there will be some
+% effect of the drift parameters in $U$ on the approximation of $\s$. 
+% 
+% The converse, that $\s$ does not impact estimates for the drift parameters is
+% also possible, for example, in the Ornsteing-Uhlenbeck process, the estimates
+% for the time-constant and the equilibrium are independent of the  estimate for
+% $\s$, although $\s$ indirectly influences them though its effect on $X$. 
+ 
+
+\Cref{eq:sigma_est_quad_variation} can readily be used for
+inference when $\s$ is NOT constant.
+
+I.e if we think that $\sigma$ is a nonlinear function of $X$ such as for example
+$\s(X) = \s_0 + \tanh(X_t/d)$, then one needs to employ a nonlinear root-finder 
+for the equation:
+$$
+\lim_{\Delta \ra 0} \sum_{k\geq 1} (X_k - X_{k-1})^2 = \int_0^T \s_0 +
+\tanh(X_t/d) \intd{t} 
+$$
+
+Finally, one can try a non-parametric approach to estimate $\s(X)$ over
+different segments of the realized $X_t$ (e.g. in the high state vs. low state
+for the double-well potential).
+
+Finally, one can devise all kind of SDE-based estimations to estimate all the
+parameters, $\th$ simultaneously \ldots
+
+
+
+ 
+\bibliographystyle{plain} 
+\bibliography{library,local}
+
+\end{document}

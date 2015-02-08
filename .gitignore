@@ -1,0 +1,6 @@
+\.project
+\.texlipse
+tmp/
+*.gz
+##*.pdf
+*.log
