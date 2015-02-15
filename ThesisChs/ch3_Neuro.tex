@@ -1,0 +1,41 @@
+\chapter{Mathematical Models in Neuroscience}
+\label{ch:neuro_background}
+
+We now describe in detail the basic mathematical model of a neuron that will be
+used often in the sequel. 
+
+An introduction to mathematical models in neuroscience is given in Gerstner and
+Kistler, \cite{Gerstner2002}, also available online, while the book Stochastic
+Methods in Neuroscience, \cite{Laing2009} gives a nice overview of several
+current research applications of stochastic techniques to neuroscience.
+
+
+Neurons relay information by means of voltage spikes - sudden sharp increases in
+voltage. Although many details remain unclear, the information content is
+thought to be contained in the length of the time-interval between these spikes.
+In the simplest case, this can be thought of as a rate - the average number of
+spikes per time interval, but more complicated coding schemes are hypothesized to
+exist. 
+
+Many experiments allow for manipulating an individual neural cell. A natural
+goal then is to make a cell produce a given spike train. This may arise, for
+example, in brain-machine interfaces or in artificial prosthetics. 
+
+\section{Problem Formulation}
+The most basic representative model for a neuron is the noisy
+leaky-integrate-and-fire model:
+\begin{equation}
+\begin{gathered}
+dX_s = \left(\a(t) - \frac{(X_s - \m}{\tc} \right) \intd{s} + \b \intd{W_s},
+\\
+X(0) = 0,
+\\
+X(\ts) = \xth \implies  
+\begin{cases}
+X(\ts^+) = 0 &  
+\end{cases}
+\end{gathered}
+\label{eq:X_evolution_uo}
+\end{equation}
+
+
