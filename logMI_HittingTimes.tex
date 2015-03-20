@@ -1,7 +1,7 @@
 %%This is a very basic article template.
 %%There is just one section and two subsections.
 \documentclass{article}  
-
+ 
 \usepackage{amsmath} 
 \usepackage{amscd}
 \usepackage{amssymb}
@@ -15,6 +15,9 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows,snakes,backgrounds}
 % \usetikz
+
+\usepackage{algpseudocode}
+\usepackage{algorithm}
 \usepackage{subfig}
 
 \usepackage[super]{nth}
@@ -322,7 +325,8 @@ In short, the equation for the adjoint function, $p$, is
 \end{equation}
 
 In practice of-course, we will set the terminal conditions for $p_\th$ at some
-finite value of $t$
+finite value of $t$, although it is not immediately obvious what that
+value should be.
 
 \vskip10pt The whole goal of this exercise is to calculate the differential of
 $I$ in \cref{eq:I_mutual_info_objective_in_terms_of_dixf},
@@ -436,7 +440,7 @@ get the controls, objective and hitting time densities shown in
 \cref{fig:hitting_time_density_g_aopt_bprior}. The optimal control seems to be
 independent of the # of pts in the prior (i.e. instead of 3 we could use 5 pts
 with weight 1/5 and get the same opt. control as in
-\cref{fig:hitting_time_density_g_aopt_bprior}).
+\cref{fig:hitting_time_density_g_aopt_bprior}). 
 
 
 
@@ -658,10 +662,273 @@ $$
 In practice, exact calculation of $\rho(\th|\t_k)$ would not be possible in our
 context, so an approximation approach needs to be made.
 
-I know that Susanne has done some work on a Bayesian approach to param.
-estimation, so I shall first discuss with her. 
+The standard approach is to describe the belief distribution by an ensemble of
+points (particles). We now describe the basic aspect of how the particle
+ensemble is constructed, how it is updated and how it is resampled. We use the
+reference \cite{Granade2012}, in particular sec 4 therein.
+
+\subsection{Quick INtro to Particle Filtering}
+We have a prior
+$ \rho(\th)$ and we want to describe it by an ensemble of points $\th_i$.
+as 
+$$ \rho(\th) \sim \sum_i w_i \delta(\th-\th_i)$$
+This is what we have been doing up to now for the MI optimization routines.
+
+Again recall that a bayesian update, given the $k$th hitting time is
+$$ \rho(\th|t_k) \propto g(t_k|\th)\rho(\th)$$
+
+thus the weights are iteratively updated as 
+
+$$w_i \ra w_i g(t_k|\th_i)$$
+
+Given the particle ensemble, $\{\th_i, w_i\}$, we can  then approximate the
+mean/variance of $\Th$ as
+$$ \Exp[\Th] \approx \sum_i w_i \th_i$$
+and 
+$$ \Var[\Th] \approx \sum_i w_i \th_i \th_i - (\Exp[\Th])^2$$
+In fact, in general 
+$$\Exp[f(\Th)]\approx\sum_i w_i f(\th_i)$$ approximates the expectation of any
+function, $f$, of the random variable $\Th$.
+
+Here's the crux of the update/resample algorithm. Given a new observation, i.e.
+the latest hitting time $t_k$, the weights are updated according to
+$$ w_{i,k} = w_{i,k-1}\cdot g(t_k| \th_i, \a_k),$$where $g(|\th_i, \a_k)$ is
+the probability density given the parameter value $\th_i$ and the chosen
+stimulation that was applied during the $k$th sample, $\a_k(\cdot)$.
+The weights are then re-normalized so that at all time $$\sum_i w_i = 1$$ 
+
+The literature suggests that this procedure will tend to concentrate all the
+'mass' on one location and most of the weights will decrease to 0. This
+concentration is 'bad' since eventually, all the weights go to zero and so
+effectively the distribution has converged  artificially to a point, which might
+be the most likely point from the initial ensemble, but still be far from the
+'true' value of the parameter. This adverse effect can be ameliorated by
+resampling the {\sl locations} of the particle ensemble, $\th_i$. This
+resampling can be done in many ways, but a standard way is described in
+algorithm. \ref{alg:particle_resampling} (which is copied from Algo4 in Granade
+et. al. \cite{Granade2012}, who in turn closely follow \cite{Liu2001}, but
+are very nice and pedagogical).
+\begin{algorithm}
+\begin{algorithmic}
+\State Given  $\{w_i, \th_i\}_1^N_p$ the current particle ensemble (weight,
+locations)  
+\State $\m $ \gets $\Exp[\Th]$
+\State $a = 0.98$ see \cite{Granade2012,Liu2001}
+\State $h = \sqrt{1-a^2}$ i.e. $h \approx 0.1990$
+\State $\Xi$\gets $h^2\cdot \Var[\Th]$
+\For {$i= 1\dots N_p$}
+	\\ {\itshape $\#$ Re-sample each particle individually}
+	\State draw $j$ with probability $w_j$ 
+	\\ {\itshape $\#$ the bigger $w_i$ the more likely to choose
+	$\th_i$}
+	\State $m_i$ \gets  $a \th_j + (1-a) \m$
+	\State Resample $\th_i'$ from $N(\m_i, \Xi)$
+	\State $w_i$ \gets $1/N_p$ 
+    \EndFor{\itshape $\quad \#   1 \ldots N_p$ particle resampling}
+\State \Return $w_i, \th_i'$ the resampled particle ensemble 
+\end{algorithmic}
+\caption{Particle Resampling Algorithm}
+\label{alg:particle_resampling}
+\end{algorithm}
+
+While, of course, updating happens after every iteration, re-sampling happens
+only when  
+$$ \frac{1}{\sum_i^{N_p} w_i^2} < \frac {N_p}{2} \implies \textrm{ resample!}$$
+
+In \cref{fig:poissonian_rate_filtering} we give an example for the filtering
+procedure to estimate the rate of a Poissonian process, $1/\t$, for which  the
+likelihood is just $\tfrac 1\t exp(- \tfrac t\t)$. From
+\cref{fig:poissonian_rate_filtering} we can conclude that the basic mechanics of
+the filtering update/resample procedure is working. (We've tried it with other
+values of $\tau$ and it works for those as well.)
+
+%\usepackage{graphics} is needed for \includegraphics
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/TauParticleEnsemble/poisson_rate_filtering.pdf}
+  \caption{Filtering Example for a test-case. We are trying to estimate the
+  inverse of the Poissonian rate, $1/\tau$, given inter-event intervals $t_k$.
+  The true value is $\tau  = 1$. The Maximum Likelihood estimate for $\tau$ in
+  this problem  is just the mean of the observed times $\bar{t_k}$, which
+  happens to be 0.9583 in this example, while after the last observation, the
+  ensemble mean $\pm$ std-dev is $0.9811\pm 0.0199$}
+  \label{fig:poissonian_rate_filtering}
+\end{center}
+\end{figure}
+
+% \clearpage
+
+\subsection{Example of Particle-Filtering + Online Estimation for hitting time
+parameter estimation}
+
+\subsubsection{Single HItting Time Illustration}
+Let's try it. First, in \cref{fig:example_online_miopt_single_iteration}, we
+illustrate one iteration of the update, that is one hitting time given a
+stimulation from either the MI Optimal Controller or a random controller, which
+just gives a random constant stimulation per each hitting time.
+
+Let's discuss what happens in \cref{fig:example_online_miopt_single_iteration}.
+Recall that lower values of $\tc$ imply higher restoring force and therefore
+longer hitting times (waiting times). Since in this sample, the observed hitting
+times were fairly long, especially for the MI-optimal stimulation, weights for
+smaller $\t$s grow larger, while weights for bigger $\t$s become smaller.
+However it is immediately clear that the MI-optimal stimulation is more
+discerning as it has almost entirely discarded (correctly) the
+possibility that $\tau>2$, while the other two stimulations have resulted in
+only mild perturbation in the belief distribution. 
+
+WARNING: The new results are much better primarily through a judicious choice of
+the initial condition of the MI-optimal optimization (the initial guess for the
+optimal control.)
+
+\begin{figure}[h]
+\begin{center}
+\subfloat[Example Hitting Times]
+{
+\label{fig:example_hitting_times_for_online_miopt}
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_trial_example_hittimes.pdf}
+} 
+\subfloat[Resulting Particle Ensemble Updates]
+{
+\label{fig:example_particle_ensemble_updates_for_online_miopt}
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_trial_example_weights.pdf}
+}
+\caption[labelInTOC]{Examples of a single iteration of the Online
+Stimulation-Estimation scheme.  }
+\label{fig:example_online_miopt_single_iteration}
+\end{center}
+\end{figure}
+
+\subsubsection{Full Multiple Hitting-Times Experiment(s)}
+Now let's go through an entire estimation experiment. That is let's stimulate a
+sequence of hitting times and online update our parameter belief distribution,
+after every observation and then online-update our MI-optimal stimulation as the
+belief evolves.
+
+The main result is shown in \cref{fig:example_miopt_vs_rand_ensemble_evolution},
+where we visualize the mean and confidence intervals for the belief
+distributions for the three protocols (MI-Optimal vs. Random Constant vs Zero),
+using $N_\t = 32$ particles and $N_k=251$ hitting times. In
+\cref{fig:example_miopt_controls_evolution}, we show the different stimulations
+that were chosen by the Mutual-Info Maximization Algorithm.
+ 
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/single_experiment_example_ensemble_distn_evolution.pdf}
+  \caption[labelInTOC]{Evolution of the belief distributions given Optimal
+  (red) or Random (green) stimulation. We used $N=32$ particles to represent
+  the ensemble for both stimulation protocols. There are 250 hitting times used}
+  \label{fig:example_miopt_vs_rand_ensemble_evolution}
+\end{center}
+\end{figure}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/single_experiment_example_controls_evolution.pdf}
+  \caption[labelInTOC]{Different MI-OPtimal Stimulations computed 
+  as the Experiment evolves and the parameter belief distribution changes}
+  \label{fig:example_miopt_controls_evolution}
+\end{center}
+\end{figure}
+ 
 
 \clearpage
+
+We now simulate $10$ independent experiments of approx. 500 hitting times each
+and visualize them in \cref{fig:online_optimization_more_examples}. Here, we see
+that the MI-optimal stimulation is indeed producing more accurate
+estimates, faster (earlier in the experiment). This is true in 7 out of the 10
+experiments, in 2 it is hard to determine whether there is a 'better' protocol
+and only once is the MI-based stimulation resulting in worse estimates than one
+of the alternatives ((f) in \cref{fig:online_optimization_more_examples}). 
+ 
+\begin{figure}[h]
+\begin{center}
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=495_ensemble_distn_evolution.pdf}
+}
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=496_ensemble_distn_evolution.pdf}
+}\\
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=497_ensemble_distn_evolution.pdf}
+}
+\subfloat
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=498_ensemble_distn_evolution.pdf}
+}\\
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=499_ensemble_distn_evolution.pdf}
+}
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=500_ensemble_distn_evolution.pdf}
+}\\
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=501_ensemble_distn_evolution.pdf}
+} 
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth] 
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=502_ensemble_distn_evolution.pdf}
+}\\
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=503_ensemble_distn_evolution.pdf}
+}
+\subfloat[] 
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=504_ensemble_distn_evolution.pdf}
+}
+\caption[labelInTOC]{Various examples with increasing $N_k$}
+\label{fig:online_optimization_more_examples}
+\end{center}
+\end{figure}
+
+
+The aggregated version of these results (the averaged evolution distribution
+from the independent experiments) is shown
+\cref{fig:online_optimization_aggregated_belief_evolution}, where the $N$ distributions are averaged out over the different experiments. It is now clear
+that the MI-Optimal procedure produces more accurate estimates much faster.
+
+% \usepackage{graphics} is needed for \includegraphics
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/aggregated_belief_distn_aggregated_ensemble_distn_evolution.pdf}
+  \caption[labelInTOC]{Aggregated belief distribution over $N$ independent
+  belief estimation experiment }
+  \label{fig:online_optimization_aggregated_belief_evolution}
+\end{center}
+\end{figure}
+\clearpage
+
+
+
+
+
+
+
+
+
+
+
+
+
 \appendix
 \section{The basic idea of optimal design for SDEs of Lin et al.}
 Here we sketch the basic idea of Lin et al. \cite{Lin}. 

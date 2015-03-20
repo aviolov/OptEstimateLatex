@@ -1065,20 +1065,23 @@ TODO: \cite{Borzi2012,Lenhart2007}
 \section{Optimal Design}
 \label{sec:optimal_design}
 Optimal design is approach to design of statistical experiments that is guided
-by the 
-desire to optimize some formal measure of the parameter estimates of the
-experiments. TODO: cite Pukelheim. Common criteria are minimizing the
-determinant or the trace of the covariance matrix of the parameter estimators. 
-The covariance matrix, also known as the Fisher Information, however often
-depends on the very parameters that one seeks to estimate. 
+by the desire to optimize some formal measure of the parameter estimates of the
+experiments, \cite{Pukelsheim2006}. For example, perhaps one would like to
+perform linear regression with a polynomial model and one has some latitude over
+at which points to evaluate the polynomial. Common criteria when selecting the
+design, e.g the polynomial points, are minimizing the determinant or the trace
+of the covariance matrix of the parameter estimators. The covariance matrix,
+also known as the Fisher Information, however often depends on the very
+parameters that one seeks to estimate.
 
-An alternative to the Fisher Information as an
-objective for the formal design of experiments is to use of concepts from
-Information Theory,  \cite{MacKay2003}. 
-
-We now define and discuss the {\sl Mutual Information} between
-two random variables $X, \Th$. For reference we will follow
-\cite{MacKay2003}. 
+An alternative to the Fisher Information as an objective for the formal design
+of experiments is to use of concepts from Information Theory, \cite{MacKay2003}.
+A related topic in the Machine Learning literature is called 'Active Learning',
+e.g. see \cite{Cohn1996,Settles2010,Seeger2008}. In the third part of the
+thesis, \cref{ch:optimal_design}, we will use the {\sl Mutual Information}
+criteria as guideline in choosing stimulation to facilitate parameter
+estimation. Thus we now define and discuss the Mutual Information between two
+random variables $X, \Th$. For reference we will follow \cite{MacKay2003}.
 
 \begin{defn}Mutual Information:
 Given two random variables $X,\Th$ with joint probability density
@@ -1184,8 +1187,8 @@ X(\ts^+) = 0 &
 \end{gathered}
 \label{eq:X_evolution_uo}
 \end{equation}
-That is $X$ follows an OU process, but upon reaching a pre-determined threshold,
-$\xth$, a 'spike' is deemed to have occurred and the process is 'reset' to an
+That is $X_t$ follows an OU process, but upon reaching a pre-determined
+threshold, $\xth$, a 'spike' is deemed to have occurred and the process is 'reset' to an
 initial value, here $0$.
 
 Alternatives to the hard-threshold integrate-and-fire model are so called
