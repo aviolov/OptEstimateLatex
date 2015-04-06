@@ -101,10 +101,10 @@ their robustness}
 \tableofcontents 
 \cleardoublepage
 
-%TODO (caption[] for each table): 
+%TODO (caption[] for each table for list of tables): 
 \listoftables
 \clearpage 
-%TODO list of figures in captions
+%TODO (caption[] for each figure for list of figures): 
 \listoffigures
 
 \pagenumbering{arabic}
@@ -112,8 +112,8 @@ their robustness}
 
 
 \chapter{Introduction}
-This thesis deals with stochastic problems in parameter estimation and
-optimal control arising in computational neuroscience. 
+This thesis deals with problems in parameter estimation and
+stochastic optimal control arising in computational neuroscience. 
 
 Neuroscience is the study of how information is processed by living beings. Its
 main building block is a single neuron cell. A neural cell maintains a certain
@@ -140,7 +140,7 @@ Fitzhugh-Nagumo model and the Morris-Lecar model, which still retain the basic
 excursion non-linearity of the spiking mechanism. A even-more drastic
 simplification is to linearize the dynamics and then impose the non-linear
 voltage excursion of the neural spike artificially. This leads to the leaky
-integrate-and-fire (LIF) model, discussed already by Lapicque in 1907, which
+integrate-and-fire (LIF) model, which
 forms the foundation of all the models used in our work.
 
 Neural cell response, especially {\sl in vivo}, is stochastic. Given the same
@@ -162,7 +162,7 @@ and control algorithms will often be based on observation of {\sl first
 passage} times of the system rather than detailed trajectories. This makes the problem
 significantly more challenging and requires some non-standard
 algorithms. At the same time, the study of First-Passage Times (FPTs) is a
-classic part of the Stochastic Analysis and there are many known
+classic part of Stochastic Analysis and there are many known
 techniques and results that we can build on.
 
 The three problems that are discussed in this thesis can be summarized as
@@ -189,12 +189,9 @@ flow of the thesis.
 In the Conclusion, \cref{ch:conclusion}, we summarize the main findings and
 provide a brief outlook.
 
-
 \cleardoublepage
 \include{chapters/ch2_Math}
 \cleardoublepage
-% \include{chapters/ch3_Neuro} 
-% \cleardoublepage
 \include{chapters/ch4_SinEstimate}
 \cleardoublepage
 \include{chapters/ch5_OptSpike}
@@ -205,6 +202,7 @@ provide a brief outlook.
 \chapter{Conclusion and Outlook}
 \label{ch:conclusion}
 Ah, la conclusion:-) 
+TODO:
 
 In the first task, of estimating, one can see that there remains one interesting
 problem, and that is why the estimation quality degrades with higher sinusoidal
@@ -213,11 +211,11 @@ Fokker-Planck / Likelihood based method).
 
 In the second task, the possible avenues for progress are much broader\ldots 
 
-The third task is currently barely scratched. Optimal Design for SDEs is still
-an opening area, but hopefully, much more work will be done especially in the
-areas of neuroscience and physiology, where there are many systems which are
-amenable to direct external perturbation.
+The third task\ldots . 
 
+Hopefully, this can be applicable to more complex areas of neuroscience and
+physiology, where the systems under study are quite amenable to direct external
+perturbation.
 
 \cleardoublepage
 % \bibliographystyle{plain}

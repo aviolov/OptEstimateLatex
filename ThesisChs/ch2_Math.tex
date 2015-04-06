@@ -132,7 +132,7 @@ Again, we state without proof a few interesting properties of $\int X \intd{W}$:
 
 We write
 \begin{equation}
-dX_t = Fdt + G dW
+dX_t = F dt + G dW
 \end{equation}
 on $0 \leq t \leq T$, if $X$ is a real-valued stochastic process satisfying:
 \begin{equation*}
@@ -394,7 +394,7 @@ The Fokker-Planck equation and Kolmogorov's Backward equation describe the
 forward (resp. backward)  evolution of the probability density of $X_t$
 
 For the rest of this section we will work in $ \R^n$, i.e. $X$ will be an $n-$
-dimensional vector that satisfies the stochastic differential 
+dimensional vector that satisfies the stochastic differential
 \begin{equation}
 dX_t = F(X,t) dt + G(X,t) dW,
 \label{eq:generic_Ito_SDE_Rn}
@@ -415,8 +415,8 @@ be the transition probability density. Then $\f$ satisfies:
 \di_t \f= -\sum_i \di_{x_i} \left[ F_i(x,t) \f(x,t) \right] 
 + 
 \sum_{i,j}  \di^2_{x_i x_j} \left[ D_{ij}(x,t) \f(x,t) \right]
-\label{eq:FP_pde}
-\end{equation}
+\label{eq:generic_FokkerPlanck}
+\end{equation} 
 This is called the \emph{Fokker-Planck} or \emph{Forward Kolmogorov} equation.
 It can also be seen as a continuity euquation or a cosevation of probability
 equation. To this end define the probability current, $\p \in \R^n$ as:
@@ -425,7 +425,7 @@ $$
 + 
 \sum_{j}  \di_{x_j} \left[ D_{ij}(x,t) \f(x,t)\right]
 $$
-then the Fokker-Planck equation, \cref{eq:FP_pde}, can be written as:
+then the Fokker-Planck equation, \cref{eq:generic_FokkerPlanck}, can be written as:
 $$
 \di_t \f= -\grad \cdot \phi
 $$
@@ -552,20 +552,42 @@ The solution to the PDE evaluated at $x$ is the expected exit time from
 $E$ for an $X_t$  starting at $x$.
 \end{ex}
 
+
+\subsection{Numerical Simulation of SDEs}
+In general SDEs, such as \cref{eq:generic_Ito_SDE_Rn}, cannot be solved
+analytically and if one wants to obtain approximate paths from their solution,
+one needs numerical methods.  
+
+The theory of discretization for SDEs offers many numerical methods for
+approximating \cref{eq:generic_Ito_SDE_Rn}, see \cite{Higham2001} for a popular
+introduction, but here we will only describe the most basic method, the Euler-Maruyama scheme, which will suffice for our
+purposes. In the Euler-Maruyama scheme, the approximate solution to
+\cref{eq:generic_Ito_SDE_Rn} is computed at predetermined time-nodes,
+$\{t_k\}_{k=0}^N$ with time intervals $\Delta t_k = t_{k+1} - t_{k }$, which
+are often constant, $\Delta t_k = \Delta t\, \forall k$. Then given an initial
+condition $X_0 = X(t_0)$, the approximate path, $\{X_k\}_{k=0}^N =
+\{X(t_k)\}_{k=0}^N$ is obtained recursively via:
+
+\begin{equation}
+X_{k+1} = F(X_k,t_k)  \Delta t_k   + G(X_k,t_k) \xi_k \sqrt{\Delta t_k }
+\label{eq:euler_maruyama_discretization_generic_Ito_SDE}
+\end{equation}
+where $\xi_k$ is an independent draw from the standard normal. 
+
+
+
 \section{Parameter Estimation for SDEs}
 \label{sec:estimation}
-Discuss MAx Likelihood, Fisher information, Fortet equation. 
-
-Parameter estimation for SDEs has a rich body of theory, \cite{??} and there are
-many mathematical techniques available. Let us rewrite the SDE
-in \cref{eq:generic_Ito_SDE_Rn} in order to explicitly that the 
-functions $F, G$ are parametrized by the some parameter set, $\th$.
+Parameter estimation for SDEs has a rich body of theory, (TODO: authoritative
+citation - Susanne?)  and there are many mathematical techniques
+available. Let us rewrite the SDE in \cref{eq:generic_Ito_SDE_Rn} in order to explicitly that the 
+functions $F, G$ are parametrized by some parameter set, $\th$.
 \begin{equation}
 dX_t = F(X,t;\th) dt + G(X,t;\th) dW,
 \label{eq:generic_Ito_SDE_Rn_parameterized}
 \end{equation}
-For example in the case of the O-U process, \cref{eq:OU_equation_generic},
-where $F(X,t;\th) = (\m - {X_t})/{\tc}$ and $G(X,t;\th) = \b$, the
+For example, in the case of the OU process, \cref{eq:OU_equation_generic},
+$F(X,t;\th) = (\m - {X_t})/{\tc}$ and $G(X,t;\th) = \b$, the
 parameter set is $\th = \{\m, \tc, \b\}$.
 
 In the standard problem formulation of SDE parameter formulation, one has exact
@@ -588,7 +610,7 @@ likelihood is just the product of the individual probabilities of each observati
 slightly more complicated, due to the Markov nature of the stochastic process. In particular,
 the likelihood becomes the product of the transition probabilities. Recall that
 earlier we defined the transition probability, $\f(x,t| y,s)$ in
-\cref{eq:transition_prob_defn}. We shall also this as $\f_\th(x,t|
+\cref{eq:transition_prob_defn}. We shall also write this as $\f_\th(x,t|
 y,s)$ is we need to explicitly be reminded of $\f$'s dependence on the
 parameter set, $\th$. With that we the likelihood of the observed $x_n$
 becomes
@@ -602,7 +624,7 @@ specifying the probability distribution of $X_0$.
 In general the transition density for a generic SDE is impossible to find
 analytically. There are several ways to approximate it numerically. The most
 generic relies on the numeric solution of the Fokker-Planck PDE in
-\cref{eq:FP_pde}, but that is quite expensive and suffers from the
+\cref{eq:generic_FokkerPlanck}, but that is quite expensive and suffers from the
 'curse-of-dimensionality' for SDEs of higher dimension. 
 
 In some simple cases, the transition density {\sl can} be calculated. The OU
@@ -638,116 +660,350 @@ e^{-\frac {\Delta}{\hat{\tc}} } &=&
 The solution for the ML estimates is almost explicit. It requires one numerical
 single-dimensional root-finding, which is an easy numerical task.
 
-\subsection{Numerical Simulation of SDEs}
-TODO: Euler-Maruyama scheme nothing fancy here. \cite{Higham2001}.
+\subsection{Fortet Equation}
+TODO
 
-
-\section{Deterministic Optimal Control}
-\label{sec:deterministic_control}
-Optimal Control theory has three main components - a state, $x$, a control, $u$
-and an objective $J$ which is a functional of $x,u$ and which we try to either
-minimize or maximize. Here, we will be minimizing.
-
-We introduce the theory for a finite dimensional state, $x(t) \in \R^{n_x}$, but
-we will not address state constraints. Our control will also be
-finite-dimensional $u(t) \in \R^{n_u}$ and it will be allowed to take values in
-some closed domain, $\Udomain$, of allowed controls, e.g.\ $\Udomain = \{ u_t
-\in \R^{n_u} \, \st |u| \leq \Umax \}$ for a control constrained to a sphere.
-The objective $J$ will be given by a time-integral-plus-terminal cost:
-\begin{equation}
-J[u] = \int_0^\tf L(x_s, u_s) \intd{s} + M(x_\tf)
-\label{eq:generic_objective_function_deterministic}
-\end{equation}
-Where $\tf$ could be either a variable or fixed. 
-
-The dynamics of $x$ are given by some controlled ordinary differential
-equation (ODE) given some initial conditions:
-\begin{equation}
-\dot{x} = f(x,t); \quad x(0) = x_0
-\label{eq:generic_dynamics_deterministic}
-\end{equation}
-
-Then we seek the optimal control $u^*$, such that:
-\begin{equation}
-u^* = \argmin_{u \in \Udomain} J[u]  
-\label{eq:generic_objective_argmin}
-\end{equation}
-
-Note that $x$ may also have final conditions, which we will deal with later,
-and/or path constraints. If there are path-constraints, we talk about a
-state-constrained problem. However, we will not face path constraints in the
-sequel and so will not say more about how to handle them.
-
-There are essentially three methods for solving equation
-\cref{eq:generic_objective_function_deterministic}. Two, Pontryagin's Minimum
-Principle and Dynamic Programing, are analytic in nature providing a set of
-equations that characterize the minimum and then solving these equations,
-numerically if necessary. The third, the direct method, simply discretizes the
-problem and solves the resulting nonlinear programing (NLP) problem via standard
-NLP techniques. We will describe both Pontryagin's Minimum Principle and Dynamic
-Programing below and indeed we will use both later on.
-
-\subsection{Pontryagin's Maximum Principle}
-Pontryagin's Principle is derived from on a variational argument, similar to the
-Euler-Lagrange equations from the Calculus of Variations, and it characterizes
-the optimal trajectory/control pair. It can be thought of as a generalization of
-the zero-tangent rule (Fermat's Rule) for finding optima in single-variable
-calculus and like both the Euler-Lagrange equations and Fermat's Rule it
-provides necessary, but not sufficient conditions for a minimum.
-
-Pontryagin's Principle also holds a similarity to Hamiltonian Mechanics, which
-should not be surprising, since Hamiltonian Mechanics is founded on
-the minimization of action.
-
-There are several versions of Pontryagin's Principle, depending on whether $x$ has
-terminal conditions or not, whether the final time, $\tf$ is specified or a
-variable in itself and most importantly whether the state has constraints or
-not. We will state the versions that are relevant for our needs, namely, $x$ has
-no constraints and $\tf$ is specified.
-
-We first introduce the Pontryagin Hamiltonian, $\H$, also called the control
-theory Hamiltonian and an adjoint state, $p \in \R^{n_x}$:
-\begin{defn} [$\H$] The control theory Hamiltonian is the function:
+\subsection{Particle Filtering}
+In {\sl Bayesian} approaches to parameter estimation, the unknown parameter,
+$\th$ is also treated as a Random Variable, $\Th$, with some belief
+distribution: $$
+\rho(\th) = \Prob(\Theta = \th)
 $$
-\H(x,p, u) := f(x,u) \cdot p + L(x,u) \quad (x,p \in R^{n_x}, u \in \Udomain)
-$$ 
+then through applications of the Bayes formula, observations from the system are
+used to update the belief distribution.
+
+
+TODO: 
+
+\subsection{Optimal Design}
+\label{sec:optimal_design}
+There are estimation problems, where the experimenter has some control over some
+of the parameters in the model and may choose to set them as to facilitate the
+estimation task. {\sl Optimal design} is the approach to design of statistical
+experiments that is guided by optimizing some formal measure of the parameter estimates of the experiments, \cite{Pukelsheim2006}. For example, perhaps one would like to
+perform linear regression with a polynomial model and one has some latitude over
+at which points to evaluate the polynomial. Common criteria when selecting the
+design, e.g the polynomial points, are minimizing the determinant or the trace
+of the covariance matrix of the parameter estimators. The covariance matrix,
+also known as the Fisher Information, however often depends on the very
+parameters that one seeks to estimate.
+
+An alternative to the Fisher Information as an objective for the formal design
+of experiments is to use of concepts from Information Theory, \cite{MacKay2003}.
+A related topic in the Machine Learning literature is called 'Active Learning',
+e.g. see \cite{Cohn1996,Settles2010,Seeger2008}. In the third part of the
+thesis, \cref{ch:optimal_design}, we will use the {\sl Mutual Information}
+criteria as guideline in choosing stimulation to facilitate parameter
+estimation. Thus we now define and discuss the Mutual Information between two
+random variables $X, \Th$. For reference, we follow \cite{MacKay2003}.
+
+\begin{defn}Mutual Information:
+Given two random variables $X,\Th$ with joint probability density
+$p(x,\th)$ and marginal densities $p(x), p(\th)$, the Mutual Information between
+$X$ and $\Th$ is given by
+\begin{equation}
+I(X,\Theta) = \int_\Theta \int_X p(x,\th) \cdot \log \left(
+\frac{p(x,\th)}{p(x)p(\th)}\right) \intd{x} \intd{\th}
+\label{eq:mutual_info_defn}
+\end{equation}
 \end{defn}
 
-\begin{thm}[Pontryagin's Fixed-Time, Free-End-Point] Assume $u^*(t)$ is
-optimal for
-\cref{eq:generic_objective_function_deterministic,eq:generic_dynamics_deterministic}
-and that $x^*$ is the corresponding trajectory. 
+It is obvious that if $X,\Th$ are independent than $I(X,\Theta) = 0$ and it can
+be verified that $I\geq0$ and that it is maximized if $\Theta$ is a function of
+$X$; that is, if the entropy of $\Th$ conditional on $X$ is zero. 
+The mutual information, $I(X,\Th)$ represents the 'average
+reduction in uncertainty about $\Th$ that results from learning the value of
+$X$' \cite{MacKay2003}. This statement is formally correct if one takes
+ 'uncertainty' to mean the entropy of a random
+ variable.
+ 
+In order to make use of the Mutual Information in a parameter estimation
+context, we need to specify a prior belief distribution over the  parameters.  
+$$
+\rho(\th) = \Prob(\Theta = \th)
+$$
+A prior distribution is standard and central concept in Bayesian statistics.
+ 
+With that we are treating the unknown parameter, $\th$ like a random variable,
+which we write as $\Th$. It is then natural to seek an experiment which
+maximizes the Mutual Information between, $\Th$ and the observations $X$
 
-Then there exists a function $p^*:[0,\tf]:\ra \R^{n_x}$ st.
+To obtain the joint and margincal distributions of $\Th$ and $X$, we
+need to recall Bayes' formula which relates the posterior of the parameters,
+$p(\th|x)$ to the observations and the parameters' prior. 
+
 \begin{equation}
+p(\th|x) = \frac{L(x|\th)\rho(\th)}{\int_\Th L(x|\th)\rho(\th)}
+\label{eq:bayes_formula}
+\end{equation}
+where $L$ is the likelihood of the observations.
+
+Moreover, the marginal distribution of the parameters, is just its prior,
+$p(\th) = \rho(\th)$, while the joint distribution of the parameters and the
+observations is $$p(x,y) = L(x|\th)\rho(\th)$$.
+
+while the $x$ marginal is $$p(x) = \int_\Theta L(x|\th)\rho(\th) \intd{\th}$$
+Plugging the three expressions for $p(x,\th), p(x)$ and $p(\th)$ in the
+definition, \cref{eq:mutual_info_defn}, gives:
+\begin{equation}
+I(X,\Th) = \int_\Theta \int_X L(x|\th)\rho(\th) \cdot 
+\log \left( \frac{L(x|\th) }
+				{\int_\Theta L(x|\th)\rho(\th) \intd{\th}  } \right)
+\intd{x}\intd{\th}.
+\label{eq:mutual_info_posterior_vs_observations} 
+\end{equation} 
+\Cref{eq:mutual_info_posterior_vs_observations}  is used in
+\cref{ch:optimal_design}.
+
+
+\section{Stochastic Optimal Control}
+Optimal Control theory has three main components - a state, $x$, a control, $u$
+and an objective $J$ which is a functional of $x,u$ and which we try to either
+minimize or maximize. In {\sl Stochastic } Optimal Control, $x$ follows a
+stochastic process, thus the objective, $J$ is most often expressed in terms of
+some average or expectation over the random realizations of $x$. The general
+theory of Optimal Control, as well as the subset dealing explicitly with random
+systems, has had two main analytical techniques - {\sl the Maximum Principle}
+and {\sl Dynamic Programing}, \cite{Fleming1975}. The Maximum Principle uses a
+a variational approach to characterize the optimal pair, $x_{opt}, u_{opt}$
+optimizing $J$, while Dynamic Programing recursively builds up the solution from
+in a backwards induction from the terminal conditions. Both techniques have
+their advantages and disadvantages and we use both in the thesis. It turns out
+that there is a close relation between the two approaches, which is well known
+in the deterministic finite dimensional case, (\cite{Fleming1975,Evansb}. 
+
+To set notation right, we consider the following functional
+\begin{equation}
+J[u] = \Exp_X \left[ \int_0^\tf L(X_s, u_s) \intd{s} + M(X_\tf) \right]
+\label{eq:generic_objective_functional}
+\end{equation}
+over the realizations of $X_t$ governed by an Ito SDE as in
+\cref{eq:generic_Ito_SDE_Rn}, such that the drift $F$ and/or the diffusion
+coefficient, $G$ are parametrized by the control $u(t)$.
+
+Given $J$ in \cref{eq:generic_objective_functional}, we then seek $u$, which
+maximizes it (for example).
+
+\begin{equation}
+u^* = \argmax_{u \in \Udomain} [ J[u] ]
+\label{eq:generic_optimization_statement}
+\end{equation} 
+
+To be mathematically correct, we should specify that the optimization in
+\cref{eq:generic_optimization_statement} is done over the space, $\Udomain$ of
+stochastic processes that are measurable with respect to the filtration
+generated by the underlying Wiener process, $W_t$. Further constraints on
+$\Udomain$ may be imposed by a specific problem.
+
+The simple-looking \cref{eq:generic_objective_functional} can give rise to
+different variations. For one, the final-time, $\tf$ may be variable. Or we may
+face path or terminal constraints for $X_t$. In the stochastic context such
+constraints are only enforceable in a probabilistic sense and they can easily
+make the problem much more difficult. However we will not deal with either of
+these complications and in the sequel we will assume that $\tf$ is fixed and
+that $X_t$ faces no constraints other than that it satisfies its SDE.
+
+Given the objective and the optimization equations,
+\cref{eq:generic_objective_functional,eq:generic_optimization_statement}, the
+Maximum Principle relies on the forward Kolmogorov (Fokker-Planck)
+equation-based definition of the SDE expectation, while Dynamic Programing
+relies on the relation between an SDE expectation and the backward Kolmogorov
+equation.
+
+
+\subsection{The Maximum Principle for Stochastic Optimal Control} 
+\label{sec:maximum_principle_4_stochastic_control}
+The Maximum Principle uses a variational principle to characterize the optimal
+control, $u$ and the optimal {\sl transition } density. Note that the
+expectation in the objective, \cref{eq:generic_objective_functional} can be written in terms of the foward
+probability density of the state $X_t$:
+\begin{align}
+J[u] =&  \Exp_X \left[ \int_0^\tf L(X_s, u_s) \intd{s} + M(X_\tf) \right]
+\notag \\
+&=  \int_0^\tf\int_X L(x, u_s) \cdot f(x,s|x_0,0) \intd{s}\intd{x} 
++ \int_X  M(x)\cdot f(x,\tf|x_0,0)\intd{x}.
+\label{eq:generic_objective_functional_in_terms_of_forward_density}
+\end{align}
+As such the stochastic problem is reduced to a deterministic optimization
+problem but for PDEs, given that $f$ follows the forward PDE in
+\cref{eq:generic_FokkerPlanck}. 
+
+Thus, for this thesis purposes, the Maximum Principle for Stochastic Optimal
+Control is really a Maximum Principle for PDEs. Its variational argument is
+similar in spirit to the Euler-Lagrange equations from the Calculus of
+Variations; one can think of it as a generalization of the zero-tangent
+rule (Fermat's Rule) for finding optima in single-variable calculus. In fact,
+like both the Euler-Lagrange equations and Fermat's Rule, the Maximum Principle
+provides necessary, but not sufficient conditions for an optimum.
+
+Originally, the Maximum Principle was developed for finite-dimensional
+deterministic systems, i.e.\ systems described by ODEs. In that context it is
+known as the {\sl Pontryagin} Maximum Principle and for ODEs, the theoretical
+results of existence and uniqueness of optimal controls are strongest. In the
+infinite dimensional case, the theory is not as unified. TODO refer
+more to Lenhart's chapter \cite{Lenhart2007}.
+
+Still, for PDEs, the basic idea is the same as for ODEs - one 'adjoins' the
+dynamics PDE to the objective and introduces a Lagrange multiplier, which in
+this case is called {\sl the adjoint state}.
+
+Let us rewrite the governing SDE, \cref{eq:generic_Ito_SDE_Rn}, to explicitly
+take the control  account for the control variable, $u(t)$:
+\begin{equation}
+dX_t = F(X,t; u) dt + G(X,t) dW,
+\label{eq:generic_Ito_SDE_Rn_controlled}
+\end{equation} 
+Given the problems considered in this thesis, we only
+illustrate  a one-dimensional SDE. Its corresponding forward density is
+governed by the following Fokker-Planck equation: 
+\begin{equation}
+\di_t \f= -\di_{x } \left[ F (x,t;u) \f(x,t) \right] +  
+\di^2_{x} \left[ D_{ij}(x,t) \f(x,t) \right]
+\label{eq:generic_FokkerPlanck_controlled}.
+\end{equation} 
+where $D(x,t) = G(x,t)^2/2$. We assume that for all $u(t)$, both the SDE and the
+PDE have unique solutions. 
+
+For notational convenience, we will write
+\cref{eq:generic_FokkerPlanck_controlled} as
+$$ \dot{\f} = \L_{u} [\f] $$ where $\L_{u}$ is the differential operator corresponding to the
+right-hand side of the Fokker-Planck equation parametrized by the control $u$.
+For now we will assume that there are no BCs, and the domain of $X$ is all of $\R$.
+
+As we already alluded, the key concept in Maximum Principle for PDEs is to
+adjoin the dynamics, \cref{eq:generic_FokkerPlanck_controlled}, multiplied by
+the adjoint state, $p$ to the objective,
+\cref{eq:generic_objective_functional_in_terms_of_forward_density}
+  
+\begin{align*}
+J[u] =& \int_0^\tf\int_X L(x, u_s) \cdot f(x,s|x_0,0) \intd{s}\intd{x} 
++ \int_X  M(x)\cdot f(x,\tf|x_0,0)\intd{x}
+\\ &+ \int_0^\tf\int_X p \cdot (\di_t f - \L_{u} [\f] ) \intd{s}\intd{x} 
+\end{align*}
+Since $f$ satisfies the PDE, we have added a term that equals zero. 
+However, what this allows us to do is to 'transfer' the time and space
+derivatives from $f$ to $p$, obtaining what is the adjoint PDE. The reason why
+that is productive is that in that form we will be able to form the 'variation'
+of $J$ with respect to the control $u$ and either set it to zero or use this as
+a gradient. 
+
+Let us be specific. 
+  
+  
+\subsection{PDE Optimal Control}
+There has been a lot of recent work on this, in particular \cite{Annunziato2014}
+discuss the relation between dynamic programing and Fokker-Planck-based
+optimization\ldots IN the deterministic, ODE Case, it is known that the adjoint
+state variable happens to equal the gradient of the value function with respect
+to the control along the optimal trajectory\ldots TODO: discuss HJB vs FBK
+connetions\ldots
+
+
+Now we discuss Optimal Control when the dynamics are deterministic but of
+infinite-dimension, i.e. the state evolution is a PDE instead of an ODE.  The
+reason we discuss this, is that optimization of ordinary SDEs in an open-loop
+control is actually a deterministic optimal control problem in infinite
+dimensions.
+
+Why?
+
+Since the objective is probabilistic and the probability density evolution is
+given by the (deterministic) Fokker-Planck PDE, we need to optimize a
+deterministic system whose dynamics are given by the Fokker-Planck equation.
+
+There is no all-encompassing generalization of Pontryagin's Principle to
+infinite dimensions, but a Maximum Principle can be derived for certain systems.
+To illustrate the idea we will discuss a simple case as in \cite{Palmer2011}.
+
+A natural inner-product, $ \langle.,. \rangle$ on functions in $L^2[\R^n]$ is
+given by: $$
+ \langle\psi,\phi  \rangle = \int_{\R^n} \psi(x) \phi(x) \intd{x}
+$$
+Our objective will be to minimize:
+\begin{equation}
+J[u] = \int_0^\tf  \langle L(\cdot,s,u), \f_u(s) \rangle \intd{s} +  
+\langle M(\cdot),\f(\tf) \rangle
+\label{eq:generic_objective_function_probabilistic}  
+\end{equation}.
+
+\Cref{eq:generic_objective_function_probabilistic} is a very natural cost
+function in the stochastic dynamics case, because it can also be written as: 
+$$
+J[u] = \Exp \left[ \int_0^\tf  L(X_s, s,u) \intd{s} + M(X_\tf) \right] 
+$$ which
+is just \cref{eq:generic_objective_function_stochastic}. We use
+\cref{eq:generic_objective_function_stochastic} if we have some feedback and
+want to use dynamic programming. We use
+\cref{eq:generic_objective_function_probabilistic} if we have no observations
+and need to run an open-loop control.
+
+Since, \cref{eq:generic_objective_function_probabilistic} is the objective
+function for deterministic dynamics, we can use Pontryagin's Principle adapted
+to the case of infinite dimensional dynamics (PDEs). 
+
+Introduce an adjoint co-state, $\l \in \R^n$ and let the Hamiltonian, $\H$ be:
+$$
+\H(\f, \l, u)= \langle \phi, L + \Lstar[\l] \rangle$$
+where $\Lstar$ is the adjoint operator to $\L$ defined via:
+$$
+\langle \L [\phi], \l \rangle =\langle \phi, \Lstar[\l] \rangle
+$$
+
+Let $\l$ evolve (backwards) according to:
+\begin{equation*}
 \begin{cases}
-\dot{x}^*(t) &=  \grad_p \H(x^*,p^*, u^*) = f(x^*, u^*)
+-\di_t \l =& \Lstar[\l] + L
 \\
-x(0) &= x_0
+\l(\tf) =& M(x)  
 \end{cases}
-\label{eq:pontryagin_state_ode}
-\end{equation}
+\end{equation*}
+then the optimal control, $u$, is given via
+$$
+u = \argmin_u {\H(\f, \l, u)}
+$$    
+
+An important fact, useful for computations, is that the total derivative of the
+objective with respect to the control is given by the partial derivative of the
+Hamiltonian with respect to the control:
 \begin{equation}
-\begin{cases}
-\dot{p}^*(t) &= -\grad_x \H(x^*,p^*, u^*) = -\grad_xL - p \grad_x f
-\\
-p^*(\tf) &= \grad_x M(x)
-\end{cases}
-\label{eq:pontryagin_adjoint_ode} 
+\grad_u \big[J[u] \big] = \di_u \H(\f, \l, u)
+\label{eq:objective_gradient_wrt_control}
 \end{equation}
-and
-\begin{equation}
-\H(x^*(t), p^*(t), u^*(t)) = \min_{u(t) \in \Udomain(t)}  \H(x^*(t), p^*(t),
-u(t))
-\label{eq:pontryaginH_optimality_condition} 
-\end{equation}
-\end{thm}
-We will not give a proof of this theorem (see A.2 in \cite{Evansb}),
-but we do provide a heuristic derivation in 
-\cref{sec:Pontryagin_heuristic_derivation}, which is very helpful in deriving
-the necessary conditions for PDE dynamics and it explains the otherwise
-mysterious origins of the optimal control Hamiltonian, $\H$, and the adjoint
-state, $p$.
+
+So for a given $u$, we can compute $\f,\l$, calculate the objective gradient
+using \cref{eq:objective_gradient_wrt_control} and then iterate in the direction
+of descent (if we are minimizing).
+
+All that remains is to compute $\Lstar$. It turns out that if we do not have any
+BCs, then
+$$
+\Lstar[\l] = \sum_i F_i(x,t) \cdot \di_{x_i} \l + \sum_{i,j} D_{ij}(x,t)
+\di^2_{x_i x_j}\l 
+$$ 
+which is just the generator of $X$! 
+
+We will see later, that things become more complicated when we need to
+consider a PDE's BCs.
+
+ 
+\subsubsection{Heuristic Derivation of the Optimality Conditions for PDEs}
+\label{sec:Pontryagin_heuristic_derivation}
+TODO: \cite{Borzi2012,Lenhart2007}
+
+  
+  
+  
+\vskip 35pt
+
+
+Unfortunately the coupled system for the state, $f$, the adjoint, $p$ and the
+control is usually not solvable. In some cases, one can express $u$ in terms of
+$f,p$ and thus create a non-linear forward-backward system, by replacing $u$ in
+the respectively forward and backward equations for respectively, $f$ and $p$,
+but due to the coupled nature, this is usually unsolvable all at once. Thus
+iterative methods are required. These come in two main flavours - 1) gradient
+descent and 2) fixed point iteration. 
+
 
 At each time, $t$, we obtain the optimal control $u(t)$, by solving
 \cref{eq:pontryaginH_optimality_condition}. This can be easy, hard or useless.
@@ -762,77 +1018,18 @@ and then \cref{eq:pontryagin_state_ode,eq:pontryagin_adjoint_ode}. Basic
 numerical techniques using this idea are discussed in the appendix in
 \cite{Kirk2004}. However, if we are going to be solving the problem numerically,
 then the direct method might be superior, see \cite{Ross2005} for a discussion.
- 
-Finally, it is possible that \cref{eq:pontryaginH_optimality_condition} does not
-depend on $u$ explicitly (it will still depend  on $u$ implicitly through $x,p$)
-and so we cannot find $u$ at all by minimizing $\H$ wrt.\ $u$. This happens, for
-example, if the cost, $L$, does not depend on $u$, the dynamics, $f$, are linear
-in $u$ and $p=0$ over an interval of positive length. Such an optimal control
-problem is called singular and it is discussed briefly in \cite{Kirk2004}, and
-the theory can still be useful in finding a solution, but many complications can
-and do arise. We face a singular control problem in our own work later, however
-instead of tackling it head on, we merely regularize the problem - thus we will
-not say much more on Singular Control Problems.
+   
 
-The version of Pontryagin's Principle for Fixed End Point, meaning $x$ has some
-terminal conditions, is very similar to the one with free end-point. Suppose 
-\begin{equation}
-\dot{x} = f(x,t); 
-\quad
-\begin{cases}
-x(0) = x_0
-\\
-x(\tf) = x_f
-\end{cases}
-\label{eq:generic_dynamics_deterministic_fixed_end_point}
-\end{equation}
-
-\begin{thm}[Pontryagin's Fixed-Time, Fixed-End-Point] Assume $u^*(t)$ is
-optimal for
-\cref{eq:generic_objective_function_deterministic,eq:generic_dynamics_deterministic_fixed_end_point}
-and that $x^*$ is the corresponding trajectory. 
-
-Then there exists a function $p^*:[0,\tf]:\ra \R^{n_x}$ st.
-\begin{equation}
-\begin{cases}
-\dot{x}^*(t) &=  \grad_p \H(x^*,p^*, u^*) = f(x^*, u^*)
-\\
-x(0) &= x_0
-\\
-x(\tf) &= x_f
-\end{cases}
-\label{eq:pontryagin_state_ode}
-\end{equation}
-\begin{equation}
-\dot{p}^*(t) &= -\grad_x \H(x^*,p^*, u^*) = -\grad_xL - p \grad_x f
-\label{eq:pontryagin_adjoint_ode} 
-\end{equation}
-and
-\begin{equation}
-\H(x^*(t), p^*(t), u^*(t)) = \min_{u(t) \in \Udomain(t)}  \H(x^*(t), p^*(t),
-u(t))
-\label{eq:pontryaginH_optimality_condition} 
-\end{equation}
-\end{thm}
-I.e. $p$ loses its final conditions because $x$ has them. This relates to the
-variational nature of Pontryagin's Principle and the idea that $p$ represents
-the sensitivity of the objective wrt. small changes in $x$. Thus, if $x$ is
-fixed, there are no variations and $p$ can be anything.
-% To illustrate Pontryagin's Principle we will solve the moon
-% lander problem (Ex. 4.4.4 \cite{Evansb}), with the twist of holding the final
-% time fixed. 
-% \begin{ex}
-% 
-% \end{ex}
 
 \subsection{Dynamic Programing - the Hamilton-Jacobi-Bellman equation} 
 Dynamic Programing uses backwards recursion to tabulate the optimal control
-starting from the terminal time. The basic object in dynamic programing is the value function, $v$. In order to
-introduce it, we first extend our definition for the objective, $J$, to include later
-times, with different initial conditions. 
+starting from the terminal time. The basic object in dynamic programing is the
+value function, $v$. In order to introduce it, we first extend our definition
+for the objective, $J$, to include later times, with different initial
+conditions.
 
 The running cost-to-go corresponding to
-\cref{eq:generic_objective_function_deterministic} is:
+\cref{eq:generic_objective} is:
 \begin{equation}
 J[u; x, t] = \int_t^\tf L(x_s, u_s) \intd{s} + M(x_\tf), \quad x_t = x
 \label{eq:generic_cost_to_go_deterministic} 
@@ -867,15 +1064,7 @@ v(x,\tf) &= M(x)
 We will not derive the HJB equation here, but we will derive a similar version
 later for the stochastic case, when the dynamics are given by SDEs. 
 
-% \subsection{Model Predictive Control}
-% Solving the HJB equations and obtaining a feedback control is usually
-% impossible. Thus a practical alternative is to solve a simplified problem on a
-% limited horizon and use the simplified solution now and then after stepping
-% forward in time and observing the system in a new position, to solve a revised
-% limited horizon problem and use the new solution.
-% Let us make this more precise.
-
-\section{Stochastic Optimal Control}
+\subsubsection{Dynamic Programing for Stochastic Optimal Control}
 \label{sec:stochastic_control}
 Here we extend the Dynamic Programing theory to the case where the dynamics are
 governed by an SDE:
@@ -962,186 +1151,6 @@ u^*(t) &= \argmax_{u \in \Udomain(t)}
 \end{thm}
 % A rigorous proof can be found in \cite{Krylov2008}, sec???ch???
 
-\section{Deterministic Optimal Control in Infinite Dimensions}
-Now we discuss Optimal Control when the dynamics are deterministic but of
-infinite-dimension, i.e. the state evolution is a PDE instead of an ODE.  The
-reason we discuss this, is that optimization of ordinary SDEs in an open-loop
-control is actually a deterministic optimal control problem in infinite
-dimensions.
-
-Why?
-
-Since the objective is probabilistic and the probability density evolution is
-given by the (deterministic) Fokker-Planck PDE, we need to optimize a
-deterministic system whose dynamics are given by the Fokker-Planck equation.
-
-There is no all-encompassing generalization of Pontryagin's Principle to
-infinite dimensions, but a Maximum Principle can be derived for certain systems.
-To illustrate the idea we will discuss a simple case as in \cite{Palmer2011}.
-Our controlled SDE will be given by: 
-$$ dX_t = F(X,t, u) dt + G(X,t) dW, $$
-The corresponding probability density is given by: $$ \di_t \f=
--\sum_i \di_{x_i} \left[ F_i(x,t,u) \f(x,t) \right] + \sum_{i,j}  \di^2_{x_i
-x_j} \left[ D_{ij}(x,t) \f(x,t) \right] $$ which we will write as $$ \dot{\f} =
-\L_{u} [\f] $$ where $\L_{u}$ is the differential operator corresponding to the
-RHS of the Fokker-Planck equation parametrized by the control $u$. For now we
-will assume that there are no BCs, and the domain of $X$ is all of $\R^n$.
-
-A natural inner-product, $ \langle.,. \rangle$ on functions in $L^2[\R^n]$ is
-given by: $$
- \langle\psi,\phi  \rangle = \int_{\R^n} \psi(x) \phi(x) \intd{x}
-$$
-Our objective will be to minimize:
-\begin{equation}
-J[u] = \int_0^\tf  \langle L(\cdot,s,u), \f_u(s) \rangle \intd{s} +  
-\langle M(\cdot),\f(\tf) \rangle
-\label{eq:generic_objective_function_probabilistic}  
-\end{equation}.
-
-\Cref{eq:generic_objective_function_probabilistic} is a very natural cost
-function in the stochastic dynamics case, because it can also be written as: 
-$$
-J[u] = \Exp \left[ \int_0^\tf  L(X_s, s,u) \intd{s} + M(X_\tf) \right] 
-$$ which
-is just \cref{eq:generic_objective_function_stochastic}. We use
-\cref{eq:generic_objective_function_stochastic} if we have some feedback and
-want to use dynamic programming. We use
-\cref{eq:generic_objective_function_probabilistic} if we have no observations
-and need to run an open-loop control.
-
-Since, \cref{eq:generic_objective_function_probabilistic} is the objective
-function for deterministic dynamics, we can use Pontryagin's Principle adapted
-to the case of infinite dimensional dynamics (PDEs). 
-
-Introduce an adjoint co-state, $\l \in \R^n$ and let the Hamiltonian, $\H$ be:
-$$
-\H(\f, \l, u)= \langle \phi, L + \Lstar[\l] \rangle$$
-where $\Lstar$ is the adjoint operator to $\L$ defined via:
-$$
-\langle \L [\phi], \l \rangle =\langle \phi, \Lstar[\l] \rangle
-$$
-
-Let $\l$ evolve (backwards) according to:
-\begin{equation*}
-\begin{cases}
--\di_t \l =& \Lstar[\l] + L
-\\
-\l(\tf) =& M(x)  
-\end{cases}
-\end{equation*}
-then the optimal control, $u$, is given via
-$$
-u = \argmin_u {\H(\f, \l, u)}
-$$   
-
-An important fact, useful for computations, is that the total derivative of the
-objective with respect to the control is given by the partial derivative of the
-Hamiltonian with respect to the control:
-\begin{equation}
-\grad_u \big[J[u] \big] = \di_u \H(\f, \l, u)
-\label{eq:objective_gradient_wrt_control}
-\end{equation}
-
-So for a given $u$, we can compute $\f,\l$, calculate the objective gradient
-using \cref{eq:objective_gradient_wrt_control} and then iterate in the direction
-of descent (if we are minimizing).
-
-All that remains is to compute $\Lstar$. It turns out that if we do not have any
-BCs, then
-$$
-\Lstar[\l] = \sum_i F_i(x,t) \cdot \di_{x_i} \l + \sum_{i,j} D_{ij}(x,t)
-\di^2_{x_i x_j}\l 
-$$ 
-which is just the generator of $X$! 
-
-We will see later, that things become more complicated when we need to
-consider a PDE's BCs.
-
- 
-\subsection{Heuristic Derivation of the Optimality Conditions for PDEs}
-\label{sec:Pontryagin_heuristic_derivation}
-TODO: \cite{Borzi2012,Lenhart2007}
-
-\section{Optimal Design}
-\label{sec:optimal_design}
-Optimal design is approach to design of statistical experiments that is guided
-by the desire to optimize some formal measure of the parameter estimates of the
-experiments, \cite{Pukelsheim2006}. For example, perhaps one would like to
-perform linear regression with a polynomial model and one has some latitude over
-at which points to evaluate the polynomial. Common criteria when selecting the
-design, e.g the polynomial points, are minimizing the determinant or the trace
-of the covariance matrix of the parameter estimators. The covariance matrix,
-also known as the Fisher Information, however often depends on the very
-parameters that one seeks to estimate.
-
-An alternative to the Fisher Information as an objective for the formal design
-of experiments is to use of concepts from Information Theory, \cite{MacKay2003}.
-A related topic in the Machine Learning literature is called 'Active Learning',
-e.g. see \cite{Cohn1996,Settles2010,Seeger2008}. In the third part of the
-thesis, \cref{ch:optimal_design}, we will use the {\sl Mutual Information}
-criteria as guideline in choosing stimulation to facilitate parameter
-estimation. Thus we now define and discuss the Mutual Information between two
-random variables $X, \Th$. For reference we will follow \cite{MacKay2003}.
-
-\begin{defn}Mutual Information:
-Given two random variables $X,\Th$ with joint probability density
-$p(x,\th)$ and marginal densities $p(x), p(\th)$, the Mutual Information between
-$X$ and $\Th$ is given by
-\begin{equation}
-I(X,\Theta) = \int_\Theta \int_X p(x,\th) \cdot \log \left(
-\frac{p(x,\th)}{p(x)p(\th)}\right) \intd{x} \intd{\th}
-\label{eq:mutual_info_defn}
-\end{equation}
-\end{defn}
-
-It is obvious that if $X,\Th$ are independent than $I(X,\Theta) = 0$ and it can
-be verified that $I\geq0$ and that it is maximized if $\Theta$ is a function of
-$X$; that is, if the entropy of $\Th$ conditional on $X$ is zero. 
-The mutual information, $I(X,\Th)$ represents the 'average
-reduction in uncertainty about $\Th$ that results from learning the value of
-$X$' \cite{MacKay2003}. This statement is formally correct if one takes
- 'uncertainty' to mean the entropy of a random
- variable.
- 
-In order to make use of the Mutual Information in a parameter estimation
-context, we need to specify a prior belief distribution over the  parameters.  
-$$
-\rho(\th) = \Prob(\Theta = \th)
-$$
-A prior distribution is standard and central concept in Bayesian statistics.
- 
-With that we are treating the unknown parameter, $\th$ like a random variable,
-which we write as $\Th$. It is then natural to seek an experiment which
-maximizes the Mutual Information between, $\Th$ and the observations $X$
-
-To obtain the joint and margincal distributions of $\Th$ and $X$, we
-need to recall Bayes' formula which relates the posterior of the parameters,
-$p(\th|x)$ to the observations and the parameters' prior. 
-
-\begin{equation}
-p(\th|x) = \frac{L(x|\th)\rho(\th)}{\int_\Th L(x|\th)\rho(\th)}
-\label{eq:bayes_formula}
-\end{equation}
-where $L$ is the likelihood of the observations.
-
-Moreover, the marginal distribution of the parameters, is just its prior,
-$p(\th) = \rho(\th)$, while the joint distribution of the parameters and the
-observations is $$p(x,y) = L(x|\th)\rho(\th)$$.
-
-while the $x$ marginal is $$p(x) = \int_\Theta L(x|\th)\rho(\th) \intd{\th}$$
-Plugging the three expressions for $p(x,\th), p(x)$ and $p(\th)$ in the
-definition, \cref{eq:mutual_info_defn}, gives:
-\begin{equation}
-I(X,\Th) = \int_\Theta \int_X L(x|\th)\rho(\th) \cdot 
-\log \left( \frac{L(x|\th) }
-				{\int_\Theta L(x|\th)\rho(\th) \intd{\th}  } \right)
-\intd{x}\intd{\th}.
-\label{eq:mutual_info_posterior_vs_observations} 
-\end{equation} 
-\Cref{eq:mutual_info_posterior_vs_observations}  is used in
-\cref{ch:optimal_design}.
-
-
 
 
 \section{Mathematical Models in Neuroscience}
@@ -1149,31 +1158,98 @@ I(X,\Th) = \int_\Theta \int_X L(x|\th)\rho(\th) \cdot
 We now describe in detail the basic mathematical model of a neuron that will be
 used in the sequel. 
 
-An introduction to mathematical models in neuroscience is given in Gerstner and
-Kistler, \cite{Gerstner2002}, also available online, while the book Stochastic
-Methods in Neuroscience, \cite{Laing2009} gives a nice overview of several
-current research applications of stochastic techniques to neuroscience.
+An introduction to mathematical models in neuroscience is given in Gerstner et
+al., \cite{Gerstner2014}, also available online. The book Stochastic Methods in
+Neuroscience, \cite{Laing2009} gives a nice overview of several current research
+applications of stochastic techniques to neuroscience.
 
+Neurons' most important property is their membrane potential - the electric
+potential difference between the cell's interior and its surroundings. Neurons
+relay information by means of voltage spikes - sudden sharp increases in their
+membrane potential, which are then transmitted to other neurons that are
+chemically or electrically connected to the spiking neuron. The information
+content is thought to be contained in the timing of the spike, or equivalently
+in the length of the time-interval between subsequent spikes. In the simplest
+case, this can be thought of as a {\sl firing rate} - the average number of
+spikes per time interval, but more complicated coding schemes are hypothesized
+to exist. A spike can be triggered by spikes from impinging neurons or, on the
+front line, for sensory neurons spikes are triggered by external stimuli, for
+example light photons in the case of visual reception neurons. 
 
-Neurons relay information by means of voltage spikes - sudden sharp increases in
-voltage. Although many details remain unclear, the information content is
-thought to be contained in the length of the time-interval between these spikes.
-In the simplest case, this can be thought of as a rate - the average number of
-spikes per time interval, but more complicated coding schemes are hypothesized to
-exist. 
+Given a small positive stimulus, the voltage of a neuron increases linearly, but
+then relaxes back down to its equilibrium, pre-stimulus, level. However, if the
+stimulus is sufficiently strong or if there are many small stimuli in a
+sufficiently short interim, the voltage will then go through a large
+ non-linear stereotypical excursion before resetting back down to its equilibrium
+ - this is a spike. The physical underpinnings of this are thought to be ion
+ channels with different time-scales which act excitatory on very short time
+ scales and inhibitory on slightly larger ones (a spike unfolds on the order of
+ 1-2 milliseconds). The first successful mathematical model describing this
+ phenomena is the famous Hodgkin-Huxley (HH) model, which forms a system of 4
+ ODEs, one for the membrane voltage and three for the dynamics of the ion
+ channels. From a practical point of view however, the HH model of
+ spike-dynamics is quite complicated if one is only interested in spike timings,
+ rather than detailed ion channel dynamics. Thus there have been several
+ reductions in the model. The standard approach is to keep the voltage equation
+ as well as one more equation for a 'recovery' variable which works on a slower
+ scale than the voltage in order to produce the very sharp up-and-down voltage
+ excursions. Two popular examples of such reductions are the Fitzhugh-Nagumo
+ model and the Morris-Lecar model. The Morris-Lecar model
+ is 2-dimension ODE for the variables $v(t), w(t)$, which reads:
+\begin{equation}
+\left\{
+\begin{array}{ccl}
+\dot{v}(t)  &=& \frac{1}{C}\Big(-g_{Ca}m_\infty(v) (v-V_{C_a}) -
+g_K w (v-V_K) \\ && 
+-g_L(v-V_L)+I(t)  \Big) \\
+\dot{w}(t)&=&\left(\alpha(v)(1-w) - \beta(w)w\right)
+\end{array}
+\right.
+\label{eq:ML_original_deterministic}
+\end{equation}
+where the auxilliary functions, $m_\infty, \alpha, \beta$ are given by:
+\begin{eqnarray*}
+m_\infty(v)&=&\frac{1}{2}\left(1+\tanh\left(\frac{v-V_1}{V_2}\right)\right),\\
+\alpha(v) &=& \frac{1}{2}\phi \cosh\left(\frac{v-V_3}{2V_4}\right)\left(1+\tanh\left(\frac{v-V_3}{V_4}\right)\right),\\
+\beta(v) &=& \frac{1}{2}\phi \cosh\left(\frac{v-V_3}{2V_4}\right)\left(1-\tanh\left(\frac{v-V_3}{V_4}\right)\right).
+\end{eqnarray*}
+TODO: Verify ML is right. 
+The term, $I(t)$ represents current applied on the neural, either from natural
+external stimulation, an experimental control or impingent neurons. 
 
-Many experiments allow for manipulating an individual neural cell. A natural
-goal then is to make a cell produce a given spike train. This may arise, for
-example, in brain-machine interfaces or in artificial prosthetics. 
+In \cref{sec:morris_lecar_control}, we describe how the Morris-Lecar
+deterministic ODE of \cref{eq:ML_original_deterministic} is extended to an SDE.   
+ 
+The 2-dimensional models like MOrris-Lecar are much easier to work with
+mathematically and experimentally, for parameter estimation, for example, but
+they still expend a lot of effort in describing the details of a neural spike.
+If one is only interested in the timing of the spike then yet another
+simplification is to keep only the voltage dynamics and then arbitrarily declare
+a spike has occurred whenever the voltage crosses some appropriate threshold,
+$v_{thresh}$. For analytical purposes this turns out to be both convenient and
+satisfactory. The basic integrate-and-fire model then is just
+\begin{equation}
+\begin{gathered}
+\dot{v} = \left(I(t) - \frac{(v - \m)}{\tc} \right) \intd{t} 
+\\
+v(\ts) = v_{thresh} \implies  
+\begin{cases}
+v(\ts^+) = 0 &  
+\end{cases}
+\end{gathered}
+\label{eq:deterministic_IF}
+\end{equation}
 
+In reality, the external stimulation to a neuron is highly erratic and
+unpredictable. When the randomness is mostly in the input, $I$,
+one can approximate this by adding to the input $I$ a white, Gaussian
+noise, in the terminology of this thesis this is just a term proportional to
+a Wiener process increment, $\beta dW_t$.
 
-TODO: Go from HH $\ra$ FN/ML  $\rightarrow$ LIF
-
-Then add noise\ldots
-
-Thus the final simplification of the basic spike-generation mechanism is the
-noisy leaky-integrate-and-fire model: 
-%TODO: tau_c -> tau
+Thus the final model of the basic spike-generation mechanism that accounts for
+its most important aspects yet retains analytical tractability is the noisy
+leaky-integrate-and-fire model:
+% TODO: tau_c -> tau
 \begin{equation}
 \begin{gathered}
 dX_t = \left(\a(t) - \frac{(X_t - \m)}{\tc} \right) \intd{t} + \b \intd{W_t},
@@ -1188,10 +1264,10 @@ X(\ts^+) = 0 &
 \label{eq:X_evolution_uo}
 \end{equation}
 That is $X_t$ follows an OU process, but upon reaching a pre-determined
-threshold, $\xth$, a 'spike' is deemed to have occurred and the process is 'reset' to an
-initial value, here $0$.
+threshold, $\xth$, a 'spike' is deemed to have occurred and the process is
+'reset' to an initial value, here $0$.
 
-Alternatives to the hard-threshold integrate-and-fire model are so called
+Alternatives to the hard-threshold integrate-and-fire model are so-called
 'soft-threshold' models which use a {\sl hazard} function which is akin to the
 intensity of a Poisson Process to determine the spike time. The hazard function
 is increasing in voltage, thus higher voltages imply higher likelihood of
