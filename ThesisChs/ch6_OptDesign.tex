@@ -5,8 +5,19 @@
 
  %TODO: change to consistent notation:
  
- \section{Problem Introduction and LIterature Review (.0)}
+\section{Thesis Context}
+ In the last of the three main chapters of the thesis, we discuss the problem of
+ stimulating a neuron model system in order to obtain higher fidelity model
+ parameter estimates. We use the Mutual Information as the formal criterion for optimization. Since the
+ parameters of the system are not known, we demonstrate why it is impossible to derive a HJB equation for the
+ optimization problem in the full-observation case. However, one can still
+ derive a variational, Maximum-Principle-based iterative schema to obtain the
+ optimal stimulus. We then use this to find the optimal stimulation and perform
+ several simulated estimations to demonstrate the superiority of the
+ MI-optimal control over common-sense alternatives. 
  
+\section{Problem Introduction} 
+Problem introduction in the context of the extant literature.
 
 \subsection{Mutual Information as the formal criterion for Optimal Design}
 The use of Mutual Information as a design criterion is newer than the use of
@@ -82,8 +93,8 @@ Identification, which is a very researched topic in the control community.
 Here's a review paper \cite{Gevers2011} from the Control Theory Community. 
 They talk about things like Transfer Functions etc. usually things are in
 Discrete time. There is no notion of SDEs although there is a=often a white
-noise error term, so in a sense these are discretized SDEs, although without ay
-of the formalism of Ito Calculus etc. 
+noise error term, so in a sense these are discretized SDEs, although without 
+the formalism of Ito Calculus etc. 
 
 The papers on Adaptive Optimal Design from the Myung et al group in Ohio is well
 cited (the main 2010 \cite{Cavagnaro2010} article has 45 citations) 
@@ -189,7 +200,7 @@ stimulus, belief distn over the params. In Algos, 1-7 of their paper they give a
 very readable summary of particle filtering! (which in turn sources
 \cite{Liu2001})
 
-\section{Problem Formulation}
+\section{Problem Formulation for full trajecotry-observation}
 The basic goal is to perturb a dynamical system in an 'optimal' way such as to
 estimate its structural parameters. 
 
@@ -1981,8 +1992,8 @@ that that to be the case as initial guess (for $\a_k$) and if we started from
 different initial guess for $\a_k$ we will not be able to converge to this,
 although, that is likely more a fault of the gradient algorithm\ldots
 
-However, we see that the difference is really very small. WHereas in the $\b$
-uncertainty only,   \cref{fig:FBSoln_OU_J_iterations}, we could triple the value
+However, we see that the difference is really very small. Whereas in the $\b$
+uncertainty only, \cref{fig:FBSoln_OU_J_iterations}, we could triple the value
 of the objective, $J$ by going from the initial guess ($\a=0$) to the optimal
 control, here the difference between bang-bang, do-nothing, and optimal control
 is very, very slight!
@@ -2005,17 +2016,18 @@ Uf!
   \includegraphics[width=1\textwidth]{Figs/OUFBSolver_BetaMu/FB_alpha_iterates_uICs_5_Tf=2.pdf}
   \caption[tableofCs]{The gradient ascent iterations for $f,p,\a$ when both
   $\tc, \m$ are uncertain. The initial guess for $\a_0$ is in 'blue' on the
-  right-most }
+  right-most}
   \label{fig:fpalpha_iterates_mubeta}
 \end{center}
 \end{figure}
 
 
 
+\clearpage
 
 
-
-\section{Problem Formulation}
+\section{Problem Formulation with only Crossing-Time Observations}
+ 
 The basic goal of 'Optimal Design' is to perturb a dynamical system in an
 'optimal' way such as to 'best' estimate its structural parameters. 
 
@@ -2287,7 +2299,8 @@ In short, the equation for the adjoint function, $p$, is
 \end{equation}
 
 In practice of-course, we will set the terminal conditions for $p_\th$ at some
-finite value of $t$
+finite value of $t$, although it is not immediately obvious what that
+value should be.
 
 \vskip10pt The whole goal of this exercise is to calculate the differential of
 $I$ in \cref{eq:I_mutual_info_objective_in_terms_of_dixf},
@@ -2386,111 +2399,119 @@ of uncertainty) of the prior on the resulting optimal control}
 
 We will run the following test:
 
-Assume the true parameters
-$$
- \m = 0; \b = 1; \s = 1.;
-$$
-We will assume we know $\s, \m$ and don't know $\b$ so we are trying to
-maximize the Mutual Information between $\ts$ and $\b$.
+Assume the true parameters $$
+ \m = 0; \tc = 1; \b = 1.;
+$$ We will assume we know $\s, \m$ and don't know the time constant, $\tc$ so we
+are trying to maximize the Mutual Information between $\ts$ and $\tc$.
  
-Let's assume a very simple uniform prior on $\b$, $\b_i = \{.5, 1. 2\},$
-each with probability 1/3. 
+Let's assume a very simple uniform prior on $\tc$, $\tc_i = \{0.25, 1.5, 2.8
+, 4.0\},$ each with probability 1/4.
 
 Then running the gradient ascent (details of the gradient ascent are omitted) we
 get the controls, objective and hitting time densities shown in 
 \cref{fig:hitting_time_density_g_aopt_bprior}. The optimal control seems to be
-independent of the # of pts in the prior (i.e. instead of 3 we could use 5 pts
-with weight 1/5 and get the same opt. control as in
-\cref{fig:hitting_time_density_g_aopt_bprior}).
+independent of the number of point in the prior (i.e. instead of 4 we could use
+32 pts with weight 1/32 and get the same opt. control as in
+\cref{fig:hitting_time_density_g_aopt_bprior}). 
+
+{\color{red} 
+WARNING: The optimal control search routines is VERY sensitive to the initial
+conditions. The one shown here is the one that has been empirically through
+bitter experience been found to give the highest MI, but currently there is no
+rigorous method to find it starting from arbitrary ICs (or from zero ICs for
+that mater) }
 
 
 
-\begin{figure}[htp] 
+\begin{figure}[htp]
 \begin{center}
-  \includegraphics[width=1\textwidth]{Figs/FP_Adjoint/ExampleOptControl_MI_HT.pdf}
+  \includegraphics[width=1\textwidth]{Figs/FP_Adjoint/OptControl_MI_HT_4.pdf}
   \caption[labelInTOC]{The gradient ascent for the optimization of $I$ in
   \cref{eq:I_mutual_info_objective_in_terms_of_dixf}. Top panel, the initial and
-  the optimal optimal controls, $\a_{0}(t), \a_{opt}(t)$
-   true' density $
-  g_{\a}(s|\b = 1.)$, ) given various controls (top panel) and the resulting Mutual Information ($I$ ) i.e using \cref{eq:J_mutual_info_objective} NOT \cref{eq:J_mutual_info_rate_objective}.
+  the optimal optimal controls, $\a_{0}(t), \a_{opt}(t)$. Middle Panel
+  shows the progress of the Objective Mutual Information ($I$) 
+  (\cref{eq:J_mutual_info_objective}). 
   The bottom plot shows the hitting times $g(t| \tc)$ corresponding to the 3
-  distinct values of $\tc$ in the prior $\rho(\tc)$}
+  distinct values of $\tc$ in the prior $\rho(\tc)$}  
   \label{fig:hitting_time_density_g_aopt_bprior}  
-\end{center}
-\end{figure} 
+\end{center}   
+\end{figure}  
 
 \subsubsection{Aside: the nitty-gritty of the estimation procedure}
 We have posed a fairly-simple estimation objective, in that it amounts to single
 variable optimization. The negative log-likelihood of an observed hitting-time
 set $\{t_n\}$ is
 \begin{equation}
-l(\b) = - \sum_n \log ( g(t_n | \b) ) =  - \sum_n \log ( -D \di_x f(t_n |
-\b) |_{\xth} )
+l(\tc) = - \sum_n \log ( g(t_n | \tc) ) =  - \sum_n \log ( -D \di_x f(t_n |
+\tc) |_{\xth} )
 \end{equation}
 
 The distributions are exemplified in
-\cref{fig:log_likelihood_beta_examples_1000,fig:log_likelihood_beta_examples_10000,fig:log_likelihood_beta_examples_100000},
-for three different values of $N_s = 1e3, 1e4, 1e5$ respectively. We see that in
-principle it is very hard to distinguish between different values of $\b$. In
-\cref{fig:log_likelihood_beta_examples_10000}, we see the first indications that
-the Opt Control, might have some superiority over the 'Crit' Control (for
-example) as it seems to estimate a $\b$ closer to 1 (the 'true' value). However,
-on average, the different shapes of $\a(t)$ seems to have a very limited impact
-on the estimates for $\b$ (even though it has a very obvious impact on the shape
-of the hitting time dist'n $g(t)$).
+\cref{fig:log_likelihood_beta_examples_100000},
+for three different values of $N_s =  1e5$. We see that for the constant
+stimulations, $\a = \a_{crit}, \a_{max}$ it is very hard to
+distinguish between different values of $\tc$. 
+
+In \cref{fig:log_likelihood_beta_examples_100000} as well as in 
+\cref{fig:hitting_time_density_g_aopt_bprior}, we get an indication for why
+the 'optimal control' is better than the constants. For the constant control
+the different hitting time densities look like local perturbations of each
+other, either a little more or a little less, but for the optimal control they
+are shifted, which means that we see the first indications that the Opt Control,
+might have some superiority over the 'Crit' Control (for example) as it seems to estimate a $\tc$ closer to 1 (the 'true' value). However, on average, the different shapes of $\a(t)$ seems to have a very limited impact on the estimates for $\tc$ (even though it has a very obvious impact on the shape of the hitting time distribution $g(t)$).
 
 
-\begin{figure}[h]
-\begin{center} 
-\subfloat[opt]  
-{
-\includegraphics[width=.75\textwidth]
-{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a0.pdf}
-}
-\\   
-\subfloat[crit]
-{
-\includegraphics[width=.75\textwidth]
-{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a1.pdf}
-}
-\\
-\subfloat[max] 
-{
-\includegraphics[width=.75\textwidth]
-{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a2.pdf}
-}
-\caption[labelInTOC]{Example of Empirical vs. Analytical Hitting time
-distributions and the associated log-likelihoods. $N_s = 1e3$}
-\label{fig:log_likelihood_beta_examples_1000}
-\end{center}
-\end{figure} 
-
-
-\begin{figure}[h]
-\begin{center}
-\subfloat[opt]
-{
-\includegraphics[width=.75\textwidth]
-{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a0.pdf}
-}
-\\
-\subfloat[crit]
-{
-\includegraphics[width=.75\textwidth]
-{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a1.pdf}
-}
-\\ 
-\subfloat[max]
-{
-\includegraphics[width=.75\textwidth]
-{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a2.pdf}
-}
-\caption[labelInTOC]{Same as \cref{fig:log_likelihood_beta_examples_1000}, but
-with  $N_s = 1e4$. Notice that ( but only slightly ) the 'opt' control tilts in
-the right direction for the $\b$ estimate (i.e. towards 1). }
-\label{fig:log_likelihood_beta_examples_10000}  
-\end{center}
-\end{figure}
+% \begin{figure}[h]
+% \begin{center} 
+% \subfloat[opt]  
+% {
+% \includegraphics[width=.75\textwidth]
+% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a0.pdf}
+% }
+% \\   
+% \subfloat[crit]
+% {
+% \includegraphics[width=.75\textwidth]
+% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a1.pdf}
+% }
+% \\
+% \subfloat[max] 
+% {
+% \includegraphics[width=.75\textwidth]
+% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a2.pdf}
+% }
+% \caption[labelInTOC]{Example of Empirical vs. Analytical Hitting time
+% distributions and the associated log-likelihoods. $N_s = 1e3$}
+% \label{fig:log_likelihood_beta_examples_1000}
+% \end{center}
+% \end{figure} 
+% 
+% 
+% \begin{figure}[h]
+% \begin{center}
+% \subfloat[opt]
+% {
+% \includegraphics[width=.75\textwidth]
+% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a0.pdf}
+% }
+% \\
+% \subfloat[crit]
+% {
+% \includegraphics[width=.75\textwidth]
+% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a1.pdf}
+% }
+% \\ 
+% \subfloat[max]
+% {
+% \includegraphics[width=.75\textwidth]
+% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a2.pdf}
+% }
+% \caption[labelInTOC]{Same as \cref{fig:log_likelihood_beta_examples_1000}, but
+% with  $N_s = 1e4$. Notice that ( but only slightly ) the 'opt' control tilts in
+% the right direction for the $\b$ estimate (i.e. towards 1). }
+% \label{fig:log_likelihood_beta_examples_10000}  
+% \end{center}
+% \end{figure}
 
 \begin{figure}[h] 
 \begin{center}
@@ -2500,7 +2521,7 @@ the right direction for the $\b$ estimate (i.e. towards 1). }
 {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a0.pdf}
 }
 \\
-\subfloat[crit]
+\subfloat[crit] 
 {
 \includegraphics[width=.75\textwidth]
 {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a1.pdf}
@@ -2511,9 +2532,9 @@ the right direction for the $\b$ estimate (i.e. towards 1). }
 \includegraphics[width=.75\textwidth]
 {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a2.pdf}
 }
-\caption[labelInTOC]{Same as  
-\cref{fig:log_likelihood_beta_examples_1000,fig:log_likelihood_beta_examples_10000}
-but with $N_s = 1e5$ hits}
+\caption[labelInTOC]{Example of Empirical vs.\ Analytical Hitting time
+distributions, $g(t|\t;\a)$, and the associated log-likelihoods. $N_s = 1e5$
+hits}
 \label{fig:log_likelihood_beta_examples_100000}
 \end{center}
 \end{figure}  
@@ -2527,16 +2548,16 @@ As is we have 3 candidates for perturbing the hitting times:
 the optimal gradient-ascent-based  control $\a_{opt}$ (see
 \cref{fig:hitting_time_density_g_aopt_bprior} top panel)
 \item   the 'critical' constant control
-$\a_{crit}$, ($\a_{crit}(t) = 1/\b$)
+$\a_{crit}$, ($\a_{crit}(t) =  \tc$)
 \item  the max constant control, $\amax$ ($=2$)
 \end{enumerate} 
 
-We now simulate $N_b = 100$ blocks of $N_s=1000$ hitting times each for the
-3 alphas and then estimate $\b$ over each set using MaxLikelihood over our
-computed expression for the density, $g(t|\tc; \a(t) )$). Examples for
-differnt $N_s$ of the hitting time empirical
-distribution are shown in \cref{fig:log_likelihood_beta_examples_1000} etc..
-Naturally, for each control, we use the same gaussian random draws per block of $N_s$ Hitting of times).
+We now simulate $N_b $ blocks of $N_s $ hitting times each for the
+3 alphas and then estimate $\tc$ over each set using MaxLikelihood over our
+computed expression for the density, $g(t|\tc; \a(t) )$). 
+Naturally, for each control, we use the same Gaussian random draws per block of
+$N_s$ Hitting of times). See \cref{fig:log_likelihood_beta_examples_100000} for
+a empirical distribution of $\ts$ for $N_s = 1e5$
 %\usepackage{graphics} is needed for \includegraphics
 % \begin{figure}[htp]
 % \begin{center}
@@ -2553,49 +2574,74 @@ The estimation results are tabulated in in
 \begin{table}
 \subfloat[$N_b=1000, N_s = 1e2$]{
 \begin{tabular}{ccc}
-\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_100.txt}
+\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_100.txt}
 \end{tabular}
 }
 \subfloat[$N_b=100, N_s = 1e3$]{
 \begin{tabular}{ccc}
-\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_1000.txt}
+\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_1000.txt}
 \end{tabular}
 }\\
 \subfloat[$N_b=10, N_s = 1e4$]{
 \begin{tabular}{ccc}
-\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_10000.txt}
+\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_10000.txt}
 \end{tabular}
 } 
 \subfloat[$N_b=1, N_s = 1e5$]{
 \begin{tabular}{ccc}
-\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_100000.txt}
+\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_100000.txt}
 \end{tabular}
 }
-\caption{Results for the estimates arising from simulations using various values
-of $\a$ (opt, crit, max). In each sub-table there are $N_b$
-parameter estimates for each distinct $\a$, with $N_s$ hitting times used to form an $\b-$estimate.
-The 'true' value of $\b$ is $\b=1$. }
-\label{tab:beta_estimates_from_hitting_times_different_alphas}
-\end{table}     
-% \begin{table} 
-% \caption{$N_b=10$, $N_s = 1e4$  }
-% \label{tab:beta_estimates_from_hitting_times_different_alphas_Nhits10000}
-% \end{table}   
-% \begin{table}
-% \begin{tabular}{ccc}
-% \input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_100000.txt}
-% \end{tabular}   
-% \caption{$N_b=1$, $N_s = 1e5$ (estimator variance is irrelevant here as there is only 1 estimate per alpha)}
-% \label{tab:beta_estimates_from_hitting_times_different_alphas_Nhits100000}
-% \end{table}  
+\caption[Static $\tau$ MLE estimates]{Results for the estimates arising from
+simulations using various values of $\a$ (opt, crit, max). In each sub-table there are $N_b$
+parameter estimates for each distinct $\a$, with $N_s$ hitting times used to
+form an $\tc-$estimate.  The 'true' value of $\tc$ is $\tc=1$, i.e. $\log(\tc)
+= 0$. Also see \cref{fig:beta_estimates_from_hitting_times_different_alphas}}
+\label{tab:beta_estimates_from_hitting_times_different_alphas} 
+\end{table}   
 
-Comments: It looks like there is a marginal advantage to using the 
+\begin{figure}[h]
+\begin{center}
+\subfloat[$N_b=1e3, N_s = 1e2$]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb1000_Ns100.pdf}
+}
+\subfloat[$N_b=1e3, N_s = 1e2$]
+{
+\label{fig:label2}
+\includegraphics[width=0.48\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb100_Ns1000.pdf}
+}
+\\
+\subfloat[$N_b=1e1, N_s = 1e4$]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb10_Ns10000.pdf}
+}
+\subfloat[$N_b=1e1, N_s = 1e5$]
+{
+\label{fig:label2}
+\includegraphics[width=0.48\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb1_Ns100000.pdf}
+}
+\caption[labelInTOC]{Fine Visualization of the MLE estimates for the different
+controls also see \cref{tab:beta_estimates_from_hitting_times_different_alphas}}
+\label{fig:beta_estimates_from_hitting_times_different_alphas}
+\end{center}
+\end{figure}
+
+Comments: It certainly looks like there is a marginal advantage to using the 
 Optimal Control, $\a_{opt}$ over the simpler, constant controls. In particular
-the bias of the estimates seems to be reduced. The variance of the estimates
-seems to be independent of the perturbation\ldots 
- 
-\clearpage
+both the bias and variance of the estimates seems to be significantly reduced.
+The strange results for $N_s = 100$ require us to look at the actual
+distribution of estimates. Results not shown, but the opt-estimates for
+$N_s=100$ are bi-modal with a cluster far from the true value. For the higher
+$N_s = 1e3,1e4, 1e5$, the opt-estimates are unimodal and tightly centred
+around the true value.
 
+
+\clearpage
 
 \section{Online MI Optimization}
 Hеre we outline a tentative approach to {\sl online} optimization of the MI,
@@ -2623,7 +2669,269 @@ $$
 In practice, exact calculation of $\rho(\th|\t_k)$ would not be possible in our
 context, so an approximation approach needs to be made.
 
-I know that Susanne has done some work on a Bayesian approach to param.
-estimation, so I shall first discuss with her. 
+The standard approach is to describe the belief distribution by an ensemble of
+points (particles). We now describe the basic aspect of how the particle
+ensemble is constructed, how it is updated and how it is resampled. We use the
+reference \cite{Granade2012}, in particular sec 4 therein.
 
+\subsection{Quick INtro to Particle Filtering}
+We have a prior
+$ \rho(\th)$ and we want to describe it by an ensemble of points $\th_i$.
+as 
+$$ \rho(\th) \sim \sum_i w_i \delta(\th-\th_i)$$
+This is what we have been doing up to now for the MI optimization routines.
+
+Again recall that a bayesian update, given the $k$th hitting time is
+$$ \rho(\th|t_k) \propto g(t_k|\th)\rho(\th)$$
+
+thus the weights are iteratively updated as 
+
+$$w_i \ra w_i g(t_k|\th_i)$$
+
+Given the particle ensemble, $\{\th_i, w_i\}$, we can  then approximate the
+mean/variance of $\Th$ as
+$$ \Exp[\Th] \approx \sum_i w_i \th_i$$
+and 
+$$ \Var[\Th] \approx \sum_i w_i \th_i \th_i - (\Exp[\Th])^2$$
+In fact, in general 
+$$\Exp[f(\Th)]\approx\sum_i w_i f(\th_i)$$ approximates the expectation of any
+function, $f$, of the random variable $\Th$.
+
+Here's the crux of the update/resample algorithm. Given a new observation, i.e.
+the latest hitting time $t_k$, the weights are updated according to
+$$ w_{i,k} = w_{i,k-1}\cdot g(t_k| \th_i, \a_k),$$where $g(|\th_i, \a_k)$ is
+the probability density given the parameter value $\th_i$ and the chosen
+stimulation that was applied during the $k$th sample, $\a_k(\cdot)$.
+The weights are then re-normalized so that at all time $$\sum_i w_i = 1$$ 
+
+The literature suggests that this procedure will tend to concentrate all the
+'mass' on one location and most of the weights will decrease to 0. This
+concentration is 'bad' since eventually, all the weights go to zero and so
+effectively the distribution has converged  artificially to a point, which might
+be the most likely point from the initial ensemble, but still be far from the
+'true' value of the parameter. This adverse effect can be ameliorated by
+resampling the {\sl locations} of the particle ensemble, $\th_i$. This
+resampling can be done in many ways, but a standard way is described in
+algorithm. \ref{alg:particle_resampling} (which is copied from Algo4 in Granade
+et. al. \cite{Granade2012}, who in turn closely follow \cite{Liu2001}, but
+are very nice and pedagogical).
+\begin{algorithm}
+\begin{algorithmic}
+\State Given  $\{w_i, \th_i\}_1^N_p$ the current particle ensemble (weight,
+locations)  
+\State $\m $ \gets $\Exp[\Th]$ 
+\State $a = 0.98$ see \cite{Granade2012,Liu2001}
+\State $h = \sqrt{1-a^2}$ i.e. $h \approx 0.1990$
+\State $\Xi$\gets $h^2\cdot \Var[\Th]$
+\For {$i= 1\dots N_p$}
+	\\ {\itshape $\#$ Re-sample each particle individually}
+	\State draw $j$ with probability $w_j$ 
+	\\ {\itshape $\#$ the bigger $w_i$ the more likely to choose
+	$\th_i$}
+	\State $m_i$ \gets  $a \th_j + (1-a) \m$
+	\State Resample $\th_i'$ from $N(\m_i, \Xi)$
+	\State $w_i$ \gets $1/N_p$ 
+    \EndFor{\itshape $\quad \#   1 \ldots N_p$ particle resampling}
+\State \Return $w_i, \th_i'$ the resampled particle ensemble 
+\end{algorithmic}
+\caption{Particle Resampling Algorithm}
+\label{alg:particle_resampling}
+\end{algorithm}
+
+While, of course, updating happens after every iteration, re-sampling happens
+only when  
+$$ \frac{1}{\sum_i^{N_p} w_i^2} < \frac {N_p}{2} \implies \textrm{ resample!}$$
+
+In \cref{fig:poissonian_rate_filtering} we give an example for the filtering
+procedure to estimate the rate of a Poissonian process, $1/\t$, for which  the
+likelihood is just $\tfrac 1\t exp(- \tfrac t\t)$. From
+\cref{fig:poissonian_rate_filtering} we can conclude that the basic mechanics of
+the filtering update/resample procedure is working. (We've tried it with other
+values of $\tau$ and it works for those as well.)
+
+%\usepackage{graphics} is needed for \includegraphics
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/TauParticleEnsemble/poisson_rate_filtering.pdf}
+  \caption{Filtering Example for a test-case. We are trying to estimate the
+  inverse of the Poissonian rate, $1/\tau$, given inter-event intervals $t_k$.
+  The true value is $\tau  = 1$. The Maximum Likelihood estimate for $\tau$ in
+  this problem  is just the mean of the observed times $\bar{t_k}$, which
+  happens to be 0.9583 in this example, while after the last observation, the
+  ensemble mean $\pm$ std-dev is $0.9811\pm 0.0199$}
+  \label{fig:poissonian_rate_filtering}
+\end{center}
+\end{figure}
+
+% \clearpage
+
+\subsection{Example of Particle-Filtering + Online Estimation for hitting time
+parameter estimation}
+
+\subsubsection{Single HItting Time Illustration}
+Let's try it. First, in \cref{fig:example_online_miopt_single_iteration}, we
+illustrate one iteration of the update, that is one hitting time given a
+stimulation from either the MI Optimal Controller or a random controller, which
+just gives a random constant stimulation per each hitting time.
+
+Let's discuss what happens in \cref{fig:example_online_miopt_single_iteration}.
+Recall that lower values of $\tc$ imply higher restoring force and therefore
+longer hitting times (waiting times). Since in this sample, the observed hitting
+times were fairly long, especially for the MI-optimal stimulation, weights for
+smaller $\t$s grow larger, while weights for bigger $\t$s become smaller.
+However it is immediately clear that the MI-optimal stimulation is more
+discerning as it has almost entirely discarded (correctly) the
+possibility that $\tau>2$, while the other two stimulations have resulted in
+only mild perturbation in the belief distribution. 
+
+WARNING: The new results are much better primarily through a judicious choice of
+the initial condition of the MI-optimal optimization (the initial guess for the
+optimal control.)
+
+\begin{figure}[h]
+\begin{center}
+\subfloat[Example Hitting Times]
+{
+\label{fig:example_hitting_times_for_online_miopt}
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_trial_example_hittimes.pdf}
+} 
+\subfloat[Resulting Particle Ensemble Updates]
+{
+\label{fig:example_particle_ensemble_updates_for_online_miopt}
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_trial_example_weights.pdf}
+}
+\caption[labelInTOC]{Examples of a single iteration of the Online
+Stimulation-Estimation scheme.  }
+\label{fig:example_online_miopt_single_iteration}
+\end{center}
+\end{figure}
+
+\subsubsection{Full Multiple Hitting-Times Experiment(s)}
+Now let's go through an entire estimation experiment. That is let's stimulate a
+sequence of hitting times and online update our parameter belief distribution,
+after every observation and then online-update our MI-optimal stimulation as the
+belief evolves.
+
+The main result is shown in \cref{fig:example_miopt_vs_rand_ensemble_evolution},
+where we visualize the mean and confidence intervals for the belief
+distributions for the three protocols (MI-Optimal vs. Random Constant vs Zero),
+using $N_\t = 32$ particles and $N_k=251$ hitting times. In
+\cref{fig:example_miopt_controls_evolution}, we show the different stimulations
+that were chosen by the Mutual-Info Maximization Algorithm.
+ 
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/single_experiment_example_ensemble_distn_evolution.pdf}
+  \caption[labelInTOC]{Evolution of the belief distributions given Optimal
+  (red) or Random (green) stimulation. We used $N=32$ particles to represent
+  the ensemble for both stimulation protocols. There are 250 hitting times used}
+  \label{fig:example_miopt_vs_rand_ensemble_evolution}
+\end{center}
+\end{figure}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/single_experiment_example_controls_evolution.pdf}
+  \caption[labelInTOC]{Different MI-OPtimal Stimulations computed 
+  as the Experiment evolves and the parameter belief distribution changes}
+  \label{fig:example_miopt_controls_evolution}
+\end{center}
+\end{figure}
+ 
+
+\clearpage
+
+We now simulate $10$ independent experiments of approx. 500 hitting times each
+and visualize them in \cref{fig:online_optimization_more_examples}. Here, we see
+that the MI-optimal stimulation is indeed producing more accurate
+estimates, faster (earlier in the experiment). This is true in 7 out of the 10
+experiments, in 2 it is hard to determine whether there is a 'better' protocol
+and only once is the MI-based stimulation resulting in worse estimates than one
+of the alternatives ((f) in \cref{fig:online_optimization_more_examples}). 
+ 
+\begin{figure}[h]
+\begin{center}
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=495_ensemble_distn_evolution.pdf}
+}
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=496_ensemble_distn_evolution.pdf}
+}\\
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=497_ensemble_distn_evolution.pdf}
+}
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=498_ensemble_distn_evolution.pdf}
+}\\
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=499_ensemble_distn_evolution.pdf}
+}
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=500_ensemble_distn_evolution.pdf}
+}\\
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=501_ensemble_distn_evolution.pdf}
+} 
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth] 
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=502_ensemble_distn_evolution.pdf}
+}\\
+\subfloat[]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=503_ensemble_distn_evolution.pdf}
+}
+\subfloat[] 
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=504_ensemble_distn_evolution.pdf}
+}
+\caption[labelInTOC]{Various examples of the perturbation-estimation protocol
+with the belief distribution plotted against the hitting time $k$,  with the
+MI-optimal stimulation (red), the constant random stimulation (green) and the zero, $\a\equiv 0\,\forall t$, stimulation (blue)}
+\label{fig:online_optimization_more_examples}
+\end{center}
+\end{figure} 
+
+The aggregated version of these results (the averaged evolution distribution
+from the independent experiments) is shown
+\cref{fig:online_optimization_aggregated_belief_evolution}, where the $N$
+distributions are averaged out over the different experiments. It is now clear 
+that the MI-Optimal procedure produces more accurate estimates much faster.
+ \begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/aggregated_belief_distn_aggregated_ensemble_distn_evolution.pdf}
+  \caption[Aggregated belief distribution vs. experiment hitting time index]
+  {TODO: () Optimal Stimulation outperforms naive stimulation for estimating 
+  $\tau$. Plotted are  Aggregated belief distribution over $N=16$
+  independent belief estimation experiment. The black line indicates the 'true' value of the unknown parameter $\tau$. } 
+  \label{fig:online_optimization_aggregated_belief_evolution}
+\end{center}
+\end{figure}
+
+\clearpage
+
+
+
+\section{Extra Stuff}
+TODO: Move all discussion of Double WEll here\ldots
+
+
+ 
 \clearpage

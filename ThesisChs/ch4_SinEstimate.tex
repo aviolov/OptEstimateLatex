@@ -3,6 +3,17 @@
 \graphicspath{{../LIFEPaper/}}
 \input{../LIFEPaper/local_style.sty}
  
+\section{Thesis Context}
+ In the first of three main chapters of the thesis, we focus on the problem of
+ estimating model parameters in a sinusoidally-perturbed LIF model from the
+ observation of spike timings only. We discuss two approaches - one based on
+ solving an integral equation and one based on solving for the forward density.
+ In both cases we need to make an approximation in order to account for the
+ non-renewal property of the hitting-time process. 
+Both estimation algorithms are iterative, therefore we propose a non-trivial
+ method for initializing them with observations-driven initial guesses.  
+ 
+\section{Problem Introduction} 
 Information processing in the nervous system is carried out by spike timings in
 neurons. To study the neural code in such a complicated system, a first step is
 to understand signal processing and transmission in single neurons. Stochastic
@@ -135,7 +146,7 @@ voltage threshold, $\vt$, and then $V(t)$ is instantaneously reset to the
 resting potential $v_0$. The difference between subsequent spike times, $J_n =
 t_{n} - t_{n-1}$, is called the interspike interval (ISI).
 
-We will assume that $\t$ is known (but see \cref{sec:discusion} for a discussion
+We will assume that $\t$ is known (but see \cref{sec:optimal_design} for a discussion
 of the alternative) and non-dimensionalize \cref{eq:v_evolution_uo} as follows
 \begin{align*}
 s &= \frac{t}{\t}	& 
@@ -2009,7 +2020,7 @@ As such we conclude that the FP estimates and the ML estimates behave comparably
 
 
 \section{Discussion and Outlook}
-% \label{sec:discusion}
+\label{sec:sin_estimate_discusion}
 We have shown two methods to estimate parameters in
 \cref{eq:X_evolution_uo} from ISI data. Our methods are based
 on binning the spikes into bins with representative phase shifts. We have
@@ -2070,3 +2081,7 @@ periodic function. This can be done as long as one knows where in the period of
 oscillation a spike has occurred. If that is the case then the binning procedure
 can be applied and the estimation methods proposed can be attempted. 
 
+
+\section{Implementation Details}
+TODO: (Extra calculations and numerics not included in the paper but that
+support it, and make another math  student likely able to reproduce them)

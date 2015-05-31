@@ -3,9 +3,25 @@
 \graphicspath{{../OptSpike/}}
 \input{../OptSpike/local_style.sty}
 
+ \section{Thesis Context}
+
+In the second of the three main chapters of the thesis, we discuss the control
+of spike timing in a single neuron. Depending on the ability to observe the
+detailed voltage or only the spike timing, we derive a Hamilton-Jacobi-Bellman
+equation in the first case and an adjoint-based Variational Principle for the
+latter. We show how in both cases the boundary conditions and the terminal
+conditions in the optimization PDEs are naturally obtained from the problem
+formulation. The optimal control is obtained by numerically solving the PDEs. We
+In simulations, we demonstrate the effectiveness of the technique for
+different system regimes, i.e. parameters. We then
+demonstrate how to estimate system parameters of the noisy LIF model given
+observations from a more complicated mathematical neural model, the Morris-Lecar
+model. Finally, we simulate the performance on the control derived for the
+noisy LIF model on the more complicated model and thus demonstrate the
+robustness of the control scheme to model error. 
 
 
-\section{Introduction} 
+\section{Problem Introduction} 
 Manipulation of individual neurones through electrical stimulation provides a
 mean of controlling their spiking activity. In applications such as
 brain-machine interfaces and neuroprosthetics, a common goal is to record from a
@@ -1883,3 +1899,7 @@ control}
 \end{algorithm}
 
 
+
+\section{Implementation Details}
+TODO: (Extra calculations and numerics not included in the paper but that
+support it, and make another math  student likely able to reproduce them)

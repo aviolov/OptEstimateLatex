@@ -55,9 +55,10 @@ to facilitate parameter estimation using inter-spike intervals data only}
 
 \listoftables  
 
-\listoffigures 
+% \listoffigures 
 
 \section{Problem Formulation}
+
 The basic goal of 'Optimal Design' is to perturb a dynamical system in an
 'optimal' way such as to 'best' estimate its structural parameters. 
 
@@ -69,8 +70,8 @@ For illustration sake we return to our favourite LIF model
 Given a noisy LIF neuronal model:
 \begin{equation}
 \begin{gathered}
-dX_s = (\underbrace{\a(t)}_{\textrm{control}} + \b(\m %\g \sin(\o t)
- - {X_s} ) \intd{s} + \s\intd{W_s},
+dX_s = (\underbrace{\a(t)}_{\textrm{control}} + \frac 1\tc(\m %\g \sin(\o t)
+ - {X_s} ) \intd{s} + \b\intd{W_s},
 \\
 X(0) = .0,
 \\
@@ -124,7 +125,8 @@ f(x,t) := \Prob \left[X_{t} \in x+ \intd{x}  \,|\,
 	\di_t f (x,t) &=&
 					\underbrace{\frac{\b^2 }{2}}_{D}\cdot \di^2_x f 
 					+ \di_x \Bigg(  
-					\underbrace{\Big( \b (x-\m) - \a(t) \Big)}_{U(x,t)}  \cdot  f \Bigg)
+					\underbrace{\Big( \frac 1\tc (x-\m) - \a(t) \Big)}_{U(x,t)}  \cdot  f
+					\Bigg)
 					\\
 					&=&
 					D \cdot \di^2_x f +
@@ -179,7 +181,7 @@ via $$g( t)  = \phi(\xth, t) = D\cdot \di_x f|_{x=\xth}$$
 In a Bayesian approach, we have some {\sl a priori} belief over the possible
 values of $\th$.
 
-Let us call the prior over the parameters $\th = \{\m, \b, \s\}$:
+Let us call the prior over the parameters $\th = \{\m, \tc, \s\}$:
 $$\rho(\th)$$.
 
 Given a single observation $\ts$, the posterior of the parameter belief dist'n
@@ -208,6 +210,7 @@ See \cref{sec:mutual_info_defn} for why.
 Naturally for different controls, $\a(\cdot)$, the mutual info, $I$, will
 be different since $g$, the hitting time density depends on the shape of $\a$.
 ($\rho$ does NOT).
+
 
 However, there is an added complication b/c we actually will observe many
 hitting times, and having less informative hitting times happen more often might
@@ -296,7 +299,7 @@ where the inner product, $<f, g>$ is just the space integral $\int f\cdot g
 \cref{eq:FP_pde_OU_absorbBC_CDF}.
 
 This is exactly the same problem as we faced in the spike-time optimal control,
-except there the integrand looked something like $(t-t^*)D\di_xf$. Thus the
+except there the integrand looked something like $(t-t^*)^2D\di_xf$. Thus the
 equations for the adjoint look exactly the same as there, with the exception of the Terminal
 Conditions (here assumed 0) and the BCs at the threshold:
 
@@ -354,9 +357,9 @@ the direction of increasing $\delta I$.
 In practice, we usually take a very simple prior, something like three values
 with equal probability, something like:.
 \begin{equation}
-\rho(\b) = 
+\rho(\tc) = 
 \begin{cases}
-	\tfrac 13 & \textrm{if } \b= \in \{.5,    1 ,  2 \}\\
+	\tfrac 13 & \textrm{if } \tc= \in \{.5,    1 ,  2 \}\\
 	0   &\textrm{o/w }
 \end{cases}
 \label{eq:basic_prior_over_tau}
@@ -398,9 +401,9 @@ resulting optimal control}
 Let's look at it another way, we will consider our basic prior as a function of
 $w$
 \begin{equation}
-\rho(\b) = 
+\rho(\tc) = 
 \begin{cases}
-	\tfrac 12 & \textrm{if } \b= \in \{1- w, 1/(1-w) \}\\
+	\tfrac 12 & \textrm{if } \tc= \in \{1- w, 1/(1-w) \}\\
 	0   &\textrm{o/w }
 \end{cases} 
 \end{equation} 
@@ -431,7 +434,7 @@ We will run the following test:
 
 Assume the true parameters $$
  \m = 0; \tc = 1; \b = 1.;
-$$ We will assume we know $\s, \m$ and don't know the time constant, $\tc$ so we
+$$ We will assume we know $\b, \m$ and don't know the time constant, $\tc$ so we
 are trying to maximize the Mutual Information between $\ts$ and $\tc$.
  
 Let's assume a very simple uniform prior on $\tc$, $\tc_i = \{0.25, 1.5, 2.8
@@ -467,6 +470,28 @@ that mater) }
 \end{center}   
 \end{figure}  
 
+
+\subsubsection{Switch point sweep}
+At this point we suspect that the optimal solution is bang-bang, in the essense
+of hold everything back and then excite maximally \ldots
+
+We then sweep through the switch point $t_{switch}$ of exactly when the
+bang-bang switch happens and see how it impacts the resulting objective, $I$.
+The results are in \cref{fig:sweep_switchtime}. It seems that, at least for this
+parameter set, there is quite an improvement in the objective by putting the switching
+point past $t=6$, but going much beyond that there is no real difference. 
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=1\textwidth]{/home/alex/Workspaces/Latex/OptEstimate/Figs/FP_Adjoint/SweepSwitchpoint.pdf}
+  \caption[Effect of Switching time on Mutual Info Objective]{Effect of
+  Switching time on Mutual Info Objective. Plotted is the objective, $I$, as a
+  function of the switching time, $t_{switch}$, of a bang-bang switching control
+  as in the top panel of \cref{fig:hitting_time_density_g_aopt_bprior}}
+  \label{fig:sweep_switchtime}
+\end{center}
+\end{figure}
+
 \subsubsection{Aside: the nitty-gritty of the estimation procedure}
 We have posed a fairly-simple estimation objective, in that it amounts to single
 variable optimization. The negative log-likelihood of an observed hitting-time
@@ -489,59 +514,6 @@ the different hitting time densities look like local perturbations of each
 other, either a little more or a little less, but for the optimal control they
 are shifted, which means that we see the first indications that the Opt Control,
 might have some superiority over the 'Crit' Control (for example) as it seems to estimate a $\tc$ closer to 1 (the 'true' value). However, on average, the different shapes of $\a(t)$ seems to have a very limited impact on the estimates for $\tc$ (even though it has a very obvious impact on the shape of the hitting time distribution $g(t)$).
-
-
-% \begin{figure}[h]
-% \begin{center} 
-% \subfloat[opt]  
-% {
-% \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a0.pdf}
-% }
-% \\   
-% \subfloat[crit]
-% {
-% \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a1.pdf}
-% }
-% \\
-% \subfloat[max] 
-% {
-% \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a2.pdf}
-% }
-% \caption[labelInTOC]{Example of Empirical vs. Analytical Hitting time
-% distributions and the associated log-likelihoods. $N_s = 1e3$}
-% \label{fig:log_likelihood_beta_examples_1000}
-% \end{center}
-% \end{figure} 
-% 
-% 
-% \begin{figure}[h]
-% \begin{center}
-% \subfloat[opt]
-% {
-% \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a0.pdf}
-% }
-% \\
-% \subfloat[crit]
-% {
-% \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a1.pdf}
-% }
-% \\ 
-% \subfloat[max]
-% {
-% \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a2.pdf}
-% }
-% \caption[labelInTOC]{Same as \cref{fig:log_likelihood_beta_examples_1000}, but
-% with  $N_s = 1e4$. Notice that ( but only slightly ) the 'opt' control tilts in
-% the right direction for the $\b$ estimate (i.e. towards 1). }
-% \label{fig:log_likelihood_beta_examples_10000}  
-% \end{center}
-% \end{figure}
 
 \begin{figure}[h] 
 \begin{center}
@@ -568,10 +540,12 @@ hits}
 \label{fig:log_likelihood_beta_examples_100000}
 \end{center}
 \end{figure}  
- -
+
 \clearpage
 
-\subsubsection{Batch Performance of the perturbations over the estimators.}
+
+
+\subsection{Batch Performance of the perturbations over the estimators.}
 As is we have 3 candidates for perturbing the hitting times: 
 \begin{enumerate}
   \item 
@@ -626,20 +600,40 @@ The estimation results are tabulated in in
 simulations using various values of $\a$ (opt, crit, max). In each sub-table there are $N_b$
 parameter estimates for each distinct $\a$, with $N_s$ hitting times used to
 form an $\tc-$estimate.  The 'true' value of $\tc$ is $\tc=1$, i.e. $\log(\tc)
-= 0$.}
+= 0$. Also see \cref{fig:beta_estimates_from_hitting_times_different_alphas}}
 \label{tab:beta_estimates_from_hitting_times_different_alphas} 
-\end{table}      
-% \begin{table} 
-% \caption{$N_b=10$, $N_s = 1e4$  }
-% \label{tab:beta_estimates_from_hitting_times_different_alphas_Nhits10000}
-% \end{table}   
-% \begin{table}
-% \begin{tabular}{ccc}
-% \input{Figs/HitTime_MI_TauChar_Adjoint_Estimate/beta_hit_time_100000.txt}
-% \end{tabular}   
-% \caption{$N_b=1$, $N_s = 1e5$ (estimator variance is irrelevant here as there is only 1 estimate per alpha)}
-% \label{tab:beta_estimates_from_hitting_times_different_alphas_Nhits100000}
-% \end{table}  
+\end{table}   
+
+\begin{figure}[h]
+\begin{center}
+\subfloat[$N_b=1e3, N_s = 1e2$]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb1000_Ns100.pdf}
+}
+\subfloat[$N_b=1e3, N_s = 1e2$]
+{
+\label{fig:label2}
+\includegraphics[width=0.48\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb100_Ns1000.pdf}
+}
+\\
+\subfloat[$N_b=1e1, N_s = 1e4$]
+{
+\includegraphics[width=0.48\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb10_Ns10000.pdf}
+}
+\subfloat[$N_b=1e1, N_s = 1e5$]
+{
+\label{fig:label2}
+\includegraphics[width=0.48\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb1_Ns100000.pdf}
+}
+\caption[labelInTOC]{Fine Visualization of the MLE estimates for the different
+controls also see \cref{tab:beta_estimates_from_hitting_times_different_alphas}}
+\label{fig:beta_estimates_from_hitting_times_different_alphas}
+\end{center}
+\end{figure}
 
 Comments: It certainly looks like there is a marginal advantage to using the 
 Optimal Control, $\a_{opt}$ over the simpler, constant controls. In particular
@@ -649,6 +643,7 @@ distribution of estimates. Results not shown, but the opt-estimates for
 $N_s=100$ are bi-modal with a cluster far from the true value. For the higher
 $N_s = 1e3,1e4, 1e5$, the opt-estimates are unimodal and tightly centred
 around the true value.
+
 
 \clearpage
 
@@ -933,6 +928,10 @@ that the MI-Optimal procedure produces more accurate estimates much faster.
   \label{fig:online_optimization_aggregated_belief_evolution}
 \end{center}
 \end{figure}
+
+
+
+
 \clearpage
 
 
@@ -997,16 +996,7 @@ the objective determining the control $\a$ becomes
 \end{equation}
 and then they show that the estimator so obtained, i.e.\ the one which uses the
 optimal $\a$, is still better than a naive estimator (without any control)
-
-% THis makes me wonder whether a more appropriate selection wouldn't be to fully
-% accept the Bayesian approach and from the start seek to minimize the variance of
-% the posterior distribution, while still maintaining the consistency of the
-% estimator (how?)
-% 
-% In general the ultimate goal is to have a scheme where a control is applied in
-% order to obtain new estimates, and these estimates are then fed back in order to
-% form a new control.
-
+ 
 
 \section{Aside - an intuition check}
 \label{sec:alpha_crit_is_best_hypothesis}
@@ -1308,7 +1298,7 @@ very readable summary of particle filtering! (which in turn sources
 \cite{Liu2001})
 
 \bibliographystyle{plain}
-\bibliography{library,local}
+\bibliography{library}
 
 
 \end{document}

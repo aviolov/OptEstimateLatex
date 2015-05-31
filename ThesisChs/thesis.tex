@@ -41,14 +41,17 @@
 \newtheorem{ex}{Example}[thm]
 \newtheorem{defn}{Definition}[thm]
 
-\includeonly{chapters/ch2_Math}
+% \includeonly{chapters/ch2_Math}
 % \includeonly{chapters/ch2_Math,chapters/ch6_OptDesign}
 % \includeonly{chapters/ch6_OptDesign}
+% \includeonly{chapters/ch5_OptSpike}
+  
 %%
 \begin{document}
 
 \pagenumbering{roman}
 \pagestyle{empty}
+
 \begin{titlepage}
 \centering
 \vspace*{1in}
@@ -129,7 +132,7 @@ time occurrence of the spike or equivalently the information is in
 the duration of the interval between two subsequent spikes.
 
 There is a rich history on modelling the dynamics of the membrane potential
-starting from the Nobel-prize winning work of Hodgkin and Huxley in the 50's.
+starting from the Nobel-prize winning work of Hodgkin and Huxley in the 1950's.
 Their model, still widely considered as a benchmark for the dynamics of the
 membrane potential, is a 4-dimensional ordinary differential equation (ODE),
 where one of the states is the voltage itself and the other three are phenomenological
@@ -201,8 +204,7 @@ provide a brief outlook.
 
 \chapter{Conclusion and Outlook}
 \label{ch:conclusion}
-Ah, la conclusion:-) 
-TODO:
+BIG TODO\ldots
 
 In the first task, of estimating, one can see that there remains one interesting
 problem, and that is why the estimation quality degrades with higher sinusoidal
@@ -211,10 +213,8 @@ Fokker-Planck / Likelihood based method).
 
 In the second task, the possible avenues for progress are much broader\ldots 
 
-The third task\ldots . 
-
-Hopefully, this can be applicable to more complex areas of neuroscience and
-physiology, where the systems under study are quite amenable to direct external
+The third task\ldots Hopefully, this technique can be applicable to more complex
+areas of neuroscience and physiology, where the systems under study are quite amenable to direct external
 perturbation.
 
 \cleardoublepage
