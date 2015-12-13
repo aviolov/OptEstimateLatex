@@ -1,0 +1,1 @@
+control type & mean($\hat\tau$) & std($\hat\tau$) \\ \hline opt & 0.887 & 0.27 \\opt-wide & 0.766 & 0.32 \\opt-narrow & 0.826 & 0.30 \\crit & 0.913 & 0.53 \\max & 0.872 & 0.37 \\
