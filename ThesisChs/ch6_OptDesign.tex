@@ -3,7 +3,9 @@
 \graphicspath{{../OptEstimate/}}
 \input{../OptEstimate/local_style.sty}
 
+% \def\input@path{{../OptEstimate}} 
 %TODO: change to consistent notation:
+% TODO: Fix the .txt includes
  
 \section{Thesis Context}
  In the last of the three main chapters of the thesis, we discuss the problem of
@@ -14,2087 +16,203 @@
  derive a variational, Maximum-Principle-based iterative schema to obtain the
  optimal stimulus. We then use this to find the optimal stimulation and perform
  several simulated estimations to demonstrate the superiority of the
- MI-optimal control over common-sense alternatives. 
+ MI-optimal control over common-sense alternatives.
  
-\section{Problem Introduction} 
-Problem introduction in the context of the extant literature.
+ This chapter can be seen to combine many of the features of the previous two
+ chapters - we are again trying to control spike-times as in the second chapter,
+ but with the ultimate goal of estimating parameters from the spike observations
+ as in the first. Mathemtaically the greatest difference between the
+ optimization problem in this chapter and that in the second is that we no
+ longer assume a definite single set of model parameters, but instead must work
+ with {\sl distributions} over the parameters. This renders the problem more
+ difficult and in particular makes the adjoint derivations more complex. Instead
+ of a single-pair of forward-backward PDEs, we now must deal with a ensemble of
+ loosely coupled forward-backward PDEs.
+  
+    
+\section{Introduction}
+We consider the problem of optimal design for estimation of parameters in a
+stochastic differential equation (SDE) given only observations of hitting times
+from the SDE. We assume that the 'controller' has influence over some part of
+the parameters of the SDE and the objective is to obtain observations that are
+most informative in both formal and informal senses. That is, we choose the
+control as the solution to a well-posed optimization problem, but our ultimate
+goal is to obtain more accurate and more precise estimates of the unknown
+parameter(s) given the observed hitting times.
 
-\subsection{Mutual Information as the formal criterion for Optimal Design}
-The use of Mutual Information as a design criterion is newer than the use of
-Fisher Information. A tutorial paper summarizing its use in Mathematical
-Psychology is given in \cite{Myung2013}, while its use in neuroscience
-experiments is discussed in a series of papers by the group of Liam Paninski in
-Columbia \cite{Paninski2003,Paninski2005,Lewi2009}. 
+We espouse a Bayesian perspective and proceed by assuming a prior
+distribution of the unknown parameters. Then we seek to maximize the Mutual
+Information (MI) between the posterior of the unknown parameters given the
+observations and the distribution of the hitting times. Note that even for a
+fixed and known parameter set the resulting observations, i.e.\ the hitting
+times, are still random, due to the inherent stochasticity of the SDE. 
 
+Using Mutual Information for the selection of 'maximally informative'
+experiments has been advocated by several recent lines of research, for example,
+in experimental psychology, \cite{Cavagnaro2010,Myung2013}, computational
+neuroscience \cite{Paninski2006a,Paninski2005,Lewi2009} and quantum physics,
+\cite{Granade2012}.
+ 
+An alternative approach is to maximize the Expected Fisher Information of the
+experiment, see \cite{Hooker2015}, which is especially effective if the Fisher
+Information of the parameter estimators is available as an analytical formula.
+That is the case when one observes full trajectories from the diffusion process,
+as in \cite{Hooker2015}, but not in the more limited hitting-times observations
+context.
+ 
+The Mutual Information measures the expected reduction in uncertainty in the
+parameter value given an observation, under a fixed experimental stimulation.
+Thus the stimulation that maximizes the Mutual Information should extract the
+maximum information about the model's parameters, on average. Using Mutual
+Information for estimating statistical quantities is formally justified by
+\cite{Paninski2005}, where proofs are provided showing that given fairly weak
+modeling conditions, using a stimulation that iteratively maximizes the mutual
+information between future observations and the parameters of interest leads to
+consistent and efficient parameter estimates. However, while theoretically
+sound, optimizing or even merely computing the Mutual Information may be
+computationally prohibitive. For our problem of interest though, that is not a
+primary issue.
 
+We should explicitly single out a very recent paper on estimation
+parameters in a quantum system,  
+\cite{Granade2012}, where the authors describe a strategy to estimate
+the parameters of the Hamiltonian of a quantum experiment. They use a simple
+filtering technique originally suggested by \cite{Liu2001} to maintain and
+update the prior distribution of the unknown parameters. In principle, their
+approach is quite similar to ours, the main difference is the nature of the
+observations, which in our case are the hitting times.
 
+As posed, our optimization problem reduces to a slightly non-standard Partial
+Differential Equation (PDE) optimization problem, in particular a Fokker-Planck
+optimization problem. The field of PDE optimization is vast and we can just
+mention one of many good references, \cite{Borzi2012}. There have recently
+appeared a series of articles on Fokker-Planck based PDE-optimization, e.g.
+\cite{Annunziato2010,Annunziato2014}. None of these however deal with the
+boundary term that arises out of the hitting-time-based objective. We
+should also mention our own work, \cite{Iolov2014a}, where we again solve a
+hitting-time inspired optimization problem. The fundamental difference here is
+that the uncertainty in the model parameters renders the problem more
+complicated as it necessitates us to solve a system of (loosely-) coupled PDEs
+rather than just one as in \cite{Iolov2014a}.
 
-We start with a tutorial paper from the Journal of Math. Psychology (2013),
-which begins as follows: { \sl ``Imagine an experiment in which each and every
-stimulus was custom tailored to be maximally informative about the question of
-interest, so that there were no wasted trials, participants, or redundant data
-points.''} 
+Our paper is also part of the general literature on estimating parameters of
+diffusion processes from hitting-times observations only. Partly due to the
+applications of this problem in theoretical neuroscience a lot has been written
+on the subject for example in
+\cite{Ditlevsen2007,MullowneyIyengar2008,Alili2005} and our own \cite{Iolov2013}
+where we deal with the more exotic case of a sinusoidal driving force. The
+literature on estimation from hitting-times of the class of diffusion models we
+consider is clear that one parameter in particular, the characteristic time, is
+most difficult to estimate having the widest confidence bounds by far. Thus we
+focus on devising stimulations that will render most accurate estimations for
+this parameter assuming that the other parameters are known or at least
+nominally known in a sense that we explain later. In fact, we show that even if
+the other parameters are also to-be estimated, for this problem, a control
+designed with the goal of estimating the characteristic time parameter only,
+ends up helping estimate all parameters.  
 
-Their work focuses on both parameter estimation and the larger task of model
-selection, let's just discuss the parameter estimation bit. 
+Thus our paper can be summarized as solving a PDE-optimzation arising from
+maximizing the Mutual Information between a prior of the characteristic time
+parameter and the random (future) hitting-times. The paper outline is as
+follows: in \cref{sec:problem_formulation} we describe the mathematical formulation of the optimal design problem; in
+\cref{sec:maximizing_MI}, we describe the optimization procedure, in particular
+the derivation of the objective gradient and the numerical methods used; in
+\cref{sec:batch_estimation}, we show the performance of the optimally designed
+stimulation when many observations are first collected and only a single-pass,
+{\sl batch} estimation is performed afterwards; in \cref{sec:online_estimation},
+we turn to the {\sl online} problem, where the estimation is performed
+after each observation and the stimulation is adjusted to reflect the newly
+updated prior of the unknown parameters; in \cref{sec:discussion} we make
+concluding and forward-looking remarks.
 
-In their terminology, the task of the {\sl experimenter}
- is to find a { \sl design, $d$ } (this is the stimulation $\a(t)$ in our
- context) that will best facilitate the estimation of the model parameters.
- After introducing a prior on the parameters $\rho(\th)$, and denoting the
- {\sl outcome} of the experiment as $t$, they state that the design selection
- can be formalized by optimizing the following expression: $$
-d^* =  \argmax_d \int \int u(\th, t; d) L(t| \th, d) \rho (\th) \intd{t}
-\intd{\th}
-$$
-where $u$ is some utility function. For example one could maximize the inverse
-sum of CVs:
-$$
-u() = \sum_i \frac{\Exp[\th_i]}{STD[\th_i]}
-$$
-where 
-$\Exp[\th_i], STD[\th_i]$ are the posterior mean/std. dev of the estimates, e.g.
-
-$$
-\Exp[\th_i] = \int_{\th_i} \th_i p(\th_i| t, d) \intd{\th_i} = 
-\int_{\th_i} \th_i \frac{ L(t| \th, d) \rho (\th) }
-					    {\int_\th L(t| \th, d) \rho (\th)\intd{\th_i} } \intd{\th_i} 
-$$
-(An aside, if the parameter estimate is on average zero, or negative I think
-this will not work at all, but I think they just suggest it as an obvious, but
-problematic utility function)
-
-They then state that the most common utility function, $u$, in the
-literature is the Mutual Information b/w the random variables $\Th$ and $T$. 
-
-Again, quote, {\sl (The Mutual Information)  measures the reduction in
-uncertainty about the values of the parameters that would be provided by the
-observation of an experimental outcome under design $d$. In other words, the
-optimal design is the one that extracts the maximum information about the
-model's parameters.}
-
-So as far as I can tell, the fact that Mutual Information maximization equates
-to reduction of parameter uncertainty is here taken dogmatically!
-
-They then go on to talk about { \sl sequential } optimal design, which is the
-same as above, but then you Bayes-update the prior of $\th$ while the experiment
-continues and then roll forward. 
-
-In our context this could mean that after $N_{s,1}$ spikes, we update the prior
-of $\b$ and redo the calculation of the optimal perturbation $\a(t)$, then
-observe for $N_{s_2}$ spikes, then recompute $\a(t)$ and so on. At this point,
-one can get creative - instead of optimizing $\a(t)$ we can just take 1(or 2 or
-whatever) steps in the gradient descent. In practice, this is probably
-not very realistic due to computational costs, but in principle very cool.
-
-\subsection{Further Literature Review}	
-In principle OPtimal Design for Dynamic Systems is a subset of System
-Identification, which is a very researched topic in the control community.
-Here's a review paper \cite{Gevers2011} from the Control Theory Community. 
-They talk about things like Transfer Functions etc. usually things are in
-Discrete time. There is no notion of SDEs although there is a=often a white
-noise error term, so in a sense these are discretized SDEs, although without 
-the formalism of Ito Calculus etc. 
-
-The papers on Adaptive Optimal Design from the Myung et al group in Ohio is well
-cited (the main 2010 \cite{Cavagnaro2010} article has 45 citations) 
-
-Оh, cool,  \cite{Cavagnaro2010} says in its lit. review leading into the paper
-that 
-\begin{quote}
-the desirability and usefulness of (using Mutual Information as the objective
-functional) was formally justified by Paninski (2005) who proved that under
-acceptably weak modeling conditions, the adaptive approach with a utility function
-based on mutual information leads to consistent and efficient parameter
-estimates. 
-\end{quote}
-
-Ok, so we just need to dig up Paninsky2005 and insert here:) Here it is:
-\cite{Paninski2005}. Here is its abridged abstract:
-\begin{quote}
-... on any given trial,
-we want to adaptively choose the input in such a way that the mutual information
-between the (unknown) state of the system and the (stochastic)
-output is maximal, given any prior information (including data collected
-on any previous trials). We prove a theorem that quantifies the effectiveness
-of this strategy\ldots and demonstrate that
-this method is in a well-defined sense never less efficient—and is generically
-more efficient—than the non-adaptive strategy\ldots  
-\end{quote}
-
-Here's another good quote from 
-\begin{quote}
-\ldots several attempts have been made to devise algorithms
-to find the “optimal stimulus” of a neuron, where optimality is
-defined in terms of firing rate (Tzanakou, Michalak, & Harth, 1979; Nelken,
-Prut, Vaadia, & Abeles, 1994; Foldiak, 2001), but we should emphasize that
-the two concepts of optimality are not related in general and turn out to be
-typically at odds (maximizing the firing rate of a cell does not maximize—
-and in fact often minimizes—the amount we can expect to learn about the
-cell; see sections 3 and 4).
-\end{quote}
-Again the punch line in \cite{Paninski2005} is:
-\begin{quote}
-Our main result (in section 2) states that under
-acceptably weak conditions on the models $p(t| \a, \th)$ (our notation, not
-his) the information maximization strategy leads to consistent and
-efficient estimates of the true underlying model, in a natural sense. 
-In particular, the information maximization
-strategy is never less efficient, in a well-defined sense—and
-is generically more efficient—than the simpler, non-adaptive, i.i.d. x strategy.
-\end{quote}
-
-
-
-The experimental/computational Lewi, Buttera et Paninsky paper from 2009 is
-very popular, `` Sequential
-optimal design of neurophysiology experiments'', \cite{Lewi2009}. It has 64
-citations, although its main citing authors are Paninsky himself
-(self-references) + the Myung et Cavagnaro group above :). Another very popular
-paper from Paninsky (117 cites) is \cite{Paninski2006a}, which deals with
-several things including 'Optimal Stimulus'. Reading Paninsky can be pleasant or
-unpleasant, the 2009 \cite{Lewi2009}paper is 73 pages of dense Convex
-Optimization, which hurts my eyes:) but the 2006 paper is much more fluent, at
-only 14 pages. 
-
-Let's review it and in paritcular let's review the part about 'Optimal
-Stimulus', this starts in Sec. 3 (p.11)
-
-\begin{quote}
-If we use the entropy of the posterior
-distribution on the model parameters ( what we call $L(t|\th)
-\rho(\th)$) to quantify this uncertainty, we arrive at the [\ldots] 
-mutual information between the response (for us this is $t_s$) and the model
-parameters $\th$ given the stimulus and past data.  
-\end{quote}
-
-They then acknowledge that optimizing $I$ is problematic, and even just
-computing it quickly becomes hard for multi-dimensional params\ldots
-
-They then suggest to approximate the posterior of $\th$ with a Gaussian. They
-self-quote (\cite{Paninski2005}, which seems to be the main theoretical
-justification paper for using MI).
-
-With that the Mutual Information calculation is reduced to determinig the
-log-Determinant of the Hessian matrix (the Gaussian Covariance)\ldots
-
-They then do a very smart observation that for online optimization this Hessian
-recuses very nicely with itself over observations and so updating it is very
-cheap (computationally). Thus one can optimize-stimulate-update online, meaning;
-
-\begin{enumerate}
-  \item Optimize the MI for a given param prior
-  \item stimulate the system with the MI-optimal stimulus
-  \item update the prior given the new observation
-  \item Reoptimize the MI using the new prior (the posterior)
-  \item roll on\ldots
-\end{enumerate}
-
-OK! Now I understand the rough idea of the 76 page 2009 paper\cite{Lewi2009}.
-
-\subsection{Cool (Waterloo) Physics paper}
-\cite{Granade2012} describe something that is in principle very close to what we
-aim at. They are trying to estimate the 'Hamiltonian' of a quantum experiment
-(its parameters) and they talk about all the things we talk about - optimal
-stimulus, belief distn over the params. In Algos, 1-7 of their paper they give a
-very readable summary of particle filtering! (which in turn sources
-\cite{Liu2001})
-
-\section{Problem Formulation for full trajecotry-observation}
-The basic goal is to perturb a dynamical system in an 'optimal' way such as to
-estimate its structural parameters. 
-
-As such the problem is a blend of optimal control and estimation, where the
-objective of the optimal control is to improve the estimation, e.g.\ by
-minimizing the variance of the estimators. 
-
-For illustration sake we return to our favourite LIF model
-Given a noisy LIF neuronal model:
+ 
+\section{Problem Formulation}
+\label{sec:problem_formulation}
+We would like to estimate the parameters in a noisy, leaky integrate-and-fire
+(LIF) neuronal model. This is a diffusion process that has an absorbing barrier
+at at an upper boundary and is unbounded below. In particular it is governed by,
 \begin{equation}
 \begin{gathered}
-dX_s = (\a(t) + \m + \g \sin(\o t) - \frac{X_s}{\tc} ) \intd{s} + \b \intd{W_s},
+dX_t = \left(\underbrace{\a(t)}_{\textrm{control}} + \frac 1\tc(\m %\g \sin(\ot)
+ - {X_t} ) \right) \intd{s} + \s\intd{W_t},
 \\
-X(0) = .0,
+X(0) = 0,
 \\
 X(\ts) = \xth \implies  
 \begin{cases}
-X(\ts^+) &= .0   
+X(\ts^+) &= 0   
 \\
 t_k &=  \ts
 \\
 k  &= k+1
 \end{cases}
-\end{gathered}
-\label{eq:X_evolution_uo}
+\end{gathered} 
+\label{eq:X_evolution_uo_control}
 \end{equation}
-With the parameter set $\th = \{\m, \g, \tc, \b\}$ unknown. i.e\ assume that
-$\o$ is known. Actually, to keep things pedagogical, let us say only $\tc$ is
-unknown.
-
-Our goal is to choose $\a(t)$ as to estimate $\tc$. Again, we consider two
-different data scenarios
-\begin{itemize}
-  \item $X_t$ is continuously observed. 
-	\item Only the spike times $\{t_k\}$ are observed
-\end{itemize}
-The first scenario is addressed (for the MOrris-Lecar model) in a submitted
-paper, \cite{Lin} where I got this idea, the second scenario is likely
-unaddressed in the literature. (I say likely as it is a 'harder' problem than
-the first scenario and the first scenario is only now being addressed in 
-\cite{Lin} which claims to be one of the first optimal design papers using
-stochastic control)
-
-In addition to addressing the second scenario, which is a highly non-trivial
-extension of the first scenario, we might also consider several smaller ways to
-differentiate ourselves from \cite{Lin} - for example their numerical method for
-the optimal control problem is relatively simple, and also their optimization
-criteria is slightly self-inconsistent in a way that I will explain later, in
-particular I feel there might be an alternative optimization criteria phrased
-in terms of posterior distributions (from Bayesian theory).
-
-
- 
-
-As such the Fisher Matrix also known as the FIsher INformation matrix
-plays a main role. 
-
-While Optimal Design of statistical experiments is a fairly well-developed
-research topic, optimal design for estimation of parameters in dynamic models
-such as ordinary differential equations has only recently begun to be addressed.
-For stochastic differential equations, there is very little done. The only
-reference to my knowledge is the work of Lin et al. \cite{Lin}, who also
-attempt to minimize the Fisher Information of parameters in an SDE model
-using the fact that for one unknown parameter the Fisher Information  of the
-continuous observations form an SDE yields a tractable dynamic optimization
-criterion.
-
-Let us briefly sketch their basic idea. We write the dynamics as
-\begin{equation}
-dX = \underbrace{F(X,\th, \a)}_{\textrm{controlled drift}}dt
-+ G dW
-\end{equation}
-where $X$ is the state, $\th$ are the unknown parameters, in this case just one,
-and $\a$ is some dynamic control. Assume that $G$ is constant. Then given an
-observed path $\{x_t\}_0^\tf$, the log-likelihood, $l$ wrt.\ the parameter set $\th$ is
-\begin{align}
-l(\th | x_t) =&  \frac 12 \int_0^\tf \frac{F^2(x_t,\th, \a)}{G^2} \intd{t}
-\notag
-\\
-&- \int_0^\tf  \frac{F(x_t,\th, \a)}{G^2} \intd{W}
-\label{eq:log_likelihood_cts_time}
-\end{align}
-The suggestion in \cite{Lin} then is to choose $\a$ by maximizing the Fisher Information
-\begin{equation}
-\FI(\th, \a) = \Exp_X \left[ \int_0^\tf \frac{ \left( \di_\th F(X_t,\th, \a)
-\right)^2}{G^2}
-\intd{t}
-\right]
-\label{eq:Fisher_Information}
-\end{equation}
-
-Note that there are two optimizations intertwined. One, to maximize
-the likelihood $l$ in order to obtain the actual estimate $\th$, the other - to
-maximize the Fisher Information evaluated at the (a priori unknown!) estimator $\th$.
-
-The authors in Lin et al. \cite{Lin} acknowledge that clearly one cannot form
-the Fisher Information directly since its evaluation requires the very parameter
-being sought! To remedy this, they apply a prior of $\th$. I still need to
-understand exactly what they do, but as far as I understand, they augment $\FI$
-by an outer expectation over the prior for $\th$, i.e.\ (I think!) the objective
-determining the control $\a$ becomes
-\begin{equation}
-\tilde{I}(\th, \a) = \underbrace{\Exp_\th \left [
-\underbrace{\Exp_{X} \left[ \int_0^\tf
-\frac{ \left( \di_\th f(x_t,\th, \a) \right)^2}{\b^2}
-\intd{t}
-\right]}_{\textrm{average over trajectories}}
-\right]}_{\textrm{average over prior}}
-\label{eq:Fisher_Information}
-\end{equation}
-and then they show that the estimator so obtained, i.e.\ the one which uses the
-optimal $\a$, is still better than a naive estimator (without any control)
-   
-
-
-\section{SDE Parameter Estimation and Optimal Design}
-The basic goal of 'Optimal Design' is to perturb a dynamical system in an
-'optimal' way such as to 'best' estimate its structural parameters.
-
-Consider the generic parametrized and controlled SDE system 
-\begin{equation}
-dX = U(x,\a(x,t); \th) \intd{t} + \sqrt{2D} dW
-\label{eq:SDE_evolution} 
-\end{equation}
-and, for illustration case, specialize \cref{eq:SDE_evolution} to the OU
-system:
-\begin{equation}
-dX = \underbrace{(\a + \b( \mu - X)}_{U(x,\a; \th)} \intd{t} +
-\underbrace{\s}_{\sqrt{2D}} dW
-\label{eq:OU_evolution} 
-\end{equation}
-Whose parameter set is:
-$$
-\th = \{\m, \b, \s\}
-$$
-or a subset thereof.
-
-We want to estimate $\th$  from observations $\{ X_t \}$, given that we have
-latitude in choosing a perturbation (control) policy $\a(\cdot)$. We will assume
-that we have cts. observations (i.e.\ very-high-frequency observations). 
-
-\subsection{Some basic concepts/notation}
-We will call $f$ the probability transition density associated with $X_t$, 
-\begin{equation}
-f(x,t| x_0 ;\th, \a(\cdot)) dx = \Prob[ X_t \in x + dx | x_0, \a, \th]
-\end{equation} 
-
-For a fixed parameter set, $\th$, and control policy, $\a(\cdot)$, $f$ is the
-solution to a Fokker-Planck equation:
-\begin{equation}
-\di_t f = \L_{\th, \a(\cdot)}[f]
-\label{eq:fokker_planck_forward_density}
-\end{equation}
-where the differential operator $\L$ is given by:
-$$
-\L_{\th, \a(\cdot)}[f] = D \cdot \di_x^2 [f] - \di_x[U(x,\a(x,t); \th) \cdot f]
-$$
-We will call $\L$ the forward operator and its adjoint, $\Lstar$, the backward
-operator.
-
-
-\section{Optimal Design using Mutual Information}
-Our main point-of-departure in obtaining $\a(\cdot)$ is the concept of Mutual
-Information (here are two books on information theory -
-\cite{Cover2006,MacKay2003} :), see \cref{sec:mutual_info_defn} for
-definitions).
-
-In particular, two references suggest that one should use the Mutual
-Information \cite{Myung2013,Lewi2009} as the criterion for designing a parameter
-estimation experiment. (Designing the experiment is synonymous to
-choosing the control policy $\a(\cdot)$.)
-
-In order to apply the concept of mutual information, we need to have a prior on
-the parameter set, $\th$. We will call this prior: 
-$$\rho(\th).$$ 
-Naturally a optimally-designed experiment is one which reveals most the actual
-value of $\th$. That is we want to choose $\a(\cdot)$ such as to maximize the
-Information from the random variable $\th$, given observations of the random
-variable $X_t$.
-
-First we need to consider the posterior of $\th$, $p(\th|X_t)$ given an
-observation $X_t$ for $t$ fixed
-\begin{subequations}
-\begin{equation}
-p(\th| X_t; \a) =
-\frac{f(X_t,t|\th; \a)\cdot \rho(\th)}
-{\int_\Theta f(X_t,t|\th; \a)\cdot \rho(\th)
-\intd{\th}}
-\label{eq:parameter_posterior_single_observation}
-\end{equation} 
-That is the transition density is the likelihood of the parameters.
-\begin{equation}
-L(X_t|\th ) = f(X_t, t| x_0, 0; \th, \a(\cdot))
-\label{eq:paramter_likelihood_single_observation}
-\end{equation}
-\end{subequations}
-However, if we have many observations $\{X_{t_n}\}$, the likelihood is, of
-course, more complicated. Then 
-\begin{subequations}
-\begin{equation}
-L(\{X_n\} | \th) = 
-\prod_n (f(X_{t_{n+1}},t_{n+1}|X_{t_{n }},t_{n} ;\th)
-\end{equation}
-and the parameter posterior is then
-\begin{equation}
-p(\th| \{X_{t_n}\}; \a) =
-\frac{L(\{X_{t_n}\},t|\th; \a)\cdot \rho(\th)}
-{\int_\Theta L(\{X_{t_n}\},t|\th; \a)\cdot \rho(\th)
-\intd{\th}}
-\label{eq:parameter_posterior_multi_observations}
-\end{equation}  
-\end{subequations}
-Once we have the concepts of the prior, posterior and likelihood, $\rho, p, L$,
-then the mutual information, $I$, between the two random variables, $\th$, $X_t$
-is: 
-\begin{equation}
-I(\a) = \int_\Theta \int_X  \log\left[\frac{p(\th| x; \a)}{\rho(\th)}\right]
-\cdot L(x| \th;\a) \cdot \rho(\th) \intd{\th} \intd{x}
-\label{eq:mutual_info_with_posterior}
-\end{equation}
-This is straight from equations 6,8,9 of \cite{Myung2013} (That paper is on the
-OptEstimate Mendeley group). Also see \cref{sec:mutual_info_defn}.
- 
-Replacing the posterior in \cref{eq:mutual_info_with_posterior}, with the
-bayesian formula from \cref{eq:parameter_posterior_single_observation} or
-\ref{eq:parameter_posterior_multi_observations}, we get:
-\begin{equation}
-I(\a) = \int_\Theta \int_X  \log\left[\frac{L(x|\th; \a)}
-										{\int_\Theta L(x|\th;\a)\cdot \rho(\th) \intd{\th}} \right] \cdot L(x|
-										\th;\a) \cdot \rho(\th) \intd{\th} \intd{x}
-\label{eq:mutual_info_with_likelihood}
-\end{equation}
-
-If $I$ is deemed to encode the information in $\th$ given $X_t$, it is
-natural to seek the policy $\a(\cdot)$ that maximizes $I$.
-
-However \cref{eq:mutual_info_with_likelihood} can appear deceptively
-simple. The integral over $X$, $\int_X \intd{x}$, is really a multi-dimensional integral
-over all observations. Thus just the evaluation of $I$ is only possible through
-Monte Carlo methods, unless we are dealing with very few, say $N<5$ observations.
-However if you have only one observation, as with the posterior given
-\cref{eq:parameter_posterior_single_observation}, then we have a very simple
-single integral over $x$, which can be easily evaluated approximately using any
-quadrature rule.
-
-A crucial assumption in the sequel is that we will NOT be updating the prior on
-the fly, that is we will always have the same $\rho(\th)$ in
-\cref{eq:mutual_info_with_likelihood}, even though new observations can
-obviously be used to update the prior, $\rho$, through Bayes' formula.
-
-
-\section{Simplest Example without any reference to Optimal Control Concepts}
-
-Reconsider the system in \cref{eq:OU_evolution} 
-$$
-dX = \underbrace{(\a + \b( \mu - X)}_{U(x,\a)} \intd{t} +
-\underbrace{\s}_{\sqrt{2D}} dW
-$$
-
-We will rederive the standard Maximum Likelihood formulas for $\th = \{\m, \b,
-\s\}$ given the non-zero, but known evolution of $\a(\cdot)$.
-
-$X_t$ can be solved explicitly for as:
-\begin{align*}
-dX =& (\a + \b( \mu - X) dt + \s dW
-% \\
-% (dX + \b X_t) dt =& (\a + \b \m) dt + \s dW
-\\
-(e^{\b t} dX + e^{\b t}\b X_t) dt
-=&
-e^{ \b t}( \a + \b \m) dt + \s e^{\b t} dW
-\\
-Xe^{\b t} - X_0 =&
-\int e^{ \b t}( \a + \b \m) dt +  \int \s e^{\b t} dW
-\\
-\implies
-X_t =& e^{-\b t} X_0 
-		+ \frac{(\a + \b \m)}\b \cdot ( 1- e^{-\b t}) +
-	       \s  \cdot \sqrt\frac{{ 1 - e^{-2\b t}}}{2\b} \cdot \xi 
-\end{align*}
-where $\xi$ is a standard normal RV. Crucially, we have assumed that $\a$ is
-constant, o/w the integral $\int e^{ \b t}  \a(t) dt$ cannot be solved
-explicitly.
-
-Then if we have known initial conditions (ICs), i.e. if $X_0$ is constant 
-$$
-X_t \sim N \left(e^{-\b t} x_0 + \frac{(\a + \b \m)}\b \cdot ( 1- e^{-\b t}),
-\quad  \s  \cdot \sqrt{ \frac{ 1 - e^{-2\b t}}{2\b}} \right)
-$$
-
-Consider discrete observations ${X_n, t_n}$ obtained at uniform
-$t_n$, such that $\a$ is constant in between observations.
-Then the transition probabilities $p_n(X_n|X_{n-1})$ are given by:
-\begin{align*}
-p_n(X_n|X_{n-1}; \m,\b, \s; \Delta_n) \propto &
-\frac{\sqrt \b}{\s \sqrt{1 -  e^{-2\b \Delta_n}}}
-\\ &\cdot 
-\exp\left(\frac{\left( X_n - (\frac \a\b + \mu)  - (X_{n-1} - \frac \a\b - \mu) \cdot
-e^{-\b \Delta_n} \right)^2 \cdot \b}
-			{ \s^2  (1-e^{-2\b\Delta_n})} \right)
-\end{align*}
-TODO: Change symbol $p \ra f$ to keep consistent with FP notation.
-
-The likelihood is simply the product:
-\begin{equation}
-L( \{X_n\}| ; \m,\b, \s; \Delta_n; \a) = \prod_n p_n(X_n|X_{n-1}; \m,\b, \s;
-\Delta_n)
-\label{eq:Likelihood_OU}
-\end{equation}
-And the log-likelihood of  ${X_n, t_n}$ is
-\begin{align*}
-l(\b, \m, \s | )=& \sum \log p_n(X_n|X_{n-1})
-\\
-=& \frac{N}{2} \log \frac{\b}{\s^2(1-e^{-2\b\Delta_n})}
-\\ & -\sum_n
-{\left( X_n - (\frac \a\b + \mu)  - 
-		(X_{n-1} - \frac \a\b - \mu) \cdot e^{-\b \Delta_n} \right)^2 } \cdot
-				\frac{\b}{\s^2  (1-e^{-2\b\Delta_n})}
-\end{align*}
-
-\def \Xn {{ X_n }}
-\def \Xm {{ X_{n-1} }}
-\def \deltan {{ \Delta_n }}
-% SAGE Derivation:
-% \\
-% In order to use classical formulas for ML estimates of OU  processes, we will
-% rewrite $l$ in terms of the variable $$ m = \frac{\a + \b \m}{\b}$$
-% which in the case of $\a=0$ gives $m=\m$.
-
-ML estimators for $\m,\b,\s$ are obtained via setting $\di_{\th} l$ to zero for
-each parameter $\th$. (ignore for now that $\Delta_n$ is not the same
-throughout). However, it turns out that it is easier to first compute the ML estimate for
-$\s$ and then plug it back into the likelihood, $l$, to simplify things:
-\begin{align}
-\di_{\s} l()=& -\frac N\s + 2\sum_n
-\frac{ \left( X_n - e^{-\b \Delta_n} X_{n-1} -
-				 (\frac \a\b + \m) \cdot ( 1-e^{-\b \Delta_n}) \right)^2 \b}
-				 {\s^3 \cdot (1-e^{-2\b\Delta_n})}
-				 \notag
-				 \\ 
-\implies \hat\s^2 =& 2\sum_n \frac{ \left( X_n - e^{-\hat\b \Delta_n} X_{n-1} -
-				 (\frac {\a}{\hat{\b}} + \m) \cdot ( 1-e^{-\hat\b \Delta_n}) \right)^2
-				 \hat\b} {N \cdot (1-e^{-2\hat\b\Delta_n})}
-				 \label{eq:sigma_root}
-\end{align}
-With that the likelihood becomes:
-\begin{align*}
-l(\b, \m |\, X_n )=& 
- -N\log \left( 
- \frac{ \sum_n\left( X_n - e^{-\b \Delta_n} X_{n-1} -
-  (\frac {{\a}}{{\b}} + \m) \cdot ( 1-e^{-\b \Delta_n})
-  \right)^2}{N} \right) - 1
-\end{align*}
-Now maximizing the negative of a log plus a const is the same as minimizing the
-argument of the log. So we need to {\itshape minimize}
-\begin{align*}
-l(\b, \m |\, X_n )\equiv& 
-\sum_n \left( X_n - e^{-\b \Delta_n} X_{n-1} -
-  (\frac {{\a}}{{\b}} + \m) \cdot ( 1-e^{-\b \Delta_n})
-  \right)^2 
-\end{align*}
-% That is a non-linear least squares problem! And in fact it is bi-linear in the
-% variable $$ b = \exp(-\b \Delta)$$ Billinear because of the term $\m b$.
- 
-Let's differentiate
-\begin{subequations}
-\begin{align}
-\di_{\m} l()=& 2 \sum_n \left( X_n - e^{-\b \Delta_n} X_{n-1} -
-  (\frac {{\a}}{{\b}} + \m) \cdot ( 1-e^{-\b \Delta_n})  \right) 
-  \cdot   ( 1-e^{-\b \Delta_n})
-\\
-\di_{\b} l()=& 2 \sum_n \left( X_n - e^{-\b \Delta_n} X_{n-1} -
-  (\frac {{\a}}{{\b}} + \m) \cdot ( 1-e^{-\b \Delta_n})  \right) 
-  \\ \notag 
-  & \times \left( \Delta_n e^{- \b \Delta_n}X_{n-1} 
-  							  + \frac{ \a } {\b^2} (1-e^{-\b \Delta_n}) 
-  					 		  - (\frac {{\a}}{{\b}} + \m) ( \Delta_n e^{- \b \Delta_n})          
-  					 		  \right)
-\end{align}
-\end{subequations}
-The $\m$ equation is straight-forward to solve
-
-\begin{align}
-\hat{\m} =&  \frac{ \sum_n \left( X_n - e^{-\b \Delta_n} X_{n-1} -
-	\frac{\a}{\b} ( 1-e^{-\b \Delta_n}) \right)}
-	{N ( 1-e^{-\b \Delta_n})}
-	\label{eq:mu_root}
-\end{align}
-
-This means that we only need to solve one equation in one unknown
-\begin{align}
-\label{eq:beta_root}
-0=& \sum_n \left( X_n - e^{-\b \Delta_n} X_{n-1} -
-  (\frac {{\a}}{{\b}} + \m) \cdot ( 1-e^{-\b \Delta_n})  \right) 
-  \\ \notag 
-  & \times \left( \Delta_n e^{- \b \Delta_n}X_{n-1} 
-  							  + \frac{ \a } {\b^2} (1-e^{-\b \Delta_n}) 
-  					 		  - (\frac {{\a}}{{\b}} + \m) ( \Delta_n e^{- \b \Delta_n})          
-  					 		  \right)
-\end{align}
-for $\b$ and then plug into \cref{eq:mu_root,eq:sigma_root}
-
-(I have checked that in the case of $\a=0$ this reduces to well-known
-expressions!)
-
-Note: we've been quite cavalier about the constancy of $\Delta_n$, mostly
-treating it as a constant, in order to focus on the impact of $\alpha$. Later we
-can go back and be a little more rigorous, treating $\Delta_n$ as a function of
-$n$.
-%  
-% On the contrary, while not being explicit in the notation, we have never assumed
-% $\a$ is constant and everything above can be rewritten in terms of $\a_n$.
-
-\subsection{Optimal Design}
-Now we proceed to apply the Mutual Information criterion in order to choose the
-controls $\a(t) = \a(t_{n-1})$, assumed piecewise constant over $\Delta_n$, such
-as to facilitate the estimation of the parameters $\m,\b,\s$?
-   
-Let us call the prior over the parameters $\th = \{\m, \b, \s\}$:
-$$\rho(\th)$$
-and the posterior over $\th$ given $X$:
-\begin{equation}
-p(\th| X; \a) =
-\frac{L(x|\th; \a)\cdot \rho(\th)}{\int_\Theta L(x|\th; \a)\cdot \rho(\th)
-\intd{\th}}
-\label{eq:parameter_posterior_defn}
-\end{equation} 
-Where $ L(X|\th; \a)$ is the likelihood of $X$ given in
-\cref{eq:Likelihood_OU}. $X$ could represent only one observation, $X_n$ or a
-set of observations $\{X_k\}_n^{n+K}$.
-
-Then we seek to find the $\a$ that maximizes the
-mutual information:
-\begin{equation}
-I(\a) = \int_\Theta \int_X  \log\left[\frac{p(\th| x; \a)}{\rho(\th)}\right]
-\cdot L(x| \th;\a) \cdot \rho(\th) \intd{\th} \intd{x}
-\label{eq:mutual_info_objective}
-\end{equation}
-This is straight from equations 6,8,9 of \cite{Myung2013} (That paper is on
-Mendeley)
- 
-Replacing the posterior in \cref{eq:mutual_info_objective}, with the Bayesian
-formula from \cref{eq:parameter_posterior_defn}, we get:
-\begin{equation}
-I(\a) = \int_\Theta \int_X  \log\left[\frac{L(x|\th; \a)}
-										{\int_\Theta L(x|\th;\a)\cdot \rho(\th) \intd{\th}} \right] \cdot L(x|
-										\th;\a) \cdot \rho(\th) \intd{\th} \intd{x}
-\label{eq:mutual_info_objective_posteriored}
-\end{equation}
-
-Again, the whole magic is to find the $\a$ that gives the highest value of $I$.
-
-Now we need to consider how are we going to represent/choose the parameter prior
-distribution $\rho(\th) = \rho(\m,\b,\s)$? 
-
-One very simplistic way to proceed is to let the system roll on unperturbed,
-then to obtain ML estimates for $\th$ using a small initial segment of $X_t$
-and then to take a Gaussian approximations centred at the so-obtained estimates. 
- 
-So  
-\begin{equation}
-\rho(\th) \propto 
-\exp\left( (\th - \hat\th) \cdot \hat\Xi^{-1} \cdot (\th-\hat\th)\right))
-\label{eq:prior_gaussian_approxmn}
-\end{equation}
-
-It is not entirely clear how to compute the covariance matrix, $\Xi$, perhaps
-something related to the Fisher Information of the ML estimates might be viable. 
-
- \subsubsection{Curse of Dimensionality given mulit-observations}
-
-As we already mentioned in \cref{eq:mutual_info_objective} we have integration
-wrt.\ the RV $x$. If, this is only one observation of the process, then $x$ is
-just $X_n$, but if we take this to be $K$ observations: then 'x' is
-$\{X_k\}_n^{n+K}$ and we have a $K$ dimensional integral\ldots However it does
-factor as we can integrate backwards, first wrt $X_{n+K}$ then $x_{n+K-1}$ and
-so on all the way to $X_{n}$.
-%  I must say this is all quite painful.
-
-One thing to do is for fixed $\th$ to sample a few, say $M$, $X$ paths. Then the
-objective will look like:
-\begin{equation}
-I(\a) = \int_\Theta \sum_{X_i|\th}  \log\left[\frac{L(X_i|\th; \a)}
-										{\int_\Theta L(X_i|\th;\a)\cdot \rho(\th)\intd{\th}} \right]
-										 \cdot \rho(\th) \intd{\th}
-\label{eq:mutual_info_objective_particlized}
-\end{equation}
-
-Now suppose that $\th$ is chosen using some kind of a Gauss-Hermite quadrature
-scheme in 3-d. Say that requires 125 points (that is only five points in each
-direction, so quite conservative, but also should give reasonable accuracy).
-That means that to evaluate $J$ we need to sample $M \times 125$ paths. And then do
-the summation. But wait, there's more. For each $x,\th$ pair we also need to do
-the integral for the normalizing constant\ldots so now we have $M \times 125^2$
-process samples in order to naively evaluate $I$. 
-Thus we might first consider, what if we only considered 1-slice ($X_n$)
-observations.
-
-\subsection{1-Slice Illustration}
-Let us make a simple proof-of-concept.
-
-We will take for the true parameters
-$$
-\b = .05; \m = -60; \s = .1;
-$$
-Now since the values of $\m, \s$ are determined by $\b$, let us reduce the prior
-to a one-dimensional Gaussian
-$\rho(\b) \propto \exp( -(\b -\hat \b)^2 / {\s_\b}^2) $
-and then for a given $\b$ we will obtain $\m, \s$ from
-the formulas in \cref{eq:mu_root,eq:sigma_root}.
-
-We will only focus on the next observation, so the likelihood is also a Gaussian
-distribution (conditional on $\m,\b,\s$) in 1-d. 
-
-Let us write it out using $x_0$ as the current value and $x$ as the future
-value and $\Delta$ as the time interval until the next observation:
-then the terms $L,\rho$ in the mutual information
-\begin{align*}
-I(\a) =& \int_\Theta \int_X  \log\left[\frac{L(x|\th; \a)}
-										{\int_\Theta L(x|\th;\a)\cdot \rho(\th) \intd{\th}} \right] \cdot L(x|
-										\th;\a) \cdot \rho(\th) \intd{\th} \intd{x}
-										\end{align*}
-										are given by:
-\begin{align*}
-L(x|\th; \a) =& \frac{\b}{\s \sqrt{2\pi(1 -  e^{-2\b \Delta}})}
- 	\cdot \exp\left(\frac{\left( x - (\frac \a\b + \mu)  - (x_{0} - \frac \a\b
- 	- \mu) \cdot e^{-\b \Delta} \right)^2 \cdot \b} { \s^2  (1-e^{-2\b\Delta})}
- 	\right) 
- 	\\
- 	\rho(\th) =&  
- 	\frac{1}{\s_\b \sqrt{2\pi} } \exp(-\frac{(\b-\hat\b)^2}{\s_\b^2}) 
-		\end{align*}
-Thus for each $x$ we need to form a Gaussian integral for the normalizing
-constant. And on top of that we need to make a two dimensional independent
-gaussian integral for the $x,\b$.
-
-Let us illustrate this. Start with a sample of duration 50 ms sampled at .1 ms ($500$ observed pts.). Then if we
-take a coarser sampling of 1s to create our boot-strap of estimates for $\beta$
-(50 observations in each sub-sample) we get:
-\begin{equation*}
-\begin{gathered}
-\hat {\hat \beta} \quad \s_{\hat\b} \\
-0.0881, 0.0182\\
-0.0974, 0.0514\\
-\boxed{0.0902, 0.0562} // \textrm{used in subsequent simulations}\\
-0.3060, 0.2968\\
-0.0696, 0.0386\\
-0.1947, 0.0790\\
-0.1702, 0.0624\\
-0.1706, 0.0481  // \textrm{way off including too small std}\\
- 0.1332, 0.0879\\
-\end{gathered}
-\end{equation*}
-That is actually ok. In 1 case, we couldn't actually estimate $\b$ (the data
-implies there is no solution to \cref{eq:beta_root}). In the other 9 cases, 8
-times the true value (.05) is within 2 standard deviations of the mean estimate
-and in 5 cases it is within 1 standard deviation of the mean.
-
-Note that calculating $\s_\b$ as $$ \s_\b^2 = \sum(\hat{ \hat \b} - \hat \b)^2
-$$ where $\hat{ \hat \b}$ are bootstrap estimates from a reduced data set helps
-increase the value of $\s_\b^2$. If instead of $\hat \b$, we use the mean of the
-bootstrap values themselves to calculate $\s_\b$, we will get smaller values for
-$\s_\b$, which will usually put the true value more than two standard deviations
-from the short-time estimate.
-
-Let's use the values of $\hat \beta, \s_{\hat\b} =  0.0902, 0.0562$ and
-visualize the resulting distributions for $\b$ and the functions $\m(\b),
-\s(\b, \m)$, see \cref{fig:prior_mu_sigma}. Essentially what we see is that $\m$
-depends on $\b$ inversely while $\s$ does not really depend on $\b$ given the
-data and a $\m$ estimate. These two facts seem reasonable given
-\cref{eq:mu_root,eq:sigma_root}, where $\mu$ is inversely proportional to
-$\b$ and $\s$ is proportional to the product of $\mu \beta$ once the term
-$\exp(-\beta \Delta)$ is ignored, and ignoring it is likely justified as long as
-$\Delta$ is small enough\ldots
-
-\begin{figure}[h]
-\begin{center}
-\subfloat[prior]
-{
-\label{fig:prior}
-\includegraphics[width=0.48\textwidth]{Figs/MI/prior_example.pdf}
-}
-\subfloat[underlying $X$ path]
-{
-\label{fig:prior_path}
-\includegraphics[width=0.48\textwidth]
-{Figs/MI/prior_example_path.pdf}
-}
-\caption[labelInTOC]{An example of a path, a prior over $\b$ built based on
-the path and the resulting functional relations between $\b$, $\m$ and $\s$,
-which are from \cref{eq:mu_root,eq:sigma_root}. The prior for $\b$ and the
-resulting $\m,\s$ are obtained using the path in (b)}
-\label{fig:prior_mu_sigma}
-\end{center}
-\end{figure}
-At this point we might start to think a normal prior for an a priori positive
-random variable, like $\b$, is a bad idea, especially if we are near zero and the std.
-dev. of the $\b$ belief distribution is non-negligible. Perhaps, we should use
-a log-normal prior or a gamma distribution \ldots
-
-
-Now let's calculate the integral of the likelihood wrt.\ the prior for a fixed
-$x$, ie. the marginal forward distribution of $x$. $$ p(x) = \int_\Theta
-L(x|\th;\a)\cdot \rho(\th) \intd{\th} $$ This is also the normalizing constant
-in bayes rule. We will use a forward horizon of  $\Delta_f = 5$ (ms) (Recall the
-data used to generate the prior distributions had $\Delta = 0.1$ and has length
-$T = 50$ ms). $p(x)$ is shown in \cref{fig:marginal_px}. Essentially,
-\cref{fig:marginal_px} is telling us that the current value of $x$ is lower than
-the estimate for the long-term mean, all things considered. Our current
-estimates for $\b, \m, \s$ are letting us believe that it should move up
-towards approximately $59.5$ provided that we continue with the
-current value of $\a=0$. 
-
-The two opposing proposed values for $\a = \pm 0.25$ result in much
-more spread distributions for $X_{t+\Delta_f}$. In particular, one might argue that
-$\a=-0.25$ is most informative, since the forward distribution has the most
-spread. (if we intuitively equate spread with information). This is consistent
-with the notion that the most informative experiments are the ones that lead $X$
-furthest from its current equilibrium (given $\a=0$). In this case the negative
-is better than positive, since the current value of $X_t$ is already negative in
-relation to the current equilibrium. Basically this is consistent with the
-following selection mechanism of $\a$: If $X_t > \m$ choose $\amax$ otherwise
-if $X_t < \m$ chose $\amin$. This is illustrated in
-\cref{fig:marginal_px_shifted}, where we artificially move the value of $X_t$ to
-the right of the (current) equilibrium, which makes the forward distribution
-arising from $\a=0.25$ more informative (higher spread), then the one with
-$\a=-0.25$.
-
-\begin{figure}[htp]
-\begin{center}
-\subfloat[Left of equilibrium]{
-  \includegraphics[width=.5\textwidth]{Figs/MI/x_marginal_example.pdf}
-  \label{fig:marginal_px}
-}
-\subfloat[Right of equilibrium]{
-  \includegraphics[width=.5\textwidth]{Figs/MI/x_marginal_example_x0_shifted_right.pdf}
-    \label{fig:marginal_px_shifted}
-  }
-  \caption[labelInTOC]{
-  Marginal of $x$ (normalizing constant), the tall red stem
-  is the current value of $X_t$. This is the last observed value based on
-  which we compute transition densities. The lower, blue stems are all the
-  other data previously observed. The blue and red curves are forward densities
-  given different applied forward values for $\a$. The green curve is the forward density given the hitherto used value of $\a=0$. It mostly coincides
-  with the so-far observed data(the blue stems).
-  In float (b) we artificially move the starting point to the right. Note that
-  the green curves in a), b) are not the same, since they depend on the value
-  of $X_t$ as well as the observed data ($X_t$ is different in the two
-  panels, but all other data points, the blue stems, are the same)}
-\end{center}
-\end{figure}
-
-Let us verify this intuition formally, by calculating $I(\a)$, for $\a =[-0.25 , 0, 0.25]$.
-
-Aside: Unfortunately, naively calculating the double integral (in Python using
-'quad' or 'romberg') is not numerically efficient. Calculating $I(\a)$ for a
-single $\a$ takes on the order of 10 secs, once you relax the quadrature
-tolerances without incurring any significant error\ldots Since we are dealing
-with Gaussian-type integrals, a Gauss-Hermite Integration scheme might be very
-effective, but we will leave that for now.
-
-Crushing through the integration with brute force we get the result
-in \cref{tab:MI_3alphas_basic_quad}.
-\begin{table}
-\begin{centering}
-\begin{tabular}{cc}
-$\a$& $I(\a)$ \\
--0.25  &
- 0.688 
-\\
-0.00 &
-   0.100 
-\\
-   0.25 &
-   0.419 
-\end{tabular}
-\caption{values for the mutual information, $I(\a)$, for various values of
-$\a$, starting from the value of $X_t$, (the red stem in
-\cref{fig:marginal_px})}
-\label{tab:MI_3alphas_basic_quad}
-\end{centering}
-\end{table}
-We have used the same starting (current) value of $X_t$ to form the forward
-likelihoods as in \cref{fig:marginal_px} and indeed we get the result.
-$$I(-0.25) >I (.25) > I(.0)$$
-which is consistent with our expectations after calculating the corresponding
-$p(x)|\a$ in \cref{fig:marginal_px}. This basically says that it should be most
-informative to stimulate down ($\a<0$), and it should be least informative to
-do nothing $\a=0$.
-
- \subsection{Follow-up Estimation}
- Let's now see what that means in practice. Pretend that we have done the
- analysis instantaneously and let the process unroll further from $X_t$ for
-some time. Then we will check if there is any advantage to
- using the mutually most informative $\a$, i.e.\ $\a = \argmax I(\a)$.
-First we generate 10 forward trajectories of duration 2$\Delta_f = 10$ (ms).
-They are shown in \cref{fig:perturbed_trajectories}. 
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=1\textwidth]{Figs/MIML/forward_sims.pdf}
-  \caption[labelInTOC]{Different Trajectories perturbed by different values of
-  $\a$ after the MI calculation}
-  \label{fig:perturbed_trajectories}
-\end{center}
-\end{figure}
-% 
-Now what we would like to see is that the estimates corresponding to $\a=-.25$
-are 'better' than the ones corresponding to $\a=.25$ and that they are much
-better than the ones corresponding to $\a=.0$.
-
-Let's see: The resulting estimates for the 10 trajectories are shown in
-\cref{fig:perturbed_estimates}. Well, what do you know, visually, it is clear
-that indeed $\a=-.25$ is  'better' than $\a=.25$, which in turn is better than $\a=.0$.
-\begin{figure}
-\begin{center}
-\includegraphics[width=1\textwidth]{Figs/MIML/perturbed_estimates.pdf}
-\caption[]{The estimates for $\b$ given the three perturbed
-trajectories (one is actually un-perturbed ($\a=.0$)). The solid black line
-indicates the true value of $\b$}
-\label{fig:perturbed_estimates}
-\end{center}
-\end{figure}
-
-\subsection{Bang-Bang?}
-We expect that it is actually best to apply maximum inhibition or maximum
-excitation. That is we expect that $I(\a_2) > I(\a_1)$ for $|\a_2| > |\a_1|$. We
-verify this in \cref{tab:MI_bang_bang_alphas}, where we see the general tendency
-that bigger is more informative than smaller and negative is more informative
-than positive.
-\begin{table}
-\begin{centering}
-\begin{tabular}{cc}
-$\a$& $I(\a)$ \\
--2&  2.31 \\
--1.00 & 1.714 \\
--0.50 & 1.182 \\
-0.50 & 0.885 \\
-1.00 & 1.563 \\
-2.00 &  2.20 \\
-\end{tabular}
-\caption{values of MI}
-\label{tab:MI_bang_bang_alphas}
-\end{centering}
-\end{table}
-\Cref{tab:MI_bang_bang_alphas} and our intuition suggest then that the choice
-for which is always between the two extremes st.\ $\a_{\textrm{most
-informative}} \in \{\amin, \amax\}$.
-
-Now we wonder what happens to the calculated value of $I$ as we move $\Delta_f$,
-see \cref{fig:MI_delta_f_variation}. Now this is interesting. As $\Delta_f$
-increases, we have a raise in the mutual information. Intuitively this is
-obvious, since bigger $\Delta_f$ means more data. However, recall that we are
-only considering the information contained in the final value (at $t=\Delta_f$).
-That is also why $I$ levels off eventually, if we were considering the full path
-and not just the final value, then it should continue increasing monotonically,
-although perhaps with a decreasing slope. However! It is also clear that while
-in the current context and for the current example at this time, inhibition is
-best $I(-) > I(+)$. At some point in the future excitation will be better! That
-is as the $X$ variable settles into its new, lower, equilibrium, $I(+) > I(-)$.
-
-The question becomes how to formulate this problem as to decide on when to
-switch. 
-%\usepackage{graphics} is needed for \includegraphics
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=1\textwidth]{Figs/MI/forward_deltas_vs_MIs.pdf}
-\caption{values of MI while varying $\Delta_f$. Note that the right-most value
-is a little iffy, as the integration routines warn about possible problems with
-the various integrals}
-	\label{fig:MI_delta_f_variation}
-\end{center}
-\end{figure} 
-Let me explain why, potentially, this is an interesting problem, what is a
-possible solution and why that solution is possibly very difficult to enact:
-
-\subsection{Optimal Switching for Optimal Design}
-Let us recap where (we think) we are:
-There is an observed OU process $X_t$. We estimate it on the fly and have
-estimates for $\b, \m, \s$ or more precisely we have a distribution for $\b$ and
-a one-to-one relation between $\b$ and $\m,\s$. 
-
-We have a control of $\a$ with which we can stimulate $X$. We want to use $\a$
-to improve the observations of $\b, \m, \s$. We use the Mutual Information
-criterion, $I(\a)$ to select $\a$. From the structure of the OU process, it is
-conjectured and empirically observed that the bigger in magnitude $\a$ the more
-informative it will be. Thus, in the absence of an energy cost, we are left only
-to select between the two extreme values of $\a$, $[\amin, \amax]$, which
-we can assume to be just $[\pm \amax]$ for some $\amax>0$. Thus at any time, $t$,
-we can calculate $I(\amin), I(\amax)$ and choose the $\a$ associated with the larger $I$.
-
-However, in a sense this is greedy and thus not necessarily optimal.
-
-Here is a simple way to think about it:
-
-Imagine that $\amin, \amax$ correspond to two equilibria
-$\xmin, \xmax$. Our intuition is that there is a mid-point $\xmid$ between
-$\xmin, \xmax$ st. if $X_t < \xmid$, we should apply $\amax$ and conversely. 
-It is now clear that this can easily result in chattering - being below $\xmid$
-we stimulate which sends us above $\xmid$ and then we inhibit, since above
-$\xmid$ it is most informative to inhibit and so on. 
-
-When you add the noise, it is hard to see if that is even a better idea than
-doing nothing. 
-
-Of course, things are not so simple as the distribution on the parameters,
-$\rho$ may make $\xmid$ itself move as $\rho$  shifts and shrinks, but let's
-ignore that for now. 
-
-At this point it becomes clear that we need a way to choose the switching time
-to switch between  $\amax, \amin$ using something more sophisticated than just
-the instantaneous value of $I(\a)$. This is related to the problem of
-how to choose the observation time $\Delta_f$ in the formulation of $I(\a)$. 
-
-Basically we need to select what we are going to do now in part based on what we
-can do later. And that is Dynamic Optimization!
-
-The main difference here from standard Dynamic Optimization is
-that our state is not so much the value of $X_t$ but the value of $\hat \b_t,
-\hat \m_t, \hat \s_t$, the estimates at time $t$. Once we realize this, we also
-realize our main challenge - the updates for $\b, \m, \s$ using the ML
-formulas are non-Markovian! That is we look back on all the old
-data when taking the new data into account to form $\hat \b_t, \hat \m_t, \hat
-\s_t$. 
-
-We could consider further one of two things
-\begin{enumerate} 
-  \item come up with a heuristic way of choosing $\Delta_f$ before which to
-  consider switching (if $\Delta_f$ is large enough, we will always switch (I
-  think))
-  \item Come up with an incremental form for updating $\b$
-\end{enumerate}
-
-In the next section we do NEITHER:) Instead we consider the Optimal Design
-problem, ie. the selection of $\a(\cdot)$ from the point-of-view of
-Stochastic Optimal Control Theory.
-
-
-
-\section{Finding the optimal design $\a(\cdot)$ using Stochastic
-Optimal Control}
-
-In principle now, we have a criterion, the mutual information in
-\cref{eq:mutual_info_with_likelihood}, using which to select the most
-informative perturbation $\a(\cdot)$. Intutitively, the 'optimal'  $\a(t)$
-depends on the up-to $t$ realization of $X_s ; s\leq t$. This is clearly a
-problem from optimal stochastic control. However, the objective in
-\cref{eq:mutual_info_with_likelihood} is not in the form needed to apply dynamic
-programing (or the maximum principle for that matter). The multi-dimensional
-integral in $X$ makes things 'too' complicated.
-
-On the other hand, a possible simplification is to take the mutual information
-criterion in \cref{eq:mutual_info_with_likelihood} using the single observation
-likelihood in \cref{eq:paramter_likelihood_single_observation} and just
-integrate it over time.
-\begin{equation}
-J(\a)  = \int_\th \int_0^T\int_{X_t}
- \log\left(\frac{f(x,t|\th ; \a(\cdot) )}
- 			{\int_\th f(x,t|\th; \a(\cdot)) \rho(\th)\intd{\th}}\right) 
- f(x,t|\th; \a(\cdot)) \cdot \rho(\th) \intd{x}\intd{t}\intd{\th}
-\label{eq:mutual_info_time_integrated}
-\end{equation}
-where the $dx$ integral has the same dimension as the dimension of the SDE not
-the dimension of the SDE times the number of observations. I should repeat that
-$J$ is NOT the mutual information between a realization of the process, $\{
-X_t\}_0^T$ and the parameter set, $\th$. It is the time-integral of the
-individual mutual informations between each $X_t$ at time $t$ and the parameter
-set $\th$. 
-
-The reason we would like to consider this simplification is that now
-$J$ can be written as
-\begin{equation}
-J( \a) = \Exp_{\th} \Bigg[
-\Exp_{X_t|\th; \a(\cdot)}
-\left[ \int_0^T \log\left(\frac{f(X_t,t|\th; \a(\cdot))}
-{\int_\th f(X_t,t|\th; \a(\cdot)) \rho(\th)\intd{\th}}\right) \intd{t} \right]
-\Bigg] 
-\label{eq:mutual_info_time_integrated_as_expectations}
-\end{equation}
-which almost has the classical form of a stochastic optimal control
-problem, except for two non-standard features:
-\begin{enumerate}
-  \item We have an extra outer expectation, this is the integration wrt. to the
-  parameter prior.
-\item There is a forward-backward coupling in the determinations of the optimal
-control, meaning we can't just back out, the optimal control with a backwards
-solution to an HJB equation
-\end{enumerate}
-Of these two features, we discuss pt. 1 first.
-
-\subsection{Stochastic Optimal Control with a Prior}
-We would like to apply Dynamic Programing to the problem of maximizing
-\cref{eq:mutual_info_time_integrated_as_expectations}. However
-\cref{sec:DP_with_a_prior} shows why this is impossible (or at least why the
-first thing one thinks of does not work).
-
-Instead, in \cref{sec:MP_with_a_prior}, we use the Maximum Principle in order to
-find the optimal $\a(\cdot)$.
-
-\subsubsection{Dynamic Programing with a Prior}
-\label{sec:DP_with_a_prior}
-
-WARNING: THIS SECTION ULTIMATLY EXPLAINS WHY YOU \underline{CANNOT!} USE
-\cref{eq:HJB_equation_with_prior}. I.E. WHY DYNAMIC PROGRAMING CANNOT! BE
-USED TO FIND THE CONTROL, $\a(\cdot)$. 
-
-\vskip 15pt
-
-In order to apply Dynamic Programing, i.e. in order to set up an HJB PDE, let us
-write our objective as:
-\begin{equation}
-J(x_0, 0; \a) = \Exp_\th \Bigg[ \Exp_{X_0^T|\th, \a} \bigg[ \int_0^T r(X_t|
-\th)\intd{t} \bigg]\Bigg]
-\label{eq:stochastic_objective_with_prior_generic} 
-\end{equation}
-where, in our case, the reward $r$ is the mutual information between $X_t$ and
-$\th$ 
-\begin{equation}
-r(x|\th) = \log\left(\frac{f(x,t|\th; \a(\cdot))}
-{\int_\th f(x,t|\th; \a(\cdot)) \rho(\th)}\right)
-\label{eq:reward_funciont_mutual_information}
-\end{equation}
-But we can consider $r(\cdot)$ as a generic function of $X_t$.
-
-Now we try to follow the standard dynamic programing approach to obtain an
-HJB-type equation. 
-
-Call $w$ the value function, i.e.\ the optimal reward-to-go.
-\begin{equation}
-w(x_t, t) = \sup_{\a(\cdot)} 
-\Exp_\th \Bigg[ \Exp_{X_t^T|\th, \a} \bigg[ \int_t^T r(X_t| \th) \intd{t}
-\bigg]\Bigg]
-\label{eq:value_function_with_prior_defn}
-\end{equation}
-Or in particular, starting from $x_0$ at $t=0$ 
-\begin{equation}
-w(x_0, 0) = \sup_{\a(\cdot)} 
-\Exp_\th \Bigg[ \Exp_{X_0^T|\th, \a} \bigg[ \int_0^T r(X_t| \th) \intd{t}
-\bigg]\Bigg]
-\end{equation} 
-
-$$
-\Exp_{X_0^T|\th, \a} [\cdot] 
-$$
-means the expectation over the full trajectory of $X$ from $0$ to $\T$, $X_0$
-held fixed, while evolving under the parameter set $\th$ and the control
-policy $\a$.
-$$
-\Exp_{\Delta X|\th, \a} [\cdot] 
-$$
-Is the expectation over the single point realization of $\Delta X = X(\Delta t)
-= X_{\Delta t}$, again under a given parameter set and policy, $\th, \a$.
-
-The Markovian nature of $X_t|\th$ implies that for $x_0$ fixed.
-$$
-\Exp_{X_0^T|\th, \a} [\cdot ] =
-\Exp_{\Delta X|\th} \Big[ \Exp_{X_{\Delta t}^T|\th, \a} [ \cdot  | \Delta X ]
-\Big] $$
-
-With that we can start deriving an equation for $w$, starting from
-\begin{align*}
-w(x_0, 0) =& \sup_{\a(\cdot)} 
-\Exp_\th \Bigg[ \Exp_{X_0^T|\th, \a} \bigg[ \int_0^T r(X_t| \th) \intd{t}
-\bigg] \Bigg]
-\\
-=&  \sup_{\a(\cdot)} 
-\Exp_\th \bigg[ r(x_0) \Delta t \bigg] + 
-\Exp_\th \Bigg[ \Exp_{X_0^T|\th, \a} \bigg[ \int_{\Delta t}^T r(X_t| \th)
-\intd{t} \bigg] \Bigg]
-\end{align*}
-All we've done so far is split the time integral into an incremental initial
-part which is approximately equal to $r(x_0)\dt$ and the rest $\smallint_\dt^T$.
-Now let's focus on the second term, $\Exp_\th \Big[ \Exp_{X_0^T|\th, \a} \big[ \int_{\Delta t}^T r(X_t| \th)
-\intd{t} \big] \bigg]$ and condition on $x_0 + \Delta X$:
-\begin{align*}
-\Exp_\th \Bigg[ \Exp_{X_0^T|\th, \a} \bigg[ \int_{\Delta t}^T r(X_t| \th)
-\intd{t} \bigg] \Bigg]
-=&  
-\Exp_\th \Bigg[ \Exp_{\Delta X |\th, \a} \Big[ \Exp_{X_{\dt}^T|\th, \a}
-\int_\dt^T r(X_t| \th) \intd{t} | X_\dt \Big] \bigg] \Bigg]
-\end{align*}
-
-Now here is the main problem! We WOULD LIKE to say that
-\begin{multline}
-\Exp_\th \Bigg[ \Exp_{\Delta X |\th, \a} \Big[ \Exp_{X_{\dt}^T|\th, \a}
-\int_\dt^T r(X_t| \th) \intd{t} | X_\dt \Big] \bigg] \Bigg] 
-= \\
-\Exp_\th \Bigg[ \Exp_{\Delta X |\th, \a} \Big[ 
-\underbrace{\boldsymbol{\Exp_\th}}_{\uparrow\textrm{add this?} \uparrow} \Big[
-\Exp_{X_{\dt}^T|\th, \a} \int_\dt^T r(X_t| \th) \intd{t} | X_\dt \Big]\Big]
-\quad \bigg] \Bigg]
-\label{eq:incremental_bellman_with_falsely_added_prior}
-\end{multline}
-Because then we could plug in $w(x_0 + \Delta X, \Delta t)$ in:
-$$
-\Exp_\th \Bigg[
-\Exp_{X_{\dt}^T|\th, \a} \int_\dt^T r(X_t| \th) \intd{t} | X_\dt \Big]\Bigg] =
- w(x_0
-+ \Delta X, \Delta t) $$
-And then the rest rolls off easily to get the PDE:
-\begin{equation}
-\di_t w(x,t) + \sup_{\a(x,t)} \bigg\{  \Exp_\th \big[\Lstar_\th [w] +
-r(x|\th)\big] \bigg\} = 0
-\label{eq:HJB_equation_with_prior}
-\end{equation}
-Where $\Lstar_\th$ is the generator (backward Kolmogorov operator) corresponding
-to the SDE \cref{eq:SDE_evolution} for fixed parameters, $\th$,
-$$
-\Lstar_\th[\cdot] = U(x,\a; \th) \di_x[\cdot] + D \di_x^2[\cdot]
-$$
-
-HOWEVER! Can we just put the extra
-$\Exp_\th$ in \cref{eq:incremental_bellman_with_falsely_added_prior}? 
-
-It comes down to what exactly is the meaning of the prior on
-SDE parameters. Is it that:
-\begin{enumerate}
-  \item You choose $\th$ at each time-step (infinitesimally going to 0) let $X$
-  evolve accordingly for an increment $dt$ and then choose $\th$ again.
-  \\
-  or
-  \item You choose $\th$ at time $0$ and then let $X$ evolve accordingly to this
-  once-and-for-all fixed $\th$
-\end{enumerate}
-
-If it is the former, then we can indeed add the extra expectation wrt.\ $\th$
-in \cref{eq:incremental_bellman_with_falsely_added_prior} and then use
-\cref{eq:HJB_equation_with_prior} to compute $w$. If it is the latter, then we
-cannot.
-
-HOWEVER! Assuming pt.1, i.e.\ that we re-choose $\th$ at each incremenent,
-fundamentally violates the basic point of the parameter estimation.
-
-Let me explain.
-
-We suppose that the underlying process $X$ is governed by a single value of
-$\th$, we just don't know which. We would like to observe the
-trajectory of $X$ so as to determine which is the underlying value of $\th$, but
-if we re-choose $\th$ at each time-increment of $X$'s evolution, then there is
-NO single $\th$ and indeed the whole estimation problem is moot.
-
-So adding the inner expectation wrt.\ $\th$ in
-\cref{eq:incremental_bellman_with_falsely_added_prior} is wrong! And solving
-\cref{eq:HJB_equation_with_prior} will not at all help in finding the maximally
-informative stimulus $\a(\cdot)$.
-
-More mundanely, I actually, computed the solution to
-\cref{eq:HJB_equation_with_prior} for the Double-Well Potential and it gives
-non-sense results (for $\a$ AND $w$\ldots)
-
-We must try something else!
-
-
-\subsubsection{Maximum Principle with a Prior}
-\label{sec:MP_with_a_prior}
-Let us go back to the original objective,
-\cref{eq:mutual_info_time_integrated} or equivalently
-\cref{eq:mutual_info_time_integrated_as_expectations}
-$$
-J(\a)  = \int_\th \int_0^T\int_X
- \log\left(\frac{f(x,t|\th ; \a(\cdot) )}
- 			{\int_\th f(x,t|\th; \a(\cdot)) \rho(\th)\intd{\th}}\right) 
- f(x,t|\th; \a(\cdot)) \cdot \rho(\th) \intd{x}\intd{t}\intd{\th}
-$$
-
-$J$ then is a functional of a family of distributions $f(|\th)$ parametrized by
-$\th$.
-
-We will write this as:
-$$
-J(\a)  = \Exp_\th \left[ \int_0^T\int_{\O_X}
-r(f(x,t|\th; \a(\cdot))) \cdot   
- f(x,t|\th; \a(\cdot)) \intd{x}\intd{t} \right]
-$$ 
-
-Then optimizing $J$ looks a lot like the a generic problem in optimizing over
-PDEs with the added complexity of the outer expectation (the one wrt.\ $\th$).
-
-We now attempt to set up a Pontryagin-Type equation for the optimal value of
-$\a$: We start by augmenting the objective with the dynamics:
-\begin{equation}
-J =  \Exp_\th
-\left[ \int_0^T\int_{\O_X} r(f) \cdot f - p \cdot (\di_t f - \L_{\th;\a}[f])
-\intd{x}\intd{t}\right] 
-\label{eq:objective_augmented}
-\end{equation} 
-where $p =  p(x,t|\th; \a(\cdot))$ is the adjoint co-state and $\di_t f -
-\L_{\th;\a}[f]$ is the Fokker-Planck equation,
-\cref{eq:fokker_planck_forward_density}.
-
-What we are going to do is calculate the differential of $J$ wrt.\ $\a(\cdot)$
-and then use this in a gradient ascent procedure. First what we would like to do
-is transfer all the differentials from $f$ to $p$. That is we will integrate $p
-\cdot (\di_t f - \L[f])$ by parts so that only $f$ appears in the expression
-without any of its derivatives. This is a standard exercise, we show it in
-detail:
-\begin{align*}
-&-\int_0^T \int_{\O_X} p \cdot (\di_t f - \L[f]) \intd{x} \intd{s}=
-\\
-=&-\int_0^T \int_{\O_X} p \cdot 
-(\di_t f_0 - D \cdot \di_x^2 f + \di_x [U \cdot f]
-\intd{x} \intd{t} \quad \textrm{// what is }\L
-\\
-=&
- \int_0^T\int_{\O_X} \di_t p  f \intd{x} \intd{t} +
-  \int_{\O_X} p f\intd{x}  \Big|^{T}_{t=0} \quad \textrm{// the time-derivative pieces }
-  \\
-  &+ \int_0^T \int_{\O_X}
-	    (D \di^2_x p + U \di_x p)\cdot f 
-	  \intd{t}\intd{x}  \textrm{// the space-derivative pieces }
-	  \\
-	  &+ \int_0^T 
-	   \Big( p U f - p D \di_xf + \di_x p D f \Big|_{x=\xmin}^{\xmax} 
-	  \intd{t}
-	   \textrm{// the BC terms in 1-d}
-\end{align*}
-
-Thus the terminal and boundary conditions of $p$ are chosen given those of $f$
-and the objective $J$. Since there are no boundary or terminal terms
-contributing to our $J$, only the boundary conditions for $f$ impact the
-choice of boundary conditions for $p$. In particular the following has to be
-true:
-\begin{align*}
-pf&\Big|_{t=T}  = 0 & \textrm{Null TCs} \\
-p U f - p D \di_xf + \di_x p D f &\Big|_{x=\xmin, \xmax} = 0 & \textrm{Null BCs}
-\end{align*}
-
-This usually implies that $p(T) \equiv 0$, since there are usually no a priori
-restrictions on $f$ at the terminal time. For the boundary terms, 
-if the forward density has reflecting boundaries such that:
-$$
-U f - D\di_x f\Big|_{x=\xmin, \xmax}  = 0
-$$
-then the BC terms for the adjoint are just the simple Neumann BCs:
-$$
-\di_x p \Big|_{x=\xmin, \xmax} = 0
-$$
-
-Once this integration-by-parts is done and the appropriate BCs applied, we
-can return to the augmented objective, \cref{eq:objective_augmented} which now
-looks like:
-\begin{equation}
-J =  \Exp_\th
-\left[ \int_0^T\int_{\O_X} \log\left(\frac{f_\th}
- 					{\int_\th f_\th \cdot \rho(\th)\intd{\th}}\right) 
- 			 \cdot f_\th 
- 			 + 
- 			 (\di_t p_\th + \Lstar_{\th;\a}[p_\th] ) \cdot f_\th
-\intd{x}
-\intd{t} \right]
-\label{eq:objective_augmented_adjoined}
-\end{equation}
-with $\Lstar$ the adjoint operator to $\L$.
-
-The next step is to take the differential of $J$ wrt.\ the control
-$\a(x,t)$
-
-% Conceptually this is best imagined for a one-dimensional $X$. Basically,
-% $\a(x,t)$ is like a sheet in $x-t$ space and the differential of $J$ is telling
-% us how to move this sheet at any given point in order to improve the overall
-% $J$. 
-
-In order to make things simpler, we will write the integral wrt.\
-$\th$ as a sum, i.e.:
-$$
-\int_\Theta f(\th) \rho(\th) \intd{\th} = \Exp_\th [f(\th) ] = 
-\sum_\th w_\th (f(\th))
-$$ where the weights $w_\th$ approximate the density $\rho(\th)$.
-If one assumes a discrete prior this is just a different way of writing the
-integral, if the prior is assumed continuous, then this is an approximation.
-Then $J$ reads like:
-
-$$
-J =  \Exp_\th
-\left[ \int_0^T\int_{\O_X} \log\left(f_\th\right)\cdot \ft - 
-\log(\sum_\th \wt \ft) \cdot f_\th 
- 			 + 
- 			 (\di_t p_\th + \Lstar_{\th;\a} [p_\th] ) \cdot f_\th
-\intd{x}
-\intd{t} \right]
-$$
-and its differential wrt.\ $\a$ for given $x,t$ is:
-\begin{align*}
-\delta J|_{x,t} =& \sum_\th \Big[
-\frac{\dft}{\ft} \cdot \ft - \frac{  w_\th \dft }{\sum_\th w_\th\ft}\cdot \ft 
-+ \log\left(\frac{f_\th} {\sum_\th \wt \ft }\right) \cdot \dft  
-\\&
-+  (\di_t p_\th + \Lstar_{\th;\a} p_\th ) \cdot \dft
-+ \delta \a \cdot (\di_x \pt \cdot \ft)
-\Big]
-\\
-=& \sum_\th \Bigg[\Big(
-1 - \frac{  w_\th \ft }{\sum_\th w_\th\ft} 
-+ \log\left(\frac{f_\th} {\sum_\th \wt \ft }\right)   
-+  (\di_t p_\th + \Lstar_{\th;\a} p_\th )
-\Big)  \cdot \dft 
-\\
-&+ \delta \a \cdot (\di_x \pt \cdot \ft)
-\Big]
-\end{align*}
-Now we need to knock out the $\dft$ terms so that we are left with only $\delta
-\a$ terms. Thus we set the coeffiecent of $\dft$ to zero, which completes the 
-evolution equation for a given $p_\th$
-\begin{equation}
--\di_t \pt = 
-\Lstar_{\th;\a} [p_\th] +  
-1 - \frac{  w_\th \ft }{\sum_\th w_\th\ft} 
-+ \log\left(\frac{f_\th} {\sum_\th \wt \ft }\right)   
-\end{equation}
-And once $\pt, \ft$ are solved for, the differential wrt.\ $\a$ comes
-out to:
-\begin{equation}
-\frac {\delta J}{\delta \a} \Big|_{x,t} = \sum_\th (\di_x \pt \cdot \ft)
-\label{eq:differential_objective_wrt_control_final}
-\end{equation}
-\Cref{eq:differential_objective_wrt_control_final} forms the key ingredient
-in our gradient search for the most informative perturbation $\a^*(x,t) =
-\argmax J(\a)$.
-
-
-\subsubsection{Stationary Maximum Principle with a Prior}
-\label{sec:StatMP_with_a_prior}
-Let us now consider a variation on the Maximum Principle approach, when we just
-maximize the Mutual Information between the stationary distribution and the
-prior.
-
-This amounts to changing the objective in
-\cref{eq:mutual_info_time_integrated} to  
-$$
-J(\a)  = \int_\th \int_X
- \log\left(\frac{f(x|\th ; \a(\cdot) )}
- 			{\int_\th f(x|\th; \a(\cdot)) \rho(\th)\intd{\th}}\right) 
- f(x|\th; \a(\cdot)) \cdot \rho(\th) \intd{x}\intd{\th}
-$$
-
-In effect this is a simplified version of \cref{sec:MP_with_a_prior}, where we
-ignore the time evolution of $f$ and focus on its long-term equilibrium.
-
-The calculations are very similar with the exception of $\di_t f = 0$. We start
-by augmenting the objective with the dynamics:
-\begin{equation}
-J =  \Exp_\th
-\left[ \int_{\O_X} r(f) \cdot f + p \cdot \L_{\th;\a}[f]
-\intd{x}\right] 
-\label{eq:objective_stat_augmented}
-\end{equation} 
-where $p =  p(x|\th; \a(\cdot))$ is the statinoary adjoint co-state and 
-$\L_{\th;\a}[f]$ is the right hand of the Fokker-Planck equation,
-\cref{eq:fokker_planck_forward_density}.
-
-What we are going to do is calculate the differential of $J$ wrt.\ $\a(\cdot)$
-and then use this in a gradient ascent procedure. First what we would like to do
-is transfer all the differentials from $f$ to $p$. That is we will integrate $p
-\cdot (\L[f])$ by parts so that only $f$ appears in the expression
-without any of its derivatives. This is done exactly as before:
-\begin{align*}
-& \int_{\O_X} p \cdot (\L[f]) \intd{x}=
-\\
-=& \int_{\O_X}
-	    (\Lstar[p])\cdot f 
-	 \intd{x}  \textrm{// the space-derivative pieces }
-	  \\
-	  &+ \int_0^T 
-	   \Big( p U f - p D \di_xf + \di_x p D f \Big|_{x=\xmin}^{\xmax} 
-	   \textrm{// the BC terms in 1-d}
-\end{align*}
-Thus we keep the BCs as in the time-dependent section
-\cref{sec:MP_with_a_prior}, and ditch the TCs:
-\begin{align*}
-p U f - p D \di_xf + \di_x p D f &\Big|_{x=\xmin, \xmax} = 0 & \textrm{Null BCs}
-\end{align*}
-Once this integration-by-parts is done and the appropriate BCs applied, we
-can return to the augmented objective, \cref{eq:objective_augmented} which now
-looks like:
-\begin{equation}
-J =  \Exp_\th
-\left[ \int_{\O_X} \log\left(\frac{f_\th}
- 					{\int_\th f_\th \cdot \rho(\th)\intd{\th}}\right) 
- 			 \cdot f_\th 
- 			 + 
- 			 (\Lstar_{\th;\a}[p_\th] ) \cdot f_\th
-\intd{x}
-\right]
-\label{eq:objective_stat_augmented_adjoined}
-\end{equation}
-
-Taking the differential of $J$ wrt.\ the control $\a(x,t)$ gives
-\begin{align*}
-\delta J|_{x} =&
-\sum_\th \Bigg[\Big(
-1 - \frac{  w_\th \ft }{\sum_\th w_\th\ft} 
-+ \log\left(\frac{f_\th} {\sum_\th \wt \ft }\right)   
-+  \Lstar_{\th;\a} p_\th
-\Big)  \cdot \dft 
-\\
-&+ \delta \a \cdot (\di_x \pt \cdot \ft)
-\Big]
-\end{align*}
-This gives us the differential equation for the adjoint $p$
-\begin{equation}
-0 = 
-\Lstar_{\th;\a} [p_\th] +  
-1 - \frac{  w_\th \ft }{\sum_\th w_\th\ft} 
-+ \log\left(\frac{f_\th} {\sum_\th \wt \ft }\right)   
-\end{equation}
-And once $\pt, \ft$ are solved for, the differential wrt.\ $\a$ comes
-out to:
-\begin{equation}
-\frac {\delta J}{\delta \a} \Big|_{x} = \sum_\th (\di_x \pt \cdot \ft)
-\label{eq:differential_objective_stationary_wrt_control_final}
-\end{equation}
-\Cref{eq:differential_objective_stationary_wrt_control_final} forms the key ingredient
-in our gradient search for the most informative {\sl stationary} perturbation
-$\a^*(x) = \argmax J(\a)$. It is exactly the same as
-\cref{eq:differential_objective_wrt_control_final} and it is imagine that
-\Cref{eq:differential_objective_stationary_wrt_control_final} can be derived
-from \cref{eq:differential_objective_wrt_control_final} without going to all
-the trouble above\ldots
- 
-
-\section{Illustrative Example - Double Well Potential}
-\subsection{Maximum Principle Approach - Time-Dependent Case}
-\label{sec:MP_Doublewell_TimeDependent}
-We now follow up the theoretical developments from \cref{sec:MP_with_a_prior}
-with a concrete example.
-
-Our first test problem will be the problem on estimating the double-well
-potential barrier height as in Sec. 4 of the latest draft of Hooper et al.
-\cite{Lin} on arXiv. (From June 7th, 2013). We shall use exactly the same parameter values
-etc. as in sec. 4 in \cite{Lin}.
-
-We would now like to compute the forward density and the adjoint functions
-$\{\ft, \pt\}$ for the double-well problem.
-
-Let's explicitly state the evolution equations for $\ft,\pt$
-\begin{equation}
-\begin{gathered}
-\di_t \ft(x,t; \th, \a(\cdot)) = -\di_x [ U(x;A, \a) \cdot \ft(x,t)] + D \di_x^2
-\ft(x,t)
-\\
-\begin{array}{ll}
-	&
-	\left\{ \begin{array}{lcll}
-	 \ft(x,0) &=& \delta(x-x_0)  &\textrm{delta function at some } x_0
-	\\
-	U \ft - D \di_x \ft \big|_{x=\xmin,\xmax} &\equiv& 0 & \textrm{reflecting BCs
-	at some } \xmin, \xmax \end{array} \right.
-\end{array}
-\label{eq:forward_density_double_well}
-\end{gathered}
-\end{equation}
-
-\begin{equation}
-\begin{gathered}
--\di_t \pt(x,t) =
-D \di_x^2 \pt(x,t) +
-U(x;A, \a(x,t))\cdot \di_x \pt(x,t) \\
-+ 1 - \frac{  w_\th \ft }{\sum_\th \pt_\th\ft} 
-+ \log\left(\frac{f_\th} {\sum_\th \wt \ft }\right)
-\\
-\begin{array}{ll}
-	&
-	\left\{ \begin{array}{lcll}
-	\di_x \pt(x, t)|_{x = \xmin, \xmax}  &=& 0  \quad &\textrm{BCs}
-	\\
-	\pt(x,\T)  &=& 0 \,& \textrm{TCs}
-\end{array} \right.
-\end{array}
-\label{eq:backward_adjoint_double_well}
-\end{gathered}
-\end{equation}
-where,  
-\begin{eqnarray*}
-U(x; A, \a) &= -\left( 4x^3 - 4x -A \frac xc e^{-(x/c)^2/2} \right) + \a(x,t)
-\\
-&= -\grad_x \left( x^4  - 2x^2 + A e^{-(x/c)^2/2} \right)  + \a(x,t)
-\\
-&= -\grad_x \left(\mathcal V(x) + \mathcal{A}(x) \right)
-\end{eqnarray*}
-
-Having computed $\ft, \pt$, we compute the gradient $\delta J / \delta \a$
-as
-$$
-\frac {\delta J}{\delta \a} |_{x,t} = \sum_\th \wt (\di_x \pt \cdot \ft)
-$$
-This just restates \cref{eq:differential_objective_wrt_control_final}.
-
-Following \cite{Lin} (with some deviation in the exact values) we set the
-parameters as $\s = 1. \implies D = 0.5$, (actually it is a little smaller in
-\cite{Lin}, but this eases the numerics) and $c = 0.3$.
-
-We will use $A = 4$ as the value of $A$ under which the actual process evolves,
-but that is not important in the computation of the optimal control, $\a^*$. For
-the prior on $A$ we use a uniform over $[2,5]$, which we represent with
-only $N_\th = 2$ uniform points - $[2.0, 5.0]$.  In general it is
-not clear how to start the forward density (what its ICs should be). 
-My first attempt - to use a delta mass at $x_0 = 0$, i.e.\ to assume the
-process starts at the crest of the barrier, resulted in poor convergence
-properties for the gradient ascent procedure (by delta mass, we mean a very
-narrow Gaussian, of course). Instead, using a broad Gaussian distribution
-centred at the crest gave better results. 
-
-The control is constrained to lie in the set $[-10, 10]$, i.e.\ $\amax = 10$.
-The space is constrained to $x \in [-2.,2.]$, i.e.\ $\xmin, \xmax = -2.,2.$,
-using  It is further discretized using $\Delta x = .1$, i.e.\ with 101 uniform
-points, $[-5, -4.9\ldots 5.]$.
-
-Let's first see what happens when we run the solver until $T = 5$ (Similar to
-the $T$ value in \cite{Lin}.)
-
-The experiment proceeds as follows: For our initial guess we take $$\a_0(x,t)
-\equiv 0$$ Then we would like to see that 
-$$ \sgn \left(\frac {\delta J}{\delta \a}\right) \Big|_{x,t} = - \sgn(x)$$
-That is that for negative $x$ we want to drive to the right, $\a > 0$ and for
-positive $x$ we want to drive to the right $\a < 0$. 
-Let's see.  
-
-The results are visualized in \cref{fig:FBSoln_doublewell_alpha_null}. Let's
-discuss \cref{fig:FBSoln_doublewell_alpha_null}. The most important plots are on
-the right, $\delta J$ which indicate how we are supposed to be changing $\a$. 
-It is clear that except for the very beginning $t \approx 0$, and the end $t
-\approx T$, $\delta J$ is essentially constant in time.  
-
-Let's focus then on what happens in the bulk of time in the middle. Indeed we  
-have that 
-$$
-\sgn \left(\frac {\delta J}{\delta \a}\right) \Big|_{x,t} = - \sgn(x)
-$$
-which implies that we should push the particle to the right (resp. left)
-depending on whether we are to the left (resp. right) of the barrier at $x=0$.
-Everything looks good, except for two points.
-\begin{enumerate}
-  \item The magnitude of $\delta J$ is very small. If we were to take steps of
-  size $s=1.$, it would take us thousands of iteratons to get to what we expect to be
-the right solution, i.e. bang-bang at $\amax = 10$.
-\item The behaviour of $\delta J$ is 'wrong' or 'surprising near the end, $t
-\approx T$, which appear around $t>4.75$ and there is also some discrepancies
-near the beginning, the negative wiggles for $t \approx 0$, which vanish by the
-time $t > 0.5$
-\end{enumerate}
-
-Both issues are minor, but we shall keep them in mind when we go through a full
-iteration of the gradient descent. 
-%\usepackage{graphics} is needed for \includegraphics
-\begin{figure}[htp] 
-\begin{center}  
-  \includegraphics[width=.9\textwidth]{Figs/DoublewellFBSolver/FB_alpha_null_solution_2.pdf}
-  \caption[labelInTOC]{Solution to the test Double Well potential problem using
-  $\a \equiv 0$. }
-  \label{fig:FBSoln_doublewell_alpha_null}
-\end{center}
-\end{figure} 
-
-\subsubsection{Going through a full gradient descent iteration}
-See
-\cref{fig:FBSoln_doublewell_alpha_iterations,fig:FBSoln_doublewell_J_iterations},
-basically, we are (almost) able to converge to the bang-bang control and from
-\cref{fig:FBSoln_doublewell_J_iterations} we are led to believe that the
-bang-bang control is indeed optimal. 
-
-\begin{figure}[htp]
-\begin{center} 
-  \includegraphics[width=.9\textwidth]{Figs/DoublewellFBSolver/FB_alpha_iterates_uICs_4.pdf}
-  \caption[labelInTOC]{Solution to the test Double Well potential problem
-  starting from $\a \equiv 0$ until convergence. Note that except at the very
-  beginning, $t \approx 0$ and very end of the interval $t\approx T$, we have
-  converged to the bang-bang solution. }
-  \label{fig:FBSoln_doublewell_alpha_iterations}
-\end{center}
-\end{figure}
-
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=.9\textwidth]{Figs/DoublewellFBSolver/FB_J_iterates_uICs.pdf}
-  \caption[labelInTOC]{The evolution of $J$ during the Gradient Ascent, we see
-  it goes up and eventually asymptotes with the value of $J$ corresponding to
-  the bang-bang control. }
-  \label{fig:FBSoln_doublewell_J_iterations}
-\end{center}
-\end{figure}
- 
-\clearpage
-
-\section{Second Illustrative Example - the time-constant for the OU model}
-\label{sec:MP_OU_TimeDependent}
-
-In \cref{sec:MP_Doublewell_TimeDependent}, we got decent results for the
-Double-Well potential problem. Let's now apply the same techniques, (from
-\cref{sec:MP_with_a_prior}) on the OU process.
-
-We have seen this a few times, now (\cref{eq:OU_evolution})
-$$
-dX = \underbrace{(\a + \b( \mu - X)}_{U(x,\a; \th)} \intd{t} +
-\underbrace{\s}_{\sqrt{2D}} dW
-$$
-
-Since, we've seen the details in \cref{sec:MP_Doublewell_TimeDependent}, we'll
-just skip to the chase:
-
-(Known) Parameter values are given by: 
-
-For the fixed parameters we assume $\s = 1. \implies D = 0.5$, $\m = 0$.
-
-For the prior on $\tc = 1/\b$ we use a uniform over $[.5,2]$, which we represent
-with only $N_\th = 2$ uniform points located at $[.5,2]$.  
-
-For ICs for the forward density, we take a very broad Gaussian centred at $0$
-(the equilibrium).
-
-The control is constrained to lie in the set $[-1 , 1 ]$, i.e.\ $\amax
-= 1$. The space is constrained to $x \in [-2.,2.]$, i.e.\ $\xmin, \xmax =
--2.,2.$. 
-
-The $\a_k$ iterates and the gradient-ascent progress of $J$ are shown
-in \cref{fig:FBSoln_OU_alpha_iterations,fig:FBSoln_OU_J_iterations}. We see that
-again, we converge close to the bang-bang control (which in this case does the
-exact opposite than it did in the Double-Well test case). We also see that
-the bang-bang control is likely MI-optimal (the red curve in
-\cref{fig:FBSoln_OU_J_iterations}). 
- 
- 
-\begin{figure}[htp]
-\begin{center} 
-  \includegraphics[width=.9\textwidth]{Figs/OUFBSolver/FB_J_iterates_uICs.pdf}
-  \caption[labelInTOC]{The evolution of $J$ during the Gradient Ascent
-  Ornstein-Uhlenbeck, we see it goes up and eventually asymptotes to the value
-  of $J$ corresponding to the bang-bang control.}
-  \label{fig:FBSoln_OU_J_iterations}
-\end{center}
-\end{figure}
-
-\begin{figure}[htp]
-\begin{center} 
-  \includegraphics[width=.9\textwidth]{Figs/OUFBSolver/FB_alpha_iterates_uICs_5.pdf}
-  \caption[labelInTOC]{Solution to the test Ornstein-Uhlenbeck
-  problem starting from $\a \equiv 0$ until convergence. Note that except at the very
-  beginning, $t \approx 0$ and very end of the interval $t\approx T$, we have
-  converged to the bang-bang solution.}
-  \label{fig:FBSoln_OU_alpha_iterations}
-\end{center}
-\end{figure}
-
-
-\vskip15pt
-\begin{center}
-
-\end{center}
-
-\clearpage
-
-\subsection{Is bang-bang (in space, i.e. feedback) optimal?}
-There is some speculation (Susanne!) whether a bang-bang in space control is
-optimal. Perhaps a bang-bang control in time is better? In particular a bang-bang control in
-space is a feedback control which pulls away from the equilibrium ($\mu=0$,
-known) always in the direction depending on the current position of $X_t$. On
-the other hand, it might be better to alternatively pull to the left and then to
-the right. ('Better' in the sense that one gets better estimates). Let's then
-run a simulation comparison. 
-
-On one hand we will take the feedback, MI-optimal bang-bang solution which we
-obtained in the beginning of this section (\cref{sec:MP_OU_TimeDependent}). On
-the other hand we will divide the time interval in $N$ equal length segments and
-alternate Up/Down on each adjacent segment, for illustration see  
-\cref{fig:bang_bang_time_vs_space}. When we apply the controls (using identical
-streams of random numbers) we get the trajectories shown in
-\cref{fig:trajectories_bang_bang_time_vs_space}. We also show the reference
-trajectory, using no control at all (labeled 'placebo'). There is obviously
-quite a big similarity between all trajectories, since we are using a fairly 
-small value of $\amax= 1$.
-
-%\usepackage{graphics} is needed for \includegraphics
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=1\textwidth]{Figs/OU_MIControlSimulator/Fb_vs_det_control_illustrate.pdf}
-  \caption[labelInTOC]{Illustration of the two competing bang-bang controls,
-  space and time}
-  \label{fig:bang_bang_time_vs_space}
-\end{center}
-\end{figure}
-%\usepackage{graphics} is needed for \includegraphics
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=1\textwidth]{Figs/OU_MIControlSimulator/det_vs_fb_amax1.pdf}
-  \caption[labelInTOC]{Illustration of the trajectories resulting from the two 
-  competing  controls, bang-bang in space and time}
-  \label{fig:trajectories_bang_bang_time_vs_space}
-\end{center}
-\end{figure}
-
-
-
-\subsubsection{Estimating $\b$}
-We now need a MaxLikelihood formula for $\b$ given the known $\m =0 $ and $\s =
-1.$. 
-Consider discrete observations ${X_n, t_n}$ obtained at uniform
-$t_n$.
-Then the transition probabilities $p_n(X_n|X_{n-1})$ are given by:
-\begin{align*}
-p_n(X_n|X_{n-1}; \b; \a_n, \Delta_n) \propto &
-\sqrt{ \frac{\b}{ 1 -  e^{-2\b \Delta_n}}}
-\\ &\cdot 
-\exp\left(-\frac{\left( X_n - (\frac {\a_n}\b )  - (X_{n-1} -
-	 \frac {\a_n}\b) \cdot e^{-\b \Delta_n} \right)^2 \cdot \b}
-			{ (1-e^{-2\b\Delta_n})} \right)
-\end{align*} 
-
-
-which makes the log-likelihood look like:
-
-\begin{align*}
-l( \b|\ldots) = & \sum \log p_n(X_n|X_{n-1})
-\\
-=& \frac{N}{2} (\log \b - \log{ (1-e^{-2\b\Delta_n})}
-\\ & -\sum_n
-{\left(\frac{\left( X_n - (\frac {\a_n}\b )  - (X_{n-1} -
-	 \frac {\a_n}\b) \cdot e^{-\b \Delta_n} \right)^2 \cdot \b}
-			{ (1-e^{-2\b\Delta_n})} \right)}	 + \const		
-\end{align*}
-
-ML estimators for $\b$ are obtained via setting $\di_{\b} l$ to zero.
-
-i.e. we must solve for 
-\begin{align}
-\di_\b l( \b|\ldots)  
-=& \frac{N}{2} \left(\frac 1 \b - 
-\frac{2 \Delta_n e^{-2\b\Delta_n}}{(1-e^{-2\b\Delta_n})} \right) \nonumber \\ 
-& -\sum_n \textrm{a horrendous mess}  \nonumber
-\\
-=& 0 
-\label{eq:OUML_estimate_beta}
-\end{align}
-
-
-% $$
-% \frac{N}{2} \, {\left(\frac{2 \, \Delta e^{\left(-2 \, \Delta
-% \beta\right)}}{e^{\left(-2 \, \Delta \beta\right)} - 1} +
-% \frac{1}{\beta}\right)}
-% $$
-where 'a horrendous mess' is actually (using SAGE - python's CAS):
-\begin{multline}
--\frac{2 \, {\left(X_{n-1} e^{\left(-\Delta \beta\right)} -
-\frac{{\left(e^{\left(-\Delta \beta\right)} - 1\right)}
-\a_{n}}{\beta} - X_{n}\right)}^{2} \Delta \beta e^{\left(-2 \,
-\Delta \beta\right)}}{{\left(e^{\left(-2 \, \Delta \beta\right)} -
-1\right)}^{2}} 
-+
-\\
- \frac{2 \, {\left(X_{n-1} e^{\left(-\Delta
-\beta\right)} - \frac{{\left(e^{\left(-\Delta \beta\right)} - 1\right)}
-\a_{n}}{\beta} - X_{n}\right)} {\left(\Delta X_{n-1}
-e^{\left(-\Delta \beta\right)} - \frac{\Delta \a_{n} e^{\left(-\Delta
-\beta\right)}}{\beta} - \frac{{\left(e^{\left(-\Delta \beta\right)} -
-1\right)} \a_{n}}{\beta^{2}}\right)} \beta}{e^{\left(-2 \, \Delta
-\beta\right)} - 1} -
-\\ \frac{{\left(X_{n-1} e^{\left(-\Delta
-\beta\right)} - \frac{{\left(e^{\left(-\Delta \beta\right)} - 1\right)}
-\a_{n}}{\beta} - X_{n}\right)}^{2}}{e^{\left(-2 \, \Delta
-\beta\right)} - 1}
-\end{multline}
-
-!!!
-Once that is all done, we can compute some estimates for the trajectories
-from \cref{fig:trajectories_bang_bang_time_vs_space} and tabulate those in
-\cref{tab:OU_control_estimates_bang_bang_time_vs_space}. Although not
-substantially, the feedback bang-bang control is clearly superior as it has a 
-lower bias and a lower variance than the estimates obtained when using the
-deterministic, bang-bang in time, control. I've tried with other values for the
-switching frequency of the deterministic control (switch every .5, 1, 2
-time units) and the results do NOT change. I've also tried with tweaking the
-value of $\alpha_{max}$, again, same results. 
-
-In \cref{tab:OU_control_estimates_bang_bang_time_vs_space}, we also show the
-results for the base-case (called 'placebo') where $\a(x,t) \equiv 0$.
-
-\begin{table}
-\begin{tabular}{l|ccc}
-$T_f$:
- & 8
- & 16
- & 32
-\\
-placebo :
- & (1.41, 0.66)
- & (1.19, 0.41)
- & (1.09, 0.27)
-\\
-det :
- & (1.37, 0.60)
- & (1.16, 0.37)
- & (1.08, 0.24)
-\\
-feedback :
- & (1.29, 0.39)
- & (1.14, 0.24)
- & (1.06, 0.15)
-\\
-\end{tabular}
-\caption{(Mean/st.deviation) of the $\b$- ML Estimates obtained using the three
-controls, given different value for $T_f$. Although not substantially, the
-bang-bang feedback control is clearly superior as it has a lower bias and a
-lower variance. We have used $N_{traj} = 1000$ to form the statistics for each
-$T_f$ and control. The 'true' value is $\b = 1.$}
-\label{tab:OU_control_estimates_bang_bang_time_vs_space}
-\end{table}
-
-
-Finally, in \cref{fig:ML_beta_root}, we show something that might be of
-interest. It is the graph of the score function of the $\b$ ML estimates,
-$\di_\b l$, \cref{eq:OUML_estimate_beta} as a function of $\b$ for several
-different trajectories ${X_n}$. Recall that an estimate is obtained by finding
-the solution to $\di_\b l(\b) = 0$. What we see is that the
-root function corresponding to the feedback control, tends to be much steeper. Intuitively, I associate this
-with a more robust estimation process, since small vertical perturbations will
-have small effects on the root $\b$, while for the flatter curves (the ones
-corresponding to the placebo and the deterministic control), small vertical
-perturbations will much more drastically change the $\b$ estimate.
- 
-%\usepackage{graphics} is needed for \includegraphics
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=1\textwidth]{Figs/OU_MIControlSimulator/BetaRoot_Tf=16.pdf}
-  \caption[labelInTOC]{THe root function \cref{eq:OUML_estimate_beta} for a few
-  trajectories}
-  \label{fig:ML_beta_root}
-\end{center}
-\end{figure}
-
-
-
-\subsubsection{Sweep through $\b_{true}, \sigma $}
-
-For completeness we repeat the exercise above, i.e. we recalculate the results
-from \cref{tab:OU_control_estimates_bang_bang_time_vs_space} for several
-different values of the 'true' value of $\b$ and of $\sigma$. See
-\cref{tab:betasigma_sweep_for_ML_estimation_of_OU}
-
-\begin{table}
-\begin{tabular}{l|cccccc}
-\input{../OptEstimate/Figs/OU_MIControlSimulator/betasigmasweep_tabulate.txt}
-% $(\beta_{true}, \sigma)$: & (5.00,0.25) & (5.00,4.00) & (1.00,0.25) &
-% (1.00,4.00) & (0.20,0.25) & (0.20,4.00)\\ \hline placebo: & (68.67, 9.09, 0) &
-% (0.34, 0.08, 0) & (17.90, 6.15, 0) & (0.10, 0.05, 0) & (6.00, 3.77, 0) & (0.06, 0.05, 2)\\det: & (19.62, 2.04, 0) & (0.41, 0.11, 0) & (5.40, 0.81, 0) & (0.11, 0.07, 3) & (2.51, 0.88, 0) & (0.06, 0.05, 4)\\feedback: & (14.83, 1.32, 0) & (0.89, 0.10, 0) & (1.59, 0.13, 0) & (0.34, 0.08, 0) & (0.34, 0.02, 0) & (0.18, 0.06, 0)\\
-\end{tabular}
-\caption{Sweep through the $\b_{true}, \sigma $ parameters and the effect on
-the estimates. $Tf =16$. We've used $N=100$ to form the statistics. In
-brackets are displayed the mean estimate (out $N$) and the estimates standard
-deviation. We have set the initial value to $X_0=2.$, if we set it to $X_0 =
-.0$ the feedback-based estimator will be much more dominant, especially for low
-noise, presumably because for low noise  the other systems spend too much
-time near the equilibrium if they already start there, and being near
-equilibrium there is no restoring force and thus $\b$ is harder to estimate...}
-\label{tab:betasigma_sweep_for_ML_estimation_of_OU}
-\end{table}
-
-
-\clearpage
-
-
-
-\subsection{Multi-Parameter Case}
-So far, we have worked in the simplest possible context - with only one unknown
-parameter. Let's try to ramp it up a bit to TWO unknown parameters. In the OU
-case this means, $\{\b, \m\}$. 
-
-WAIT! First let's consider if we only had $\m$ uncertainty? Suppose we
-knew $\b = 1$ and only cared about $\mu$, which could be one of ${-1,1}$. Then, after some
-crunching it turns out (Results NOT shown) that the best thing to do is do
-nothing, $\a \equiv 0$. I don't know why, but that is what the numerics
-suggest\ldots. Again, by 'best thing' we mean the control, $\a(x,t)$,
-which maximizes $J[\a]$ in \cref{eq:mutual_info_time_integrated}. 
-
-So as a first guess, the optimal control for when both $\b,\m$ are uncertain
-should be some combination of 'bang-bang' and 'null'. Bang-bang is best for $\b$
-and 'null' (do nothing/ $\a=0$) is (we think) best for $\m$.
-We let the prior be equally weighted between the following (cartesian
--product ) possibilities:
-$$
-(\b, \m) =\{.5, 2\} \times \{-1,1\} = (.5,-1), \ldots (2,1)
-$$
-i.e.\ in the prior, each of the 4 possibilities has probability
-0.25. The calculations after that are exactly as in the earlier section when we only had
-an uncertainty over $\b$. We show the distributions and optimal control in
-\cref{fig:fpalpha_iterates_mubeta} and the objective value in
-\cref{fig:OU_mubeta_Jiterates}. 
-
-Strictly speaking, what we see is quite novel and interesting! The optimal
-control is a strange combination of 'bang-bang' outside for  $x \notin [-1,1]$.
-But null ($\a=0$.), for $x in [-1,1]$. This is slightly cheating, as we take
-that that to be the case as initial guess (for $\a_k$) and if we started from
-different initial guess for $\a_k$ we will not be able to converge to this,
-although, that is likely more a fault of the gradient algorithm\ldots
-
-However, we see that the difference is really very small. Whereas in the $\b$
-uncertainty only, \cref{fig:FBSoln_OU_J_iterations}, we could triple the value
-of the objective, $J$ by going from the initial guess ($\a=0$) to the optimal
-control, here the difference between bang-bang, do-nothing, and optimal control
-is very, very slight!
-
-Uf!
-
-
-%\usepackage{graphics} is needed for \includegraphics
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=1\textwidth]{Figs/OUFBSolver_BetaMu/FB_J_iterates_uICs_Tf=2.pdf}
-  \caption[tableofCs]{The iterations for $J$ when both $\tc, \m$ are
-  uncertain.}
-  \label{fig:OU_mubeta_Jiterates}
-\end{center}
-\end{figure}
-
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=1\textwidth]{Figs/OUFBSolver_BetaMu/FB_alpha_iterates_uICs_5_Tf=2.pdf}
-  \caption[tableofCs]{The gradient ascent iterations for $f,p,\a$ when both
-  $\tc, \m$ are uncertain. The initial guess for $\a_0$ is in 'blue' on the
-  right-most}
-  \label{fig:fpalpha_iterates_mubeta}
-\end{center}
-\end{figure}
-
-
-
-\clearpage
-
-
-\section{Problem Formulation with only Crossing-Time Observations}
- 
-The basic goal of 'Optimal Design' is to perturb a dynamical system in an
-'optimal' way such as to 'best' estimate its structural parameters. 
-
-As such the problem is a blend of optimal control and estimation, where the
-objective of the optimal control is to improve the estimation, for example by
-minimizing the variance of the estimators. 
-
-For illustration sake we return to our favourite LIF model
-Given a noisy LIF neuronal model:
-\begin{equation}
-\begin{gathered}
-dX_s = (\underbrace{\a(t)}_{\textrm{control}} + \b(\m %\g \sin(\o t)
- - {X_s} ) \intd{s} + \s\intd{W_s},
-\\
-X(0) = .0,
-\\
-X(\ts) = \xth \implies  
-\begin{cases}
-X(\ts^+) &= .0   
-\\
-t_k &=  \ts
-\\
-k  &= k+1
-\end{cases}
-\end{gathered}
-\label{eq:X_evolution_uo}
-\end{equation}
-where (a subset of) the parameter set $\th = \{\m, \b, \s\}$ is unknown.
-
-Our goal is to choose $\a(t)$ as to estimate $\b$ 'best' given only that the
-spike times $\{t_k\}$ are observed 
- 
-\section{Notation}
-The probability density of the $n$th interval,
-conditional on some applied control $\a$:
+The 'hitting time', $\ts$ is the first-time the process touches the upper
+boundary, $\xth$, which is here set to $\xth=1$. Once a hitting-time is
+recorded, the process is reset to $0$ and then continues from there. The control
+$\a(t)$ is arbitrary and can be altered at any time; however, the parameter set,
+$\th = \{\m, \tc, \s\}$, is assumed to be constant.
+
+In the context of parameter estimation, we will assume that (a subset of) the
+parameter set $\th = \{\m, \tc, \s\}$ is unknown and only the hitting times,
+$\{t_k\}$, are observable.
+
+In fact, we will concentrate on estimating the characteristic time ($\tc$). As
+we mentioned in the introduction, previous papers on estimating parameters of
+LIF from hitting times, e.g.\ \cite{Ditlevsen2007,MullowneyIyengar2008}, have
+at length discussed that the estimation of $\tau$ is clearly the
+hardest. In fact the literature is still not quite in agreement whether $\tau$ is hard to estimate or
+whether it is simply unidentifiable. Since these studies were done in the
+context of no control $\a=0$ or at least $\a= \textrm{const}$, we posit that
+a judicious choice for the shape of $\a$ can significantly improve the
+estimation of $\tau$.
+
+Our goal is to choose the control, $\a(t)$, such as to 'best' estimate $\tc$
+given only that the spike times $\{t_k\}$ are observed. Equivalently, setting
+$t_0 = 0$, we can talk about the inter-spike intervals, $\{S_k\}$, which are
+just the differences of subsequent spike times, $S_k = t_k - t_{k-1}$.
+
+The probability density of the length of the $k$th interval,
+conditional on some applied control $\a(\cdot)$, will be denoted as
 \begin{equation} 
 \begin{array}{rcll} 
-g_n(\t) \intd{\t} &:=& \Prob(I_{n} \in [\t, \t + \intd{\t})  \,|\,
- \a(t)) &
+g_k(t) \intd{t} &:=& \Prob[I_{k} \in [t, t + \intd{t})  \,|\,
+ \a(\cdot)] &
  \textrm{(probability density)} 
-\\ 
-G_{n}(t) &:=& \Prob \left[I_{n} \leq t  \,|\,
- \a(t) \right] = \int_0^t g_{\phi}(\t) \intd{\t} &
- \textrm{(cumulative distribution)}
-\\
-\G_{n}(t) &:= & \Prob(I_{n}>t \,|\, \a(t) ) = 1 - G_{\phi}(t)
-&
- \textrm{(survivor distribution)}
+% \\ 
+% G_{n}(t) &:=& \Prob \left[T_{n} \leq t  \,|\,
+%  \a(\cdot) \right] = \int_0^t g_{\phi}(\t) \intd{\t} &
+%  \textrm{(cumulative distribution)}
+% \\
+% \G_{n}(t) &:= & \Prob(T_{n}>t \,|\, \a(\cdot) ) = 1 - G_{n}(t)
+% &
+%  \textrm{(survivor distribution)}
 \end{array}
 \label{eq:ISI_distribution_functions}
 \end{equation}
-We'll drop the $n$ subscript when there is no confusion. 
-There is also the transition distribution for $X_t$ for $t \in [0,
-I_{n})$:
+We will drop the hitting-time indexing subscript, $k$, when there is no
+confusion. 
+
+The transition density for the state variable, $X_t$, $t \in [0, I_{n})$, will
+be denoted as
 \begin{equation}
-f(x,t) := \Prob \left[X_{t} \in x+ \intd{x}  \,|\,
+f(x,t) := \Prob \left[X_{t} \in [x, x+ \intd{x})  \,|\,
  X_0 = 0, X_{s < t} < 1  \right]  \quad
- \textrm{(transition distribution)}
+ \textrm{(transition density)}
  \label{eq:transition_distribution}
 \end{equation} 
+The transition density satisfies a Fokker-Planck PDE over the domain, $x \in
+(-\inf, \xth]$
 \begin{equation}
 \begin{gathered}
 \begin{array}{lcl}
 	\di_t f (x,t) &=&
-					\underbrace{\frac{\b^2 }{2}}_{D}\cdot \di^2_x f 
+					\underbrace{\frac{\s^2 }{2}}_{D}\cdot \di^2_x f 
 					+ \di_x \Bigg(  
-					\underbrace{\Big( \b (x-\m) - \a(t) \Big)}_{U(x,t)}  \cdot  f \Bigg)
+					\underbrace{\Big( \frac 1\tc (x-\m) - \a(t) \Big)}_{U(x,t)}  \cdot  f
+					\Bigg)
 					\\
 					&=&
 					D \cdot \di^2_x f +
@@ -2110,454 +228,853 @@ f(x,t) := \Prob \left[X_{t} \in x+ \intd{x}  \,|\,
 	\left\{ \begin{array}{lcl}
 	 f (x,0) &=& \delta(x)
 	\\
-	D \di_xf + U f |_{x=\xmin} &\equiv& 0 
+	D \di_xf + U f |_{x=\xmin} &=& 0 
 	\\
-	f |_{x=\xth} &\equiv& 0.
+	f |_{x=\xth} &=& 0.
 	\end{array} \right.
-\label{eq:FP_pde_OU_absorbBC_CDF}
+\label{eq:FP_pde_OU_absorbBC}
 \end{gathered}
 \end{equation}
 
-The probability flux-out at the threshold boundary $$\phi(\xth, s) = D
-\di_xf |_{x=\xth}$$ is very important as it is related to the spike-time density
-via $$g( t)  = \phi(\xth, t) = D\cdot \di_x f|_{x=\xth}$$
- 
-% 
-% In a typical (maximum likelihood) estimation experiment, we will see a lot of
-% spikes and form the likelihood as
-% $$
-% L(\th| t_n ) = \prod_n g_n(t_n)
-% $$
-% We will then take logs and proceed as usual:
-% $$
-% l(\th| t_n ) = \sum_n \log (g_n(t_n)) =  \sum_n \log ( -\di_t F(1,t_n)) 
-% $$
-% and then maximize $l$ over the parameters $\th$. 
-% 
-% The associated {\sl score} function is
-% $$
-% S(\th | \ts ) = \grad_\th l(\th | \ts)
-% $$
-% The score function is a vector\footnote{We write $\grad$ for the vector
-% differential and $\di$ for its scalar components, i.e.\ $\grad_\th =
-% [\di_{\th_1},\ldots\di_{\th_i}],\ldots$}.
-% 
-% The typical Maximum Likelihood process is to 
-% maximize the likelihood, $l$ which, if one uses a gradient-based approach
-% amounts to finding the roots of the score, $S$.
+The probability flux-out at the threshold boundary, $\phi(\xth, t)$, is very
+important as it is related to the spike-time density,
+\cref{eq:ISI_distribution_functions} via 
+$$g(t)  = \phi(\xth, t) = -D\cdot \di_x
+f|_{x=\xth}.$$
+Recall that $U \cdot f = 0$ at the absorbing boundary, $\xth$.
 
-In a Bayesian approach, we have some {\sl a priori} belief over the possible
-values of $\th$.
 
-Let us call the prior over the parameters $\th = \{\m, \b, \s\}$:
-$$\rho(\th)$$.
+%  In a typical (maximum likelihood) estimation experiment, we will see a lot of
+% spikes and form the likelihood as $$ L(\th| t_n ) = \prod_n g_n(t_n) $$ We
+% will then take logs and proceed as usual: $$ l(\th| t_n ) = \sum_n \log
+% (g_n(t_n)) =  \sum_n \log ( -\di_t F(1,t_n)) $$ and then maximize $l$ over the
+% parameters $\th$.  The associated {\sl score} function is $$ S(\th | \ts ) =
+% \grad_\th l(\th | \ts) $$ The score function is a vector\footnote{We write
+% $\grad$ for the vector differential and $\di$ for its scalar components, i.e.\
+% $\grad_\th = [\di_{\th_1},\ldots\di_{\th_i}],\ldots$}.  The typical Maximum
+% Likelihood process is to maximize the likelihood, $l$ which, if one uses a
+% gradient-based approach amounts to finding the roots of the score, $S$.
 
-Given a single observation $\ts$, the posterior of the parameter belief dist'n
-is 
+In our Bayesian approach, we assume some {\sl  prior} distribution over
+the possible values of $\th$. We denote the prior distribution as
+$$
+\begin{array}{rcll} 
+\rho(\th) \intd{\th} &:=& \Prob(\Theta \in [\th, \th + \intd{\th})  ] &
+ \textrm{(prior density)} 
+ \end{array}
+$$.
+
+Given a single observation, $\ts$, the parameter posterior 
+distribution is 
 \begin{equation}
 p(\th| \ts; \a) =
 \frac{g(\ts |\th; \a)\cdot \rho(\th)}{\int_\Theta g(\ts|\th; \a)\cdot \rho(\th)
 \intd{\th}}
 \label{eq:parameter_posterior_defn}
 \end{equation} 
-Where $ g( \ts |\th; \a)$ is the likelihood of $X$ given in
+Where $ g( \ts |\th; \a)$ is the likelihood of the hitting time given in
 \cref{eq:ISI_distribution_functions}.
 
-The idea now, is to choose $\a$ such that the mutual information $I$ between the
-two random variables is maximized. Here the Mutual Information is given by
+Our goal is to choose the control, $\a(\cdot)$, that maximizes the mutual
+information  between the two random variables, $\Th, \ts$. Conditional on
+$\a(\cdot)$, the Mutual Information, $I$, is given by
 \begin{equation}
 I[\a]= 
-\int_\Theta \int_{[0, \infty]} g(t|\th)\rho(\th) \cdot 
+\int_\Theta \int_0^\infty g(t|\th)\rho(\th) \cdot 
 \log \left( \frac{g(t|\th)}
 {\int_\Theta g(t|\th)\rho(\th) \intd{\th}   } \right)
 \intd{t}\intd{\th}.
 \label{eq:J_mutual_info_objective}
 \end{equation}
 
-See \cref{sec:mutual_info_defn} for why. 
-Naturally for different controls, $\a(\cdot)$, the mutual info, $I$, will
-be different since $g$, the hitting time density depends on the shape of $\a$.
-($\rho$ does NOT).
-
-However, there is an added complication b/c we actually will observe many
-hitting times, and having less informative hitting times happen more often might
-be better than hitting times which are informative but happen less often. 
-
-The rigorous way to deal with this is to consider the mutual information between
-the parameters and the set of hitting times $\{t_n\}$, however this seems
-incredibly complicated, so instead we will maximize the 'Mutual Information
-rate, $J$, which we define as 
-\begin{align}
-J[\a]= & \Exp[\ts]^{-1} \cdot I[\a]
-\\
-= & \frac{
-\int_\Theta \int_{[0, \infty]} g(t|\th)  \rho(\th) \cdot 
-\log \left( \frac{g(t|\th)}{\int_\Theta g(t|\th)\rho(\th) \intd{\th} } \right)
-\intd{t}\intd{\th}}
-{ \int_\Theta \int_{[0, \infty]} \t g(t|\th)\rho(\th) \intd{t}\intd{\th}}
-\label{eq:J_mutual_info_rate_objective}
-\end{align}
-
-Well, this does NOT look any less complicated\ldots, Note that $g$ (and thus
-implicitly $\a$) appears 4 times in this expression. Recall that $g$ is related
-to $\a$ via the solution of the Fokker-Planck equation and thus we can also
-write
-
-\begin{align}
-J[\a] 
-= & \frac{
-\int_\Theta \int_{[0, \infty]} \di_xf(1, t)  \rho(\th) \cdot 
-\log \left( \frac{\di_xf(1, t)}{\int_\Theta \di_xf(1, t)\rho(\th) \intd{\th} } \right)
-\intd{t}\intd{\th}}
-{ \int_\Theta \int_{[0, \infty]} t \di_xf(1, t)\rho(\th) \intd{t}\intd{\th}}
-\label{eq:J_mutual_info_rate_objective_in_terms_of_dixf} 
-\end{align}
+See \cref{sec:mutual_info_defn} for how this is derived from the usual textbook
+definition of the Mutual Information. For different controls, $\a(\cdot)$,
+the mutual information, $I$, will be different since $g$, the hitting time
+density depends on the shape of $\a$ (the prior, $\rho$, does not). 
   
-We want to find the control input $\a(t)$, which maximizes $J$ in
-\cref{eq:J_mutual_info_rate_objective_in_terms_of_dixf}. 
+In short, we want to find the control input $\a(\cdot)$, which maximizes $I$ in
+\cref{eq:J_mutual_info_objective} and we then verify that observations obtained
+under such 'optimal' stimulation lead to parameter estimates that are more
+accurate and more precise than parameters obtained for observations when the
+system is perturbed by 'sub-optimal' stimulations.
 
-\section{Gradient Ascent using Maximum Principle in order to maximize 
-\cref{eq:J_mutual_info_rate_objective_in_terms_of_dixf} or rather the simpler 
-\cref{eq:J_mutual_info_objective}} 
-
+\section{Maximizing the Mutual Information,
+\cref{eq:J_mutual_info_objective}, using the Adjoint Method}
+\label{sec:maximizing_MI}
 Let us discuss the optimization problem
-
 $$
-\a(\cdot) = \argmax_{\a \sim \textrm{admissible}} J[\a]
+\a(\cdot) = \argmax_{\a \sim \textrm{admissible}} I[\a]
 $$ 
-   
 
-\subsection{The nitty-grity of calculating the (infinite-dimensional) gradient
-$\grad_{\a} J$ } We would like to maximize
-\cref{eq:J_mutual_info_rate_objective_in_terms_of_dixf}, but now we realize that
-doing so is very difficult, b/c we have a ratio of integrals. (The standard
-theory always works with just one integral).
+in our case, admissible controls are simply those that are continuous and with
+the upper and lower bounds, $\a(t) \in [\amin, \amax] \,  \forall t$.
 
-Let's then drop the denominator integral and focus on the numerator. (i.e. we
-just go back to \cref{eq:J_mutual_info_objective})
+Our goal will be to obtain the gradient of $I$ with respect to $\a$, and then
+use it in a standard gradient-based optimization procedure. There is the added
+complexity that the gradient here is an infinite dimensional object and there
+are some subtle functional analysis questions from a purely mathematical
+point-of-view, we refer to the references, \cite{Lenhart2007,Borzi2012} for
+rigorous justification of the manipulations. 
+
+To proceed with obtaining the gradient with respect to $\a$, let us rewrite \cref{eq:J_mutual_info_objective}) in terms of the transition density, $f$. 
 \begin{equation}
-I[\a] 
-=  -
-\int_\Theta \int_{[0, \infty]} \di_xf(1, t)  \rho(\th) \cdot 
-\log \left( \frac{ \di_xf(1, t)}{\int_\Theta \di_xf(1, t)\rho(\th) \intd{\th}
-} \right)
+I[\a] = 
+- \int_\Theta \int_0^\infty
+	   \di_xf_\th(\xth, t|\th)  \rho(\th) \cdot 
+		\log \left( \frac{\di_xf_\th(\xth, t|\th)}
+						{\int_\Theta \di_xf_\th(\xth, t|\th)\rho(\th)
+\intd{\th} } \right)
 \intd{t}\intd{\th}
 \label{eq:I_mutual_info_objective_in_terms_of_dixf} 
 \end{equation}
+We have dropped the constant, $D$ from
+\cref{eq:I_mutual_info_objective_in_terms_of_dixf} as it is irrelevant for
+the maximizing value of $\a$.
 
-To proceed, we apply a Maximum Principle type derivation, in which we first seek
-the differential of the objective $I$ in
-\cref{eq:I_mutual_info_objective_in_terms_of_dixf} wrt.\
-$\a(\cdot)$ and proceed from there.   
-
-As always, we start by augmenting our objective functional with the
-dynamics:
+ In a standard approach for what
+is known as the {\sl adjoint}  method of deriving a gradient of a
+functional of a solution to a PDE with respect to one of the PDE's inputs, we
+augment the objective, $I$, with the dynamics of $f$, by introducing the {\sl
+adjoint} variable, $p$: 
 \begin{align}
-I=&  
-\int_\Theta \int_{[0, \infty]} \di_xf_\th(1, t)  \rho(\th) \cdot 
-\log \left( \frac{\di_xf_\th(1, t)}{\int_\Theta \di_xf_\th(1, t)\rho(\th)
-\intd{\th} } \right)
+I=&  -
+\int_\Theta \int_0^\infty 
+	  \di_xf_\th(\xth, t|\th)  \rho(\th) \cdot 
+		\log \left( \frac{\di_xf_\th(\xth, t|\th)}
+						{\int_\Theta \di_xf_\th(\xth, t|\th)\rho(\th)\intd{\th} } \right)
 \intd{t}\intd{\th} 
 \\
-	  &- \int_\Theta \int_0^\infty <p_\th, (\di_t f_\th - \L[f_\th])> \intd{s} 
+	  &+ \int_\Theta  \rho(\th) \cdot \int_0^\infty \int_{x_-}^{\xth}
+	  		p_\th \cdot (\di_t f_\th -	  \L[f_\th]) 
+  				\intd{x}	  \intd{t} \intd{\th}
+	  \label{eq:adjoint_term_in_objective} 
 \end{align}
-where the inner product, $<f, g>$ is just the space integral $\int f\cdot g
-\intd{x}$ and we write $\L$ for the spatial differential operator in 
-\cref{eq:FP_pde_OU_absorbBC_CDF}.
+where, recall, we write $\L$ for the spatial differential operator in 
+\cref{eq:FP_pde_OU_absorbBC}.
 
-This is exactly the same problem as we faced in the spike-time optimal control,
-except there the integrand looked something like $(t-t^*)D\di_xf$. Thus the
-equations for the adjoint look exactly the same as there, with the exception of the Terminal
-Conditions (here assumed 0) and the BCs at the threshold:
+Note that the term \cref{eq:adjoint_term_in_objective} that is added to
+\cref{eq:I_mutual_info_objective_in_terms_of_dixf}, is always zero, due to the
+fact that $f$ satisfies the PDE in \cref{eq:FP_pde_OU_absorbBC}. However, the
+reason for adding this null term is that via integration by parts, we can
+remove the dependence of $I$ on first-order perturbations of $f$. This allows us to
+compute the 'differential' of $I$ with respect to $\alpha$, without needing to
+additionally compute the 'differential' of $f$ with respect of $\alpha$ as th
+chain rule would require us to do. This is quite useful, since the
+'differential' of $f$ with respect of $\alpha$ is a complicated mathematical
+object because any value of $f(x,t)$ depends on the entire history of
+$\a(\cdot)$, i.e.\ on all values of $\alpha(s)$ for $s<t$.
 
+The elimination of $I$'s dependence on $f$ is done by 'transferring' the
+derivatives of $f$ to $p$ using repeated integration-by-parts. For completeness,
+we demonstrate in detail how this is done for $\th$ fixed:
+\begin{align*}
+\int_0^{\tf} \int_{x_-}^{\xth}
+p \cdot \left[\di_t f  + \di_x \phi\right]
+	\intd{x}\intd{t} 
+=& 
+\int_{x_-}^{\xth} p \cdot f \intd{x} \Big|_0^{\tf} -
+\int_0^{\tf}\int_{x_-}^{\xth} \di_tp \cdot  f \intd{x}\intd{t}  
+\\
+&+ \int_{0}^{\tf} p\cdot \phi   \Big|_{x_-}^{\xth} \intd{t}
+-  \int_0^{\tf}\int_{x_-}^{\xth} \di_xp \cdot  (\underbrace{-D\di_xf - U
+f}_{\phi})
+\intd{x}\intd{t}
+\\
+=&
+\int_{x_-}^{\xth} p \cdot f \intd{x} \Big|_0^{\tf} -
+\int_0^{\tf}\int_{x_-}^{\xth} \di_tp \cdot  f \intd{x}\intd{t}  
+\\ 
+&+ \int_{0}^{\tf} p\cdot \phi \Big|_{x_-}^{\xth} \intd{t} 
+ + \int_0^{\tf}\int_{x_-}^{\xth} \di_xp \cdot  U f\intd{x}\intd{t}
+\\
+&+  
+\int_{0}^{\tf} D\di_xp\cdot f \intd{t}  \Big|_{x_-}^{\xth} -
+\int_0^{\tf}\int_{x_-}^{\xth} D\di^2_xp \cdot  f\intd{x}\intd{t}
+\end{align*}
 
+We can make a few simplifications based on the terminal and boundary
+conditions for $f$
+\begin{itemize}
+  \item The initial conditions for $f$ are fixed and so that perturbations of
+  $f$ at $t=0$ do not exist, equivalently, perturbations of the  control, $\a$,
+  do not perturb the initial conditions of $f$, thus we can also disregard any
+  terms that involve $f(x,0)$.
+  \item $\phi(x_-, t)=0$
+  \item $f(\xth, t) = 0$ 
+\end{itemize}
+with that we can simplify the adjoint term to 
+\def \tf {{t_f}}
+\begin{align*}
+\int_0^{\tf} \int_{x_-}^{\xth}
+p \cdot \left[\di_t f  + \di_x \phi\right]
+	\intd{x}\intd{t} 
+=&
+-\int_0^{\tf}\int_{x_-}^{\xth} \di_tp \cdot  f \intd{x}\intd{t}
++
+\int_{x_-}^{\xth} p(x, \tf) \cdot f(x, \tf) \intd{x}  
+\\ 
+&- \int_{0}^{\tf} p(\xth,t) \cdot D\di_xf(\xth,t) \intd{t}
+ + \int_0^{\tf}\int_{x_-}^{\xth} \di_xp \cdot  U f\intd{x}\intd{t}
+\\
+&- \int_{0}^{\tf} D\di_xp(x_-,t) \cdot f(x_-,t) \intd{t} 
+ - \int_0^{\tf}\int_{x_-}^{\xth} D\di^2_xp \cdot  f\intd{x}\intd{t}
+\\
+=&
+\int_0^{\tf}\int_{x_-}^{\xth} 
+	\left[-\di_tp -  D\di^2_xp + U \di_xp \right]\cdot  f
+\intd{x}\intd{t}
+\\ 
+&- \int_{0}^{\tf} p(\xth,t) \cdot D\di_xf(\xth,t) \intd{t}
+\\
+& + \int_{0}^{\tf} D\di_xp(x_-,t) \cdot f(x_-,t) \intd{t}
+\\
+& +
+\int_{x_-}^{\xth} p(x, \tf) \cdot f(x, \tf) \intd{x} 
+\end{align*}
+We can see that the adjoint term breaks down into several sub-terms, the spatial
+sub-term, which gives the (backwards) evolution for the adjoint variable, $p$,
+and two boundary sub-terms, which will provide the boundary conditions for $p$. 
 
-In short, the equation for the adjoint function, $p$, is
+We now replace the adjoint term in the original equation for $I$,
+\cref{eq:adjoint_term_in_objective}. Recall that ultimate goal is to find the
+differential of $I$ with respect to $\a$ while eliminating the
+dependence on perturbations in $f_\th$. 
+
+\begin{align*}
+I=  
+\int_\Theta  \rho(\th)\cdot \Bigg[ 
+&-\int_0^{\tf} 
+	  \di_xf_\th(\xth, t)  \cdot 
+		\log \left( \frac{\di_xf_\th(\xth, t)}
+						{\int_\Theta \di_xf_\th(\xth, t)\rho(\th)\intd{\th} } \right)
+\intd{t} 
+\\ &+
+\int_0^{\tf}\int_{x_-}^{\xth} 
+	\left[-\di_tp_\th -  D\di^2_xp_\th + U \di_xp_\th \right]\cdot  f_\th
+\intd{x}\intd{t}
+\\ 
+&- \int_{0}^{\tf} D p_\th(\xth,t) \cdot \di_xf_\th(\xth,t) \intd{t}
+\\
+& + \int_{0}^{\tf} D\di_xp_\th(x_-,t) \cdot f_\th(x_-,t) \intd{t}
+\\	& +
+\int_{x_-}^{\xth} p(x, \tf) \cdot f(x, \tf) \intd{x}  
+\Bigg]				\intd{\th}   
+\end{align*}
+
+We are now in position to consider the effect of small
+perturbations, $\delta \a$, of the control, $\a$, on our objective, $I$,
+$$
+\delta I_\epsilon =\frac{I(\a + \epsilon \delta \a) - I(\a)}{\eps}
+$$
+
+The natural assumption is that given $\a +  \epsilon \delta \a$, there is a
+corresponding solution to the evolution PDE, $f+ \epsilon \delta f$
+
+Taking the limit of $\epsilon\ra0$, we get
+\begin{equation}
+\begin{aligned}
+\delta I =  
+\int_\Theta  \rho(\th)\cdot\Bigg[ \int_0^{\tf} \Bigg[ 
+&-   \di_x \delta f_\th(\xth, t)  \cdot 
+		\log \left( \frac{\di_xf_\th(\xth, t)}
+						{\int_\Theta \di_xf_\th(\xth, t)\rho(\th)\intd{\th} } \right)
+\\ 
+	&-  \frac{ \di_x f_\th(\xth, t)}{ \di_x f_\th(\xth, t)}  \cdot \di_x
+		\delta f_\th(\xth, t)
+\\ 
+	&+    \frac{ \di_x f_\th(\xth, t)}{	{\int_\Theta \di_xf_\th(\xth,
+	t)\rho(\th)\intd{\th} }} \cdot
+		 \boxed{\int_\Theta \rho(\th) \di_x \delta f_\th(\xth, t) 	\intd{\th}}				 
+\\
+ &+ \int_{x_-}^{\xth} 
+	\left[-\di_tp_\th +  D\di^2_xp_\th  - U \di_xp_\th \right]\cdot  \delta f_\th
+\intd{x}
+\\ & - \int_{x_-}^{\xth}
+\di_xp_\th \cdot f_\th\cdot \delta \a \intd{x}
+\\
+ &-   D p_\th(\xth,t) \cdot \di_x\delta f_\th(\xth,t) 
+\\
+ &+  D\di_xp_\th(x_-,t) \cdot\delta f_\th(x_-,t)
+  \Bigg]			 \intd{t}	
+\\
+&+\int_{x_-}^{\xth} p(x, \tf) \cdot \delta f_\th(x, \tf) \intd{x}  
+   \Bigg]\intd{\th}	   
+\end{aligned} 
+\label{eq:differential_I_before_refactoring}
+\end{equation}
+We see that $\delta I$ depends on both $\delta \a$ and $\delta f_\th$. 
+In fact, it only depends on $\delta \a$ though the third last term, and on
+$\delta f_\th$ through all the others.
+However, we can select $p_\th$ in a judicious matter, such that the
+dependence on $\delta f$ vanishes, which was our ultimate intention.
+
+In order to eliminate $\delta f$ on the lower boundary,
+$x_-$, we need that $$ \di_xp(x_-,t)=0.$$
+
+To eliminate the dependence on the terminal value of $\delta f(x, \tf)$, we set
+$p_\th(x, \tf)=0$.
+
+In order to eliminate the spatial dependence on $\delta f$, we need to
+enforce that $p$ evolves (backwards) as $$\di_t p + D\di_x^2p - U \di_x p = 0$$
+
+Finally, in order to nullify the effect of $\di_x \delta f$ on the upper,
+threshold, boundary, we note that we can rewrite the terms in
+\cref{eq:differential_I_before_refactoring} that depend on $\di_x \delta
+f(\xth, t)$ as
+\begin{align*}
+\int_\Theta  \rho(\th)\cdot \int_0^{\tf} \Bigg[ 
+&-   \di_x \delta f_\th(\xth, t)  \cdot 
+		\log \left( \frac{\di_xf_\th(\xth, t)}
+						{\int_\Theta \di_xf_\th(\xth, t)\rho(\th)\intd{\th} } \right)
+\\ 
+	&-  \frac{ \di_x f_\th(\xth, t)}{ \di_x f_\th(\xth, t)}  \cdot \di_x
+		\delta f_\th(\xth, t)
+\\ 
+	&+    \frac{ \di_x f_\th(\xth, t)}{	{\int_\Theta \di_xf_\th(\xth,
+	t)\rho(\th)\intd{\th} }} \cdot
+		 \boxed{\int_\Theta \rho(\th) \di_x \delta f_\th(\xth, t) 	\intd{\th}}				 
+\\ 
+ &-   D p_\th(\xth,t) \cdot \di_x\delta f_\th(\xth,t) \Bigg] \intd{t}	\intd{\th}	   
+ \end{align*}
+ \begin{align*}
+ =
+ \int_\Theta  \rho(\th)\cdot \int_0^{\tf} \Bigg[ 
+& \bigg[ - \log \left( \frac{\di_xf_\th(\xth, t)}
+						{\int_\Theta \di_xf_\th(\xth, t)\rho(\th)\intd{\th} } \right)
+\\ 
+	&- 1
+\\ 
+	&+    \frac{ \int_\Theta \rho(\th)\di_x f_\th(\xth, t)\intd{\th}}
+	     		{	{\int_\Theta \di_xf_\th(\xth,	t)\rho(\th)\intd{\th} }} 
+		 \bigg]  \cdot \di_x \delta f_\th(\xth, t)				 
+\\ 
+ &-   D p_\th(\xth,t) \cdot \di_x\delta f_\th(\xth,t) \Bigg] \intd{t}	\intd{\th}
+\end{align*}
+This is more clear if we replace the integrals with respect to $\th$ by discrete
+sums. 
+
+We then note that the latter two of the three terms before $\di_x \delta
+f_\th$, sum to zero, and thus in order to eliminate the dependence of  $\delta
+I$ on $\di_x \delta f_\th$, we need merely apply the simple boundary
+condition: 
+$$ p_\th(\xth,t) = - \frac 1D \log\left( \frac{\di_xf_\th(\xth, t)}
+						{\int_\Theta \di_xf_\th(\xth, t)\rho(\th)\intd{\th} } \right) $$
+
+\subsection{Terminal Time}
+In principle, there is no {\sl a priori} obvious way how to select the terminal
+time, $\tf$ in general. Intuitively, we would like the terminal time to be after
+the bulk of the hitting-time density (say the 99th percentile). But, of course,
+that depends on the chosen control, $\a$. For example, if we happen to select a
+control that is always maximally-negative, $\a(t) = \amin$, we might not see a
+hitting time for a long time.
+
+\def \topt {{ t_{opt}}}
+
+For practical purposes we proceed as follows. Given a set of plausible
+parameters we set $\tf$ large enough and we further select a sub-interval,
+$[0, \topt] \subset [0, \tf]$, such that we only seek to optimize over $t\in
+[0, \topt]$ and for $t > \topt$ we let $\a= \amax$. I.e. after some interval we
+force the system to spike so that to ensure that $$\int_{t>\tf} g(t) \intd{t}
+\ll 1$$
+
+\subsection{Adjoint PDE}
+In summary, the adjoint variables, $p_\th$, must satisfy the following, adjoint,
+PDE
 \begin{equation}
 \begin{gathered}
 \begin{aligned}
-\di_t p =& - \Lstar[p]
-\\
-		=&
-			- \Big[ D\cdot \di^2_x p +
-			 U(x,t,\th)   \cdot \di_x p \Big].
+-\di_t p_\th =&  \Lstar[p_\th]
+\\ 		=&  \Big[ D\cdot \di^2_x p_\th - U(x,t;\th)   \cdot \di_x p_\th \Big].
 \end{aligned}
 \\
 \begin{cases}
-	p_\th \big|_{x=\xth} &=  \log\left(\frac{\di_xf_\th}{\int_\Th
-	\di_xf_\th \rho(\th)\intd{\th})}\right) +
-	 1 -
-	  \frac{\di_xf_\th}{\int_\Th
-	\di_xf_\th \rho(\th)\intd{\th})}
+	p_\th \big|_{x=\xth} &=  -\log\left( \frac{\di_xf_\th(\xth, t)}
+						{\int_\Theta \di_xf_\th(\xth, t)\rho(\th)\intd{\th} } \right) 
+							- 1 
+							+ \frac{\di_xf_\th(\xth, t)}
+				   					{\int_\Theta \di_xf_\th(\xth, t)\rho(\th)\intd{\th} } $$
 	\\
 	\di_x p_\th  \big|_{x=\xmin} &= 0
 	\\
-	p_\th(x,\infty) &= 0
+	p_\th(x,\tf) &= 0
 \end{cases}
 \label{eq:adjoint_pde_OU}
 \end{gathered}
 \end{equation}
 
-In practice of-course, we will set the terminal conditions for $p_\th$ at some
-finite value of $t$, although it is not immediately obvious what that
-value should be.
+\subsection{Objective Gradient}
+Given $p_\th, f_\th$, we can calculate the differential of $I$ in
+\cref{eq:I_mutual_info_objective_in_terms_of_dixf}, with respect to the
+control $\a(t)$, $\delta I / \delta \a$ using the terms in
+\cref{eq:differential_I_before_refactoring} that multiply $\delta \a$ as 
+\begin{align}
+\delta I =&  \Bigg[ 
+-\int_\Theta  \rho(\th) \cdot \bigg(  
+ \int_\xmin^{1} \di_x p_\th \cdot f_\th \intd{x} 
+    \bigg) \intd{\th} \Bigg]\cdot \delta \a
+    \label{eq:objective_gradient_continuous}
+\end{align}
 
-\vskip10pt The whole goal of this exercise is to calculate the differential of
-$I$ in \cref{eq:I_mutual_info_objective_in_terms_of_dixf},
-wrt.\ the control $\a(t)$, i.e.\ to calculate $\delta I / \delta \a$. After the
-introduction of the adjoint state, $p_\th$, that is just:
+\subsection{Approximation of the prior distribution}
+For tractability purposes, we need to approximate the $\th-$integral via a
+sample sum. I.e for a given $\alpha(t)$, we solve for $p,f$ for a few sampled
+values $\th_i$ from the updated prior distribution $\rho(\th)$ and their
+corresponding probabilities, $\rho(\th_i)$.
 
- 
-\begin{align*}
-\delta I =&   
-\int_\Theta  \rho(\th) \cdot \Bigg(  
-- \int_\xmin^{1} \di_x p_\th f_\th \intd{x} + 
-   p_\th f_\th \Big|_\xmin 
-    \Bigg) \intd{\th}
-\end{align*}
-
-I.e for a given $\alpha(t)$, we solve for $p,f$ and a few values of $\th$ from
-the current belief distribution $\rho(\th)$ and their corresponding
-probabilities/weights. Compute the above expression and increment $\alpha$ in
-the direction of increasing $\delta I$.
-
-In practice, we usually take a very simple prior, something like three values
-with equal probability, something like:.
+This is equivalent to assuming a discrete, i.e.\ a 'particle', prior, a sum
+of Dirac delta masses. In the simplest case, these are $N$ values with equal
+probability.
 \begin{equation}
-\rho(\b) = 
-\begin{cases}
-	\tfrac 13 & \textrm{if } \b= \in \{.5,    1 ,  2 \}\\
-	0   &\textrm{o/w }
-\end{cases}
+\rho(\tc) = \sum_i  
+	\tfrac 1N \delta(\tc- \tc_i) 
 \label{eq:basic_prior_over_tau}
 \end{equation} 
 
-\subsection{Effect of the Prior}
 
-Here we show that the optimal control is sensitive to the {\sl spread} of the
-prior, for example if we have a tightly clustered vs. loosely spread prior, both
-centred at roughly the same mean (the log-prior has the same mean). 
+% \subsection{Effect of the Prior}
+% Here we show that the optimal control is sensitive to the {\sl spread} of the
+% prior, for example if we have a tightly clustered vs. loosely spread prior, both
+% centred at roughly the same mean (the log-prior has the same mean). 
+% 
+% Very interestingly, we see that while for a wide prior, the optimal control has
+% its characteristic double hump shape, that we have seen already, for a tight
+% prior, that is no longer the case
+% 
+% Thus we see that the shape of the prior {\sl has!}
+% an effect on the optimal control.
+% 
+% \begin{figure}[h]
+% \begin{center}
+% \subfloat[Wide Prior]
+% {
+% \label{fig:prior_spread_wide}
+% \includegraphics[width=0.48\textwidth]
+% {Figs/FP_Adjoint/PriorBox_wide_prior.pdf}
+% }
+% \subfloat[Tight Prior]
+% {
+% \label{fig:prior_spread_tight}
+% \includegraphics[width=0.48\textwidth]
+% {Figs/FP_Adjoint/PriorBox_concentrated_prior.pdf}
+% }
+% \caption[labelInTOC]{The effect of the spread (variance) of the prior on the
+% resulting optimal control}
+% \label{fig:prior_spread}
+% \end{center}
+% \end{figure}
+% 
+% Let's look at it another way, we will consider our basic prior as a function of
+% $w$
+% \begin{equation}
+% \rho(\tc) = 
+% \begin{cases}
+% 	\tfrac 12 & \textrm{if } \tc= \in \{1- w, 1/(1-w) \}\\
+% 	0   &\textrm{o/w }
+% \end{cases} 
+% \end{equation} 
+% and sweep for $w = .1:.1:.9$ (in matlab notation).
+% 
+% The results are in \cref{fig:effect_of_prior_width}. Looking at
+% \cref{fig:effect_of_prior_width}, we might be optimistic to hypothesize that we
+% should be doing this online and as the uncertainty (roughly speaking $w$) of the
+% parameter decreases, we should be changing the applied control\ldots This
+% brings us to {\sl adaptive } versions of our scheme which is NOT something we
+% have yet implemented. 
+%  
+% \begin{figure}[h]
+% \begin{center} 
+% \includegraphics[width=\textwidth]
+% {Figs/FP_Adjoint/Effect_of_prior_spread.pdf} 
+% \caption[labelInTOC]{The effect of the width ($w$, a measure
+% of uncertainty) of the prior on the resulting optimal control}
+% \label{fig:effect_of_prior_width}
+% \end{center}
+% \end{figure}
 
-Very interestingly, we see that while for a wide prior, the optimal control has
-its characteristic double hump shape, that we have seen already, for a tight
-prior, that is no longer the case
+\section{Implementation and Illustration of the Gradient Ascent Procedure}
+\label{sec:gradient_ascent}
+The optimization of the Mutual Information, $I$, in
+\cref{eq:I_mutual_info_objective_in_terms_of_dixf} is approached as a gradient-based iterative method, where we approximate the
+infinte-dimensional gradient, $\delta I$ in
+\cref{eq:objective_gradient_continuous} by some finite-dimensional
+approximation. 
 
-Thus we see that the shape of the prior {\sl has!}
-an effect on the optimal control.
+The process involves three basic stages
+\begin{enumerate}
+  \item Given the current control iterate, $\a_n(t))$, numerically solve for the
+  corresponding $f,p$ from their respective PDEs,
+  \cref{eq:FP_pde_OU_absorbBC,eq:adjoint_pde_OU}.
+  \item From the adjoint differential,
+  $\delta I / \delta \a$, using \cref{eq:objective_gradient_continuous}
+  \item Increment $\a_{n+1}$ in the direction of increasing $\delta I / \delta
+  \a$
+  \begin{equation}
+\a_{n+1}(t) \ra \a_n(t) + \frac {\delta I }{\delta \a} (t) \cdot \Delta \a
+\label{eq:simple_gradient_ascent_increment}
+\end{equation}
+for some step-size $\Delta \a$.
+\end{enumerate}
 
-\begin{figure}[h]
+In practice, we need to align the various discretization grids, and the simplest
+thing to do is to discretize $\a,f,p$ at the same time points, $t_k$.
+
+That is, the gradient evaluated at $t_k$ is just $$ 
+\frac {\delta I }{\delta \a}(t_k) =   
+	-\int_\Theta  \rho(\th) \cdot \bigg(  
+	\int_\xmin^{1} \di_x p_\th(t_k,x) f_\th(t_k,x) \intd{x}    
+	    \bigg) \intd{\th}
+$$
+
+\Cref{eq:simple_gradient_ascent_increment} is the simplest gradient ascent
+scheme one can devise. The literature on gradient-based optimization,
+\cite{Nocedal1999}, and the subset on PDE-based gradient optimization,
+\cite{Borzi2012} offers more sophisticated schemes, but for simplicity
+sake we start with this basic one. An example of a more sophisticated scheme
+is the nonlinear conjugate-gradient ascent, as recommended in the literature on
+Fokker-Planck control, \cite{Annunziato2013}.
+ 
+We provide a full description of the optimization algorithm in the appendix, see
+Algorithm \ref{alg:gradient_ascent_4_OC}.
+
+An illustration of a single control increment is shown in
+\cref{fig:example_control_increment}; while an example of a full optimization ascent is given in \cref{fig:example_gradient_ascent}.
+
+%\usepackage{graphics} is needed for \includegraphics
+\begin{figure}[htp] 
 \begin{center}
-\subfloat[Wide Prior]
-{
-\label{fig:prior_spread_wide}
-\includegraphics[width=0.48\textwidth]
-{Figs/FP_Adjoint/PriorBox_wide_prior.pdf}
-}
-\subfloat[Tight Prior]
-{
-\label{fig:prior_spread_tight}
-\includegraphics[width=0.48\textwidth]
-{Figs/FP_Adjoint/PriorBox_concentrated_prior.pdf}
-}
-\caption[labelInTOC]{The effect of the spread (variance) of the prior on the
-resulting optimal control}
-\label{fig:prior_spread}
+  \includegraphics[width=\textwidth]{Figs/FP_Adjoint/control_increment_example.pdf}
+  \caption[Single control Increment Illustration]{Illustration of how the
+  control is incremented given the gradient. In the top panel, we show the
+  initial control in dashed and the incremented control in solid with arrows
+  indicating the incremental change. In the bottom panel, we visualize the
+  corresponding value of $\delta I/ \delta \a (t)$. }
+  \label{fig:example_control_increment}    
 \end{center}
-\end{figure}
-
-Let's look at it another way, we will consider our basic prior as a function of
-$w$
-\begin{equation}
-\rho(\b) = 
-\begin{cases}
-	\tfrac 12 & \textrm{if } \b= \in \{1- w, 1/(1-w) \}\\
-	0   &\textrm{o/w }
-\end{cases} 
-\end{equation} 
-and sweep for $w = .1:.1:.9$ (in matlab notation).
-
-The results are in \cref{fig:effect_of_prior_width}. Looking at
-\cref{fig:effect_of_prior_width}, we might be optimistic to hypothesize that we
-should be doing this online and as the uncertainty (roughly speaking $w$) of the
-parameter decreases, we should be changing the applied control\ldots This
-brings us to {\sl adaptive } versions of our scheme which is NOT something we
-have yet implemented. 
+\end{figure}   
+           
+\begin{figure}[htp] 
+\begin{center}
+\includegraphics[width=1\textwidth]{Figs/AdjointOptimizer/GradientAscent_Nt2.pdf}
+  \caption[Gradient Ascent for the Optimal Stimulation]{Example gradient
+  ascent for the optimization of $I$ in
+  \cref{eq:I_mutual_info_objective_in_terms_of_dixf} illustrating that the
+  effect of the optimal control $\a_{opt}$ is to effectively 'separate' the
+  hitting time distributions corresponding to the potential values of $\tc$.
+  Top
+  panel, the initial and the optimal optimal controls, $\a_{0}(t), \a_{opt}(t)$. Second panel shows the hitting time distributions $g(t|\tc)$ conditional on
+  using the initial control, $\a_0$.
+  The third panel again shows $g(t|\tc)$, but this time conditional on the
+  optimal, $\a_{opt}$.
+ The bottom panel shows the progress of the Objective Mutual Information ($I$) 
+  (\cref{eq:J_mutual_info_objective}) as a function of the gradient ascent
+  iterations (here the algorithm converged in 9 iterations). It is clear that
+  th optimal control significantly improves the objective in comparison to the
+  initial guess.}
+  \label{fig:example_gradient_ascent}   
+\end{center}   
+\end{figure}    
  
-\begin{figure}[h]
-\begin{center} 
-\includegraphics[width=\textwidth]
-{Figs/FP_Adjoint/Effect_of_prior_spread.pdf} 
-\caption[labelInTOC]{The effect of the width ($w$, a measure
-of uncertainty) of the prior on the resulting optimal control}
-\label{fig:effect_of_prior_width}
-\end{center}
-\end{figure}
+In \cref{fig:example_gradient_ascent}, we get an intuitive 
+feeling for what the 'optimal control' is attempting to do - it tries to
+'pull apart' the hitting time distributions, such that an observed hitting time
+can most cleanly be attributed to one of the potential parameter values, $\t$.
+For the combination of known parameters, $\m, \s$ and prior $\rho$, used in
+\cref{fig:example_gradient_ascent}, the optimal control first suppresses firing
+for an initial time-segment and then maximally stimulates firing in the
+remaining time. 
+It is visually obvious that the result on $g(t|\tc)$ is to go
+from a case where the two possible, hitting time distributions lie on top of each other, to one where they are clearly
+delineated. Thus given an observation from the optimally stimulated system, one
+would be able to much more confidently estimate what was the underlying value of
+$\tau$ that produced the observation. 
 
+\subsection{Switch point sweep}
+Given the optimal solution obtained in \cref{sec:gradient_ascent}, we suspect
+that the optimal solution is bang-bang, in the sense of 'hold  everything back
+and then excite maximally'. It is interesting to check how sensitive the
+objective is to the exact value of the switching time, $t_{switch}$. If it is
+not very sensitive, it would be practically useful as the exact
+optimization of the PDE-based optimization will not be
+necessary, and any 'bang-bang' solution will achieve satisfactory improvement in
+estimation. 
 
-\clearpage
-\section{Basic Estimation Experiment}
-
-We will run the following test:
-
-Assume the true parameters $$
- \m = 0; \tc = 1; \b = 1.;
-$$ We will assume we know $\s, \m$ and don't know the time constant, $\tc$ so we
-are trying to maximize the Mutual Information between $\ts$ and $\tc$.
- 
-Let's assume a very simple uniform prior on $\tc$, $\tc_i = \{0.25, 1.5, 2.8
-, 4.0\},$ each with probability 1/4.
-
-Then running the gradient ascent (details of the gradient ascent are omitted) we
-get the controls, objective and hitting time densities shown in 
-\cref{fig:hitting_time_density_g_aopt_bprior}. The optimal control seems to be
-independent of the number of point in the prior (i.e. instead of 4 we could use
-32 pts with weight 1/32 and get the same opt. control as in
-\cref{fig:hitting_time_density_g_aopt_bprior}). 
-
-{\color{red} 
-WARNING: The optimal control search routines is VERY sensitive to the initial
-conditions. The one shown here is the one that has been empirically through
-bitter experience been found to give the highest MI, but currently there is no
-rigorous method to find it starting from arbitrary ICs (or from zero ICs for
-that mater) }
-
-
+Therfore, we sweep through the switch point of exactly when the
+bang-bang switch occurs and see how it impacts the resulting objective, $I$.
+The results are in \cref{fig:sweep_switchtime}. It seems that, at least for this
+parameter set, there is an improvement in the objective by putting the switching
+point past $t=6$, but going much beyond that there is no real difference. 
 
 \begin{figure}[htp]
 \begin{center}
-  \includegraphics[width=1\textwidth]{Figs/FP_Adjoint/OptControl_MI_HT_4.pdf}
-  \caption[labelInTOC]{The gradient ascent for the optimization of $I$ in
-  \cref{eq:I_mutual_info_objective_in_terms_of_dixf}. Top panel, the initial and
-  the optimal optimal controls, $\a_{0}(t), \a_{opt}(t)$. Middle Panel
-  shows the progress of the Objective Mutual Information ($I$) 
-  (\cref{eq:J_mutual_info_objective}). 
-  The bottom plot shows the hitting times $g(t| \tc)$ corresponding to the 3
-  distinct values of $\tc$ in the prior $\rho(\tc)$}  
-  \label{fig:hitting_time_density_g_aopt_bprior}  
-\end{center}   
-\end{figure}  
+  \includegraphics[width=1\textwidth]{Figs/AdjointOptimizer/SweepSwitchpoint_wide.pdf}
+  \caption[Effect of Switching time on Mutual Info Objective]{Effect of
+  Switching time on Mutual Info Objective. Plotted is the objective, $I$, as a
+  function of the switching time, $t_{switch}$, of a bang-bang switching control
+  as in the top panel of \cref{fig:example_gradient_ascent}. The same
+  simulation parameters are used as in \cref{fig:example_gradient_ascent}. The
+  red line is the value of $I$ as function of a switching time, $t_{switch}$
+  between maximally-inhibitive to maximally-excitatory control (a bang-bang
+  control). The blue line, plotted for refernce, is the value of
+  $I$ for no control ($\a=0, \forall t$))}
+  \label{fig:sweep_switchtime}
+\end{center}
+\end{figure}
 
-\subsubsection{Aside: the nitty-gritty of the estimation procedure}
-We have posed a fairly-simple estimation objective, in that it amounts to single
-variable optimization. The negative log-likelihood of an observed hitting-time
-set $\{t_n\}$ is
+
+\subsection{Optimization Method Sensitivity to Problem Parameters}
+We explore the effect of the number of points
+$\t_i$ in the prior and the dispersion in the prior; the initial
+guess for $\a(\cdot)$ and the values of the known parameters $\m, \s$. 
+
+\subsubsection{Number of Points, higher moments of the prior}
+We wonder whether the exact shape of the prior matter or whether the first two
+moments (mean, variance) are sufficient to determine the optimal control. We
+make a simple experiment where we compute the optimal control as in
+\cref{sec:gradient_ascent} for two very similar priors, the first using 2 points
+in the prior and in the second using 3 points, but both priors have the same
+log-mean and log-variance. See \cref{fig:prior_shape_impact}. We observe that
+the optimal control is essentially the same. This suggests that for practical
+purposes it suffices to make the optimization with a 2-point prior that matches
+the (log-) variance of the more detailed prior distribution.
+ 
+%\usepackage{graphics} is needed for \includegraphics
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=1\textwidth]{Figs/AdjointOptimizer/NumberOfTausEffect.pdf}
+  \caption[Detailed-Shape-of-Prior Impact]{Effect of detailed shape of the prior
+  on the Optimal Control.} 
+  \label{fig:prior_shape_impact} 
+\end{center}
+\end{figure}
+
+\subsubsection{The dispersion of the prior}
+We wonder whether the dispersion of the prior, quantified by the ($log$-)
+variance changes the optimal control. Again, we take two 2-point priors, one with
+particles at $\tc = [.25, 4]$ and the other at $\tc = [.75,1.3]$, the results
+are shown in \cref{fig:prior_dispersion_impact}. It is clear that while the
+general shape of the optimal control is the same, regardless of the 'width' of
+hte prior, there is some difference. We further investigate the
+practical difference between the two priors in the section on estimation,
+\cref{sec:batch_estimation}.
+
+%\usepackage{graphics} is needed for \includegraphics
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/AdjointOptimizer/PriorSpread.pdf}
+  \caption[Variance-of-Prior Effect]{Effect of variance-of-prior on
+  optimal stimulation. For the 'wide prior', we set the simple, uniform 2-point prior at
+   $\tc =  [0.25, 4]$, while for the 'narrow prior', they are positioned much
+   closer to each other at $\tc =   [0.75, 1/.75 ]$  }
+  \label{fig:prior_dispersion_impact} 
+\end{center}
+\end{figure}
+
+\subsubsection{The initial guess for the control $\a_0$}
+Like all gradient-based optimization procedures, ours is sensitive to the choice
+of initial guess for the independent variable, i.e.\ the choice of $\a_0$. 
+
+It turns out that indeed the choice of $\a_0$ has a strong influence on what the
+scheme finds as optimal. We illustrate this in \cref{fig:ICs_for_control}. We
+proceed as follows, for three different priors, a wide, medium and concentrated
+one, we run the optimization scheme from four different initial guesses for
+$a_0$ - 
+\begin{enumerate}
+\item zero for the entire (optimization) time-interval
+\item linearly increasing from the lower to the upper control bound over the
+optimization interval
+\item a sinusoidal wave from max to min and again to max
+\item max for the entire optimization time-interval 
+\end{enumerate}
+In \cref{fig:ICs_for_control}, we see that for different initial guesses the
+optimization routine finds different optimal controls. It seems that it is
+easier to find a good optimal control for the wide prior and more difficult for
+the concentrated prior in which case, the optimizer cannot improve on the
+objective except if started with the 'sinusoidal' initial guess.
+
+\begin{figure}[h]
+\begin{center}  
+\subfloat[Wide Prior]
+{
+\label{fig:wide_prior_opt_ics}
+\includegraphics[width=0.5\textwidth]
+{Figs/AdjointOptimizer/OptimizerICswide_prior.pdf}
+}
+\subfloat[Medium Prior] 
+{
+\label{fig:medium_prior_opt_ics}
+\includegraphics[width=0.5\textwidth]
+{Figs/AdjointOptimizer/OptimizerICsmedium_prior.pdf}
+}
+\\
+\subfloat[Concentrated Prior]  
+{
+\label{fig:medium_prior_opt_ics}
+\includegraphics[width=0.5\textwidth]
+{Figs/AdjointOptimizer/OptimizerICsconcentrated_prior.pdf}
+}
+\caption[Dependence on initial guess for control]{Illustrating the dependence
+of the optimization scheme on the initial guess for the optimal control. 
+On the top panel of each sub-float we have the initial guess, in the middle
+panel we show the corresponding solution obtained by the optimization routine;
+in the bottom panel we show the corresponding evolution of the objective. Note
+that the general shape of the optimal control depends more on the IC then the
+spread of the prior distribution of $\tc$.}
+\label{fig:ICs_for_control}
+\end{center}
+\end{figure}
+
+\subsubsection{The value of the known parameters $\mu, \s$}
+So far we have restricted ourselves to a base-case scenario of the assumed known
+parameters, $\mu, \s$. We now redo the basic analysis by varying these.
+
+We look at 6 qualitatively different parameter values, in
+\cref{tab:mu_sigma_perturbation}.
+\begin{centering} 
+\begin{table}
+\begin{tabular}{cccc}
+Regime meaning & $\m$ & $ \s$ & Meaningful Objective Improvement?\\ \hline
+ Negative $\m$ & -0.5& 1 & YES\\ 
+ Small-perturbation $\m$ &0.1&1   & YES\\ 
+ Very-Positive $\m$ & 1&1  & YES\\
+    Smaller $\s$ &                 0&0.3 & YES\\ 
+ Small-perturbation $\s$  &        0&0.9 & YES\\ 
+                Larger $\s$ &      0&1.5 & YES\\ 
+\end{tabular}
+\caption{TODO: This table is just for internal consumption - what is the best
+way to present this table?
+
+Perturbation parameter values and a YES/NO as to whether the
+optimization routine can find significant improvements in the
+objective, recall that small-perturbations, mean small relative to
+the base case $\m, \s=0,1$.
+All examples use the same, 2-pt, prior, $\tc = 
+[0.5, 2]$}
+\label{tab:mu_sigma_perturbation}
+\end{table}
+\end{centering}
+
+Unfortunately, while for small perturbation, lines 2,5 in
+\cref{tab:mu_sigma_perturbation}, the results are the same as for the base-case,
+$\m,\s = 0,1$, for the more significant perturbations, the iterative
+ optimization method is not able to progress to significantly better objective
+ values and the ascent terminates after only one or two iterations. Clearly some 
+improvement can be made here.
+
+\clearpage
+
+\section{Batch Estimation}
+\label{sec:batch_estimation}
+We now proceed to generate a large sample of hitting times with several type
+of controlled stimulation and then estimate the unknown
+parameter after observing the whole sample. We call this 'batch' estimation as opposed to
+'online' estimation where estimates are updated after every single observation
+and the control is also updated according to the updated prior distribution.
+Online estimation is performed in the next
+section, \cref{sec:online_estimation}).
+
+We assume that the true parameters governing \cref{eq:X_evolution_uo_control} are
+$$ \m = 0; \tc = 1; \s = 1;
+$$ We will assume we know $\s, \m$ and do not know the time constant, $\tc$ so
+we are trying to maximize the Mutual Information between the random hitting
+time, $\ts$, and $\tc$. In the parlance of the neuroscience literature this
+parameter set corresponds to what is known as the 'Sub-Threshold, High-Noise'
+regime, \cite{Iolov2013}, as long as the control, $\a$ equals zero. Of course,
+changing the control sufficiently will move it into the qualitatively different,
+'Super-Threshold' regime, which is the case when the process can hit the
+threshold even in the absence of noise (in the 'Sub-Threshold' regime, a
+non-zero noise parameter is required if any hitting-times are to occur.)
+
+For obtaining the MI-optimal stimulation, we will take a uniform prior on
+$\tc$, using 10 $\tc_i$ uniformly spaced in the interval $[0.25, 4.0]$, i.e.
+each of the $\tc_i$ in the prior has 1/10. Note that neither the mean nor the
+log-mean of the prior correspond to the unknown true, $\tc$ or $\log(\tc)$.
+ 
+The control obtained thus will be tagged as 'opt. In addition we consider the
+two optimal control obtained using the 'wide' and 'narrow' 2-point priors as
+shown in \cref{fig:prior_dispersion_impact}. We call these 'opt-wide' for the
+prior with $\tc =  [0.25, 4]$, and 'opt-narrow' for the prior with  $\tc =  
+[0.75, 1/0.75]$.  
+
+In addition, we also use the control where $\a$ is set to the 'critical' value,
+$\a = \xth/\tc = 1$, and one where the control is set to its upper
+bound, $\a = \amax$.
+
+\subsection{The Estimation Algorithm for the Batch Problem}
+We have posed a fairly-simple estimation objective, to estimate $\tau$, which
+amounts to single-variable optimization. The negative log-likelihood of an
+observed hitting-time set $\{t_n\}$ is
 \begin{equation}
-l(\tc) = - \sum_n \log ( g(t_n | \tc) ) =  - \sum_n \log ( -D \di_x f(t_n |
-\tc) |_{\xth} )
+l(\tc) = - \sum_n \log ( g(t_n | \tc) ) =  - \sum_n \log \left( -D \di_x f(\xth,
+t_n |\tc) \right)
+\label{eq:MLE_likelihood}
 \end{equation}
+We minimize \cref{eq:MLE_likelihood} using the standard single-variable
+optimization routine in NumPy based on Brent's method.
 
-The distributions are exemplified in
-\cref{fig:log_likelihood_beta_examples_100000},
-for three different values of $N_s =  1e5$. We see that for the constant
-stimulations, $\a = \a_{crit}, \a_{max}$ it is very hard to
-distinguish between different values of $\tc$. 
-
-In \cref{fig:log_likelihood_beta_examples_100000} as well as in 
-\cref{fig:hitting_time_density_g_aopt_bprior}, we get an indication for why
-the 'optimal control' is better than the constants. For the constant control
-the different hitting time densities look like local perturbations of each
-other, either a little more or a little less, but for the optimal control they
-are shifted, which means that we see the first indications that the Opt Control,
-might have some superiority over the 'Crit' Control (for example) as it seems to estimate a $\tc$ closer to 1 (the 'true' value). However, on average, the different shapes of $\a(t)$ seems to have a very limited impact on the estimates for $\tc$ (even though it has a very obvious impact on the shape of the hitting time distribution $g(t)$).
-
-
-% \begin{figure}[h]
-% \begin{center} 
-% \subfloat[opt]  
-% {
-% \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a0.pdf}
-% }
-% \\   
-% \subfloat[crit]
-% {
-% \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a1.pdf}
-% }
-% \\
-% \subfloat[max] 
-% {
-% \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x1000_a2.pdf}
-% }
-% \caption[labelInTOC]{Example of Empirical vs. Analytical Hitting time
-% distributions and the associated log-likelihoods. $N_s = 1e3$}
-% \label{fig:log_likelihood_beta_examples_1000}
-% \end{center}
-% \end{figure} 
+% The distributions are exemplified in
+% \cref{fig:log_likelihood_beta_examples_100000},
+% for three different values of $N_s =  1e5$. We see that for the constant
+% stimulations, $\a = \a_{crit}, \a_{max}$ it is very hard to
+% distinguish between different values of $\tc$. 
 % 
-% 
-% \begin{figure}[h]
+% In \cref{fig:log_likelihood_beta_examples_100000} as well as in 
+% \cref{fig:hitting_time_density_g_aopt_bprior}, we get an indication for why
+% the 'optimal control' is better than the constants. For the constant control
+% the different hitting time densities look like local perturbations of each
+% other, either a little more or a little less, but for the optimal control they
+% are shifted, which means that we see the first indications that the Opt Control,
+% might have some superiority over the 'Crit' Control (for example) as it seems to estimate a $\tc$ closer to 1 (the 'true' value). However, on average, the different shapes of $\a(t)$ seems to have a very limited impact on the estimates for $\tc$ (even though it has a very obvious impact on the shape of the hitting time distribution $g(t)$).
+
+% \begin{figure}[h] 
 % \begin{center}
 % \subfloat[opt]
 % {
 % \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a0.pdf}
+% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a0.pdf}
 % }
 % \\
-% \subfloat[crit]
+% \subfloat[crit] 
 % {
 % \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a1.pdf}
+% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a1.pdf}
 % }
-% \\ 
+% \\
 % \subfloat[max]
 % {
 % \includegraphics[width=.75\textwidth]
-% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x10000_a2.pdf}
+% {Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a2.pdf}
 % }
-% \caption[labelInTOC]{Same as \cref{fig:log_likelihood_beta_examples_1000}, but
-% with  $N_s = 1e4$. Notice that ( but only slightly ) the 'opt' control tilts in
-% the right direction for the $\b$ estimate (i.e. towards 1). }
-% \label{fig:log_likelihood_beta_examples_10000}  
+% \caption[labelInTOC]{Example of Empirical vs.\ Analytical Hitting time
+% distributions, $g(t|\t;\a)$, and the associated log-likelihoods. $N_s = 1e5$
+% hits}
+% \label{fig:log_likelihood_beta_examples_100000}
 % \end{center}
-% \end{figure}
+% \end{figure}  
+% 
+% \clearpage
 
-\begin{figure}[h] 
-\begin{center}
-\subfloat[opt]
-{
-\includegraphics[width=.75\textwidth]
-{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a0.pdf}
-}
-\\
-\subfloat[crit] 
-{
-\includegraphics[width=.75\textwidth]
-{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a1.pdf}
-}
-\\
-\subfloat[max]
-{
-\includegraphics[width=.75\textwidth]
-{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_estimatorWorkbench_b=0x100000_a2.pdf}
-}
-\caption[labelInTOC]{Example of Empirical vs.\ Analytical Hitting time
-distributions, $g(t|\t;\a)$, and the associated log-likelihoods. $N_s = 1e5$
-hits}
-\label{fig:log_likelihood_beta_examples_100000}
-\end{center}
-\end{figure}  
- -
-\clearpage
 
-\subsubsection{Batch Performance of the perturbations over the estimators.}
-As is we have 3 candidates for perturbing the hitting times: 
+
+\subsection{Estimator Comparison}
+Recall that we will stimulate the system using 5 stimulation
+waveforms.  
 \begin{enumerate}
-  \item 
-the optimal gradient-ascent-based  control $\a_{opt}$ (see
-\cref{fig:hitting_time_density_g_aopt_bprior} top panel)
-\item   the 'critical' constant control
-$\a_{crit}$, ($\a_{crit}(t) =  \tc$)
-\item  the max constant control, $\amax$ ($=2$)
+  \item 'opt' - the optimal gradient-ascent-based  control $\a_{opt}$, based on
+  a 10-point uniform prior between $[0.25, 4]$
+  \item  'opt-wide' - the optimal control using a 2-point prior on  $[0.25, 4]$
+  \item 'opt-narrow' - the optimal control using a 2-point prior on $[0.75,
+  1/0.75]$
+\item   'crit' - the constant control
+$\a_{crit}$, ($\a_{crit}(t) =  \xth/\tc$
+\item  'max' - the max constant control, $\amax$ ($=2$)
 \end{enumerate} 
 
-We now simulate $N_b $ blocks of $N_s $ hitting times each for the
-3 alphas and then estimate $\tc$ over each set using MaxLikelihood over our
-computed expression for the density, $g(t|\tc; \a(t) )$). 
+We now simulate $N_b $ blocks of $N_s$ hitting times each for the
+5 alphas and then estimate $\tc$ over each set using MaxLikelihood over our
+computed expression for the density, $g(t|\tc; \a(t) )$. 
 Naturally, for each control, we use the same Gaussian random draws per block of
-$N_s$ Hitting of times). See \cref{fig:log_likelihood_beta_examples_100000} for
-a empirical distribution of $\ts$ for $N_s = 1e5$
+$N_s$ hitting of times.
+
 %\usepackage{graphics} is needed for \includegraphics
 % \begin{figure}[htp]
 % \begin{center}
@@ -2572,31 +1089,31 @@ The estimation results are tabulated in in
 \cref{tab:beta_estimates_from_hitting_times_different_alphas}.
 
 \begin{table}
-\subfloat[$N_b=1000, N_s = 1e2$]{
-\begin{tabular}{ccc}
-\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_100.txt}
-\end{tabular}
-}
-\subfloat[$N_b=100, N_s = 1e3$]{
-\begin{tabular}{ccc}
-\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_1000.txt}
-\end{tabular}
-}\\
-\subfloat[$N_b=10, N_s = 1e4$]{
-\begin{tabular}{ccc}
-\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_10000.txt}
-\end{tabular}
-} 
-\subfloat[$N_b=1, N_s = 1e5$]{
-\begin{tabular}{ccc}
-\input{../OptEstimate/Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_100000.txt}
-\end{tabular}
-}
-\caption[Static $\tau$ MLE estimates]{Results for the estimates arising from
-simulations using various values of $\a$ (opt, crit, max). In each sub-table there are $N_b$
-parameter estimates for each distinct $\a$, with $N_s$ hitting times used to
-form an $\tc-$estimate.  The 'true' value of $\tc$ is $\tc=1$, i.e. $\log(\tc)
-= 0$. Also see \cref{fig:beta_estimates_from_hitting_times_different_alphas}}
+% \subfloat[$N_b=1000, N_s = 1e2$]{
+% \begin{tabular}{ccc}
+% \input{../OptEstiamte/Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_100.txt}
+% \end{tabular}
+% }
+% \subfloat[$N_b=100, N_s = 1e3$]{
+% \begin{tabular}{ccc}
+% \input{Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_1000.txt}
+% \end{tabular}
+% }\\
+% \subfloat[$N_b=10, N_s = 1e4$]{
+% \begin{tabular}{ccc}
+% \input{Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_10000.txt}
+% \end{tabular}
+% } 
+% \subfloat[$N_b=1, N_s = 1e5$]{
+% \begin{tabular}{ccc}
+% \input{Figs/HitTime_MI_TauChar_Adjoint_Estimate/tauchar_hit_time_100000.txt}
+% \end{tabular}
+% }
+\caption[Batch $\tau$ MLE estimates]
+{Results for the estimates arising from simulations using various values of $\a$
+(opt, crit, max). In each sub-table there are $N_b$ parameter estimates for each distinct $\a$, with $N_s$ hitting times used to
+form a $\tc-$estimate.  The 'true' value of $\tc$ is $\tc=1$. 
+Also see \cref{fig:beta_estimates_from_hitting_times_different_alphas}.}
 \label{tab:beta_estimates_from_hitting_times_different_alphas} 
 \end{table}   
 
@@ -2607,59 +1124,146 @@ form an $\tc-$estimate.  The 'true' value of $\tc$ is $\tc=1$, i.e. $\log(\tc)
 \includegraphics[width=0.48\textwidth]
 {Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb1000_Ns100.pdf}
 }
-\subfloat[$N_b=1e3, N_s = 1e2$]
+\subfloat[$N_b=1e2, N_s = 1e3$]
 {
-\label{fig:label2}
 \includegraphics[width=0.48\textwidth]
 {Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb100_Ns1000.pdf}
 }
 \\
-\subfloat[$N_b=1e1, N_s = 1e4$]
+\subfloat[$N_b=1e2, N_s = 1e4$]  
 {
 \includegraphics[width=0.48\textwidth]
 {Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb10_Ns10000.pdf}
-}
+}  
 \subfloat[$N_b=1e1, N_s = 1e5$]
-{
-\label{fig:label2}
+{ 
 \includegraphics[width=0.48\textwidth]
 {Figs/HitTime_MI_TauChar_Adjoint_Estimate/miestimates_scatterplot_Nb1_Ns100000.pdf}
 }
-\caption[labelInTOC]{Fine Visualization of the MLE estimates for the different
-controls also see \cref{tab:beta_estimates_from_hitting_times_different_alphas}}
+\caption[Illustration of the individual MLE Estimates]{Fine Visualization of the
+MLE estimates for the different controls, also see
+\cref{tab:beta_estimates_from_hitting_times_different_alphas}}
 \label{fig:beta_estimates_from_hitting_times_different_alphas}
 \end{center}
 \end{figure}
+ 
+Given
+\cref{tab:beta_estimates_from_hitting_times_different_alphas,fig:beta_estimates_from_hitting_times_different_alphas},
+we see a clear advantage to using the Optimal Control, $\a_{opt}$ over the
+simpler, constant controls. In particular, the bias of the estimates seems to
+be significantly reduced. The variance is greater for the optimal controls, but
+a look at the detailed distribution of estimates, top panels in
+\cref{fig:beta_estimates_from_hitting_times_different_alphas} indicates that
+this is due to a few outliers. Meanwhile, if we consider the various optimal
+controls, 'opt' vs. 'opt-wide', 'opt-narrow', we see that there is no big
+difference in the estimator quality of each - they all perform approximately
+equivalently. 
 
-Comments: It certainly looks like there is a marginal advantage to using the 
-Optimal Control, $\a_{opt}$ over the simpler, constant controls. In particular
-both the bias and variance of the estimates seems to be significantly reduced.
-The strange results for $N_s = 100$ require us to look at the actual
-distribution of estimates. Results not shown, but the opt-estimates for
-$N_s=100$ are bi-modal with a cluster far from the true value. For the higher
-$N_s = 1e3,1e4, 1e5$, the opt-estimates are unimodal and tightly centred
-around the true value.
 
+\subsection{Closer look when the estimation goes wrong}
+TODO: Move to appendix?
+
+In general, the optimally-stimulated samples give (much) more accurate estimates
+than the ones that are naively-stimulated. However, we see in
+\cref{fig:beta_estimates_from_hitting_times_different_alphas}, panel b) that
+occasionally (once), the optimally-stimulated sample can give very wrong
+estimates.
+
+We now plot what goes wrong in that sample vs. the base-case where the estimate
+is almost exact, see \cref{fig:batch_estimtion_in_detail}. It seems that in the
+bad case, there are enough extreme (very long) hitting times that the estimation
+procedure infers that the characteristic time must be very small (i.e the
+attractive force towards $\mu=0$ is very strong). In the larger sample, there
+are no other examples of these extremely delayed hitting times, they are thus
+seen to be a rarity and the correct parameter value is inferred.
+
+\begin{figure}[h]
+\begin{center} 
+\subfloat[1e3 Hits]  
+{ 
+\includegraphics[width=0.98\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_good_vs_bad_estimates_Nh1000.pdf}
+}\\
+\subfloat[1e4 Hits]
+{
+\includegraphics[width=0.98\textwidth]
+{Figs/HitTime_MI_TauChar_Adjoint_Estimate/Adjoint_TauChar_Estimator_good_vs_bad_estimates_Nh10000.pdf}
+}
+\caption[Estimation Detail View for the Optimally-Stimulated
+Experiment]{Comparing the case when the estimation does best vs. when it does
+worst for the optimally-stimulated experiment. In the case with less samples, a
+few extreme observations can skew the estimate, however with more data points,
+those are seen to be rare cases and a more accurate estimate is found.}
+\label{fig:batch_estimtion_in_detail}
+\end{center}
+\end{figure}
+
+
+\subsection{Proof of concept of estimating the entire parameter set}
+So far we have assumed that $\mu, \s \in \th$ are known. We now relax that
+assumption and attempt to estimate those two parameters in addition to
+characterisitc time $\tc$. We still use the optimal control obtained assuming
+$\m,\s$ known. Why is this expected to work? First of all we found that the
+optimal control seems essentially irrelevant to the exact values of $\m,\s$ as
+long as they are not 'too far' from the nominal values ($\m=0, \s=1$.). Moreover
+as discussed in the introduction, the $\tc$ parameter is well-known to be the
+hardest to estimate. Thus a scheme designed to estimate it well is conjectured
+to help with estimation of the entire parameter set, since removing variation
+from one parameter estimate necessarily removes variation from the others.
+
+We use the same simulated hitting-time data-set as in
+\cref{tab:beta_estimates_from_hitting_times_different_alphas,fig:beta_estimates_from_hitting_times_different_alphas},
+using $N_s=1e4$ hits and $N_b=10$ separate sample-sets, i.e.\ we make 10
+estimates.
+
+The results are given in \cref{fig:all_theta_estimates_batch}, it is clear that
+the 'optimally' stimulated samples result in much more accurate and precise
+estimates. In particular all stimulation schemes come-up with high-fidelity
+estimates for $\s$, it is in resolving the interplay between $\m,\tc$ that the
+'optimal' stimulation excels. In particular the 'naive' stimulations does
+not allow to distinguish a high $\m$ and a small $\tc$ from a low $\m$
+and a high $\tc$, while the dynamic, bang-bang situation makes it possible.
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{/home/alex/Workspaces/Latex/OptEstimate/Figs/MuTauSigma_Batch_estimates/all_theta_estimates_scatterplot_Nb10_Ns10000.pdf}
+  \caption[Batch estimates for all 3 parameters]{Optimal Stimulation greatly
+  improves estimates when all parameters are being estimated. 
+  From the top to bottom, we show $N_b=10$ estimates for $\m,\tc,\s$,
+  formed after observing $N_s=1e4$ hits per-estimate. There are three 'optimal'
+  stimulations as discussed in the text, shown to the left and two naive ones,
+  shown to the right. The scatter dots are the individual estimates per
+  stimulation-parameter pair. The horizontal line indicates the true value of
+  the paramters, i.e.\ the value used to simulate the hitting-time observations
+  in the data samples.}
+  \label{fig:all_theta_estimates_batch}
+\end{center}
+\end{figure}
 
 \clearpage
 
-\section{Online MI Optimization}
-Hеre we outline a tentative approach to {\sl online} optimization of the MI,
-which means
+\section{Online Estimation}
+\label{sec:online_estimation} 
+In the {\sl online} optimization of the MI / estimation, we proceed in a
+slightly more complicated way. In particular we 
 
 \begin{enumerate}
   \item Find $\aopt$ using the gradient ascent, for the prior $\rho$
-  \item Apply $\aopt$ and measure several $1,2\ldots,N_{s,1}$ hitting times
+  \item Apply $\aopt$ and measure several $1,2\ldots,N_{s}$ hitting times
   $t_k$
   \item Update the $\rho$ into a posterior conditional on the observed $\{t_k\}$
   \item Recalibrate $\aopt$ using the new $\rho$, i.e. go back to 1. 
 \end{enumerate}
 
- Efficiency considerations aside, we have all the tools to do pts. 1,2,4, it
- is only the prior update that needs to be discussed. 
+In practice we incrementally, increase by starting with $N_s=1$ and then
+doubling it, i.e.\ we re-compute $\a$ after the 1st, 3rd, 7th etc hitting time.
 
-Of course we start by restating Bayes' formula
+Computational efficiency considerations aside, we have already discussed and
+illustrated all the techniques needed to perform pts. 1,2,4, it is
+only the prior update that needs to be discussed.
 
+\subsection{Quick Intro to Particle Filtering}
+Recall Bayes' formula
 $$
 \rho(\th| \{t_k\} ) = 
 \frac{  \rho(\th) \cdot \prod_k g(t_k|\th ; \a) }
@@ -2669,15 +1273,13 @@ $$
 In practice, exact calculation of $\rho(\th|\t_k)$ would not be possible in our
 context, so an approximation approach needs to be made.
 
-The standard approach is to describe the belief distribution by an ensemble of
+The standard approach is to describe the prior distribution by an ensemble of
 points (particles). We now describe the basic aspect of how the particle
 ensemble is constructed, how it is updated and how it is resampled. We use the
-reference \cite{Granade2012}, in particular sec 4 therein.
+reference \cite{Granade2012}, in particular section 4 therein.
 
-\subsection{Quick INtro to Particle Filtering}
 We have a prior
-$ \rho(\th)$ and we want to describe it by an ensemble of points $\th_i$.
-as 
+$ \rho(\th)$, which we represent or approximate  via an ensemble of points $\th_i$. as 
 $$ \rho(\th) \sim \sum_i w_i \delta(\th-\th_i)$$
 This is what we have been doing up to now for the MI optimization routines.
 
@@ -2715,217 +1317,372 @@ resampling can be done in many ways, but a standard way is described in
 algorithm. \ref{alg:particle_resampling} (which is copied from Algo4 in Granade
 et. al. \cite{Granade2012}, who in turn closely follow \cite{Liu2001}, but
 are very nice and pedagogical).
-\begin{algorithm}
-\begin{algorithmic}
-\State Given  $\{w_i, \th_i\}_1^N_p$ the current particle ensemble (weight,
-locations)  
-\State $\m $ \gets $\Exp[\Th]$ 
-\State $a = 0.98$ see \cite{Granade2012,Liu2001}
-\State $h = \sqrt{1-a^2}$ i.e. $h \approx 0.1990$
-\State $\Xi$\gets $h^2\cdot \Var[\Th]$
-\For {$i= 1\dots N_p$}
-	\\ {\itshape $\#$ Re-sample each particle individually}
-	\State draw $j$ with probability $w_j$ 
-	\\ {\itshape $\#$ the bigger $w_i$ the more likely to choose
-	$\th_i$}
-	\State $m_i$ \gets  $a \th_j + (1-a) \m$
-	\State Resample $\th_i'$ from $N(\m_i, \Xi)$
-	\State $w_i$ \gets $1/N_p$ 
-    \EndFor{\itshape $\quad \#   1 \ldots N_p$ particle resampling}
-\State \Return $w_i, \th_i'$ the resampled particle ensemble 
-\end{algorithmic}
-\caption{Particle Resampling Algorithm}
-\label{alg:particle_resampling}
-\end{algorithm}
-
 While, of course, updating happens after every iteration, re-sampling happens
 only when  
 $$ \frac{1}{\sum_i^{N_p} w_i^2} < \frac {N_p}{2} \implies \textrm{ resample!}$$
+For reference, the complete filtering algorithm is provided in 
+Algorithm \ref{alg:particle_resampling} in the Appendix.
 
-In \cref{fig:poissonian_rate_filtering} we give an example for the filtering
-procedure to estimate the rate of a Poissonian process, $1/\t$, for which  the
-likelihood is just $\tfrac 1\t exp(- \tfrac t\t)$. From
-\cref{fig:poissonian_rate_filtering} we can conclude that the basic mechanics of
-the filtering update/resample procedure is working. (We've tried it with other
-values of $\tau$ and it works for those as well.)
 
-%\usepackage{graphics} is needed for \includegraphics
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=\textwidth]{Figs/TauParticleEnsemble/poisson_rate_filtering.pdf}
-  \caption{Filtering Example for a test-case. We are trying to estimate the
-  inverse of the Poissonian rate, $1/\tau$, given inter-event intervals $t_k$.
-  The true value is $\tau  = 1$. The Maximum Likelihood estimate for $\tau$ in
-  this problem  is just the mean of the observed times $\bar{t_k}$, which
-  happens to be 0.9583 in this example, while after the last observation, the
-  ensemble mean $\pm$ std-dev is $0.9811\pm 0.0199$}
-  \label{fig:poissonian_rate_filtering}
-\end{center}
-\end{figure}
+
+% In \cref{fig:poissonian_rate_filtering} we give an example for the filtering
+% procedure to estimate the rate of a Poissonian process, $1/\t$, for which  the
+% likelihood is just $\tfrac 1\t exp(- \tfrac t\t)$. From
+% \cref{fig:poissonian_rate_filtering} we can conclude that the basic mechanics of
+% the filtering update/resample procedure is working. (We've tried it with other
+% values of $\tau$ and it works for those as well.)
+% 
+% %\usepackage{graphics} is needed for \includegraphics
+% \begin{figure}[htp]
+% \begin{center}
+%   \includegraphics[width=\textwidth]{Figs/TauParticleEnsemble/poisson_rate_filtering.pdf}
+%   \caption{Filtering Example for a test-case. We are trying to estimate the
+%   inverse of the Poissonian rate, $1/\tau$, given inter-event intervals $t_k$.
+%   The true value is $\tau  = 1$. The Maximum Likelihood estimate for $\tau$ in
+%   this problem  is just the mean of the observed times $\bar{t_k}$, which
+%   happens to be 0.9583 in this example, while after the last observation, the
+%   ensemble mean $\pm$ std-dev is $0.9811\pm 0.0199$}
+%   \label{fig:poissonian_rate_filtering}
+% \end{center}
+% \end{figure}
 
 % \clearpage
 
-\subsection{Example of Particle-Filtering + Online Estimation for hitting time
-parameter estimation}
+\subsection{Simulation Results}
+We now illustrate how the Optimal Design procedure works while using the
+particle filtering methodology to represent and update our parameter prior.
 
-\subsubsection{Single HItting Time Illustration}
-Let's try it. First, in \cref{fig:example_online_miopt_single_iteration}, we
-illustrate one iteration of the update, that is one hitting time given a
-stimulation from either the MI Optimal Controller or a random controller, which
-just gives a random constant stimulation per each hitting time.
+% \subsubsection{Single Hitting-Time Illustration}
+% In \cref{fig:example_online_miopt_single_iteration}, we
+% illustrate one iteration of the update, that is one hitting time given a
+% stimulation from either the MI Optimal Controller or a random controller, which
+% just gives a random constant stimulation per each hitting time.
+% 
+% Let's discuss what happens in \cref{fig:example_online_miopt_single_iteration}.
+% Recall that lower values of $\tc$ imply higher restoring force and therefore
+% longer hitting times (waiting times). Since in this sample, the observed hitting
+% times were fairly long, especially for the MI-optimal stimulation, weights for
+% smaller $\t$s grow larger, while weights for bigger $\t$s become smaller.
+% However it is immediately clear that the MI-optimal stimulation is more
+% discerning as it has almost entirely discarded (correctly) the
+% possibility that $\tau>2$, while the other two stimulations have resulted in
+% only mild perturbation in the prior distribution. 
+% 
+% WARNING: The new results are much better primarily through a judicious choice of
+% the initial condition of the MI-optimal optimization (the initial guess for the
+% optimal control.)
+% 
+% \begin{figure}[h]
+% \begin{center}
+% \subfloat[Example Hitting Times]
+% {
+% \label{fig:example_hitting_times_for_online_miopt}
+% \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_trial_example_hittimes.pdf}
+% } 
+% \subfloat[Resulting Particle Ensemble Updates]
+% {
+% \label{fig:example_particle_ensemble_updates_for_online_miopt}
+% \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_trial_example_weights.pdf}
+% }
+% \caption[Effect of the First Observation on the Belief
+% Distribution]{Examples of a single iteration of the Online Stimulation-Estimation scheme.}
+% \label{fig:example_online_miopt_single_iteration}
+% \end{center}
+% \end{figure}
+% 
+% \subsubsection{Full Multiple Hitting-Times Experiment}
+We stimulate a sequence
+of hitting times and online update our parameter prior distribution, after
+every observation and then online-update our MI-optimal stimulation as the
+prior evolves. 
 
-Let's discuss what happens in \cref{fig:example_online_miopt_single_iteration}.
-Recall that lower values of $\tc$ imply higher restoring force and therefore
-longer hitting times (waiting times). Since in this sample, the observed hitting
-times were fairly long, especially for the MI-optimal stimulation, weights for
-smaller $\t$s grow larger, while weights for bigger $\t$s become smaller.
-However it is immediately clear that the MI-optimal stimulation is more
-discerning as it has almost entirely discarded (correctly) the
-possibility that $\tau>2$, while the other two stimulations have resulted in
-only mild perturbation in the belief distribution. 
-
-WARNING: The new results are much better primarily through a judicious choice of
-the initial condition of the MI-optimal optimization (the initial guess for the
-optimal control.)
-
-\begin{figure}[h]
-\begin{center}
-\subfloat[Example Hitting Times]
-{
-\label{fig:example_hitting_times_for_online_miopt}
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_trial_example_hittimes.pdf}
-} 
-\subfloat[Resulting Particle Ensemble Updates]
-{
-\label{fig:example_particle_ensemble_updates_for_online_miopt}
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_trial_example_weights.pdf}
-}
-\caption[labelInTOC]{Examples of a single iteration of the Online
-Stimulation-Estimation scheme.  }
-\label{fig:example_online_miopt_single_iteration}
-\end{center}
-\end{figure}
-
-\subsubsection{Full Multiple Hitting-Times Experiment(s)}
-Now let's go through an entire estimation experiment. That is let's stimulate a
-sequence of hitting times and online update our parameter belief distribution,
-after every observation and then online-update our MI-optimal stimulation as the
-belief evolves.
-
-The main result is shown in \cref{fig:example_miopt_vs_rand_ensemble_evolution},
-where we visualize the mean and confidence intervals for the belief
-distributions for the three protocols (MI-Optimal vs. Random Constant vs Zero),
-using $N_\t = 32$ particles and $N_k=251$ hitting times. In
-\cref{fig:example_miopt_controls_evolution}, we show the different stimulations
-that were chosen by the Mutual-Info Maximization Algorithm.
+% The main result is shown in \cref{fig:example_miopt_vs_rand_ensemble_evolution},
+% where we visualize the mean and confidence intervals for the belief
+% distributions for the three protocols (MI-Optimal vs. Random Constant vs Zero),
+% using $N_\t = 32$ particles and $N_k=251$ hitting times. In
+% \cref{fig:example_miopt_controls_evolution}, we show the different stimulations
+% that were chosen by the Mutual-Info Maximization Algorithm.
  
+% \begin{figure}[htp]
+% \begin{center}
+%   \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/single_experiment_example_ensemble_distn_evolution.pdf}
+%   \caption[labelInTOC]{Evolution of the belief distributions given Optimal
+%   (red) or Random (green) stimulation. We used $N=32$ particles to represent
+%   the ensemble for both stimulation protocols. There are 250 hitting times used}
+%   \label{fig:example_miopt_vs_rand_ensemble_evolution}
+% \end{center}
+% \end{figure}
+% \begin{figure}[htp]
+% \begin{center}
+%   \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/single_experiment_example_controls_evolution.pdf}
+%   \caption[labelInTOC]{Different MI-OPtimal Stimulations computed 
+%   as the Experiment evolves and the parameter belief distribution changes}
+%   \label{fig:example_miopt_controls_evolution}
+% \end{center}
+% \end{figure}
+ 
+% \clearpage
+
+
+We now simulate $50$ independent experiments of 500 hitting times each and
+then average the ensembles.
+
+% We visualize them in \cref{fig:online_optimization_more_examples}. Here, we
+% see that the MI-optimal stimulation is indeed producing more accurate
+% estimates, faster (earlier in the experiment). This is true in 7 out of the 10
+% experiments, in 2 it is hard to determine whether there is a 'better' protocol
+% and only once is the MI-based stimulation resulting in worse estimates than
+% one of the alternatives ((f) in \cref{fig:online_optimization_more_examples}).
+% \begin{figure}[h] \begin{center} \subfloat[] {
+% \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=495_ensemble_distn_evolution.pdf}
+% } \subfloat[] { \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=496_ensemble_distn_evolution.pdf}
+% }\\
+% \subfloat[] { \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=497_ensemble_distn_evolution.pdf}
+% } \subfloat[] { \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=498_ensemble_distn_evolution.pdf}
+% }\\
+% \subfloat[] { \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=499_ensemble_distn_evolution.pdf}
+% } \subfloat[] { \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=500_ensemble_distn_evolution.pdf}
+% }\\
+% \subfloat[] { \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=501_ensemble_distn_evolution.pdf}
+% } \subfloat[] { \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=502_ensemble_distn_evolution.pdf}
+% }\\
+% \subfloat[] { \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=503_ensemble_distn_evolution.pdf}
+% } \subfloat[] { \includegraphics[width=0.48\textwidth]
+% {Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=504_ensemble_distn_evolution.pdf}
+% } \caption[labelInTOC]{Various examples of the perturbation-estimation
+% protocol with the belief distribution plotted against the hitting time $k$,
+% with the MI-optimal stimulation (red), the constant random stimulation (green)
+% and the zero, $\a\equiv 0\,\forall t$, stimulation (blue)}
+% \label{fig:online_optimization_more_examples} \end{center} \end{figure}
+The aggregated evolutions for the updated prior distributions are
+visualized in \cref{fig:online_optimization_aggregated_belief_evolution}. It is now clear that
+the MI-Optimal procedure produces more accurate and more precise estiamtes and
+that the increase in precision is especially clear in the earlier parts in the
+experiment. That is, using the MI-optimal protocol reduces the uncertainty in
+the parameters much faster.
+
+In \cref{fig:online_optimization_quantiles_belief_evolution}, we plot a similar
+illustration, here we show the median of the mean of the prior (median over the
+$N=16$ experiments) as well as the min and the max. We see a similar effect in
+that the 'opt'-estimates are much more accurate and precise. 
+
+TODO: Should we include only one of these figs - they are kinda showing the
+same thing?
+ 
+% \usepackage{graphics} is needed for \includegraphics
 \begin{figure}[htp]
 \begin{center}
-  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/single_experiment_example_ensemble_distn_evolution.pdf}
-  \caption[labelInTOC]{Evolution of the belief distributions given Optimal
-  (red) or Random (green) stimulation. We used $N=32$ particles to represent
-  the ensemble for both stimulation protocols. There are 250 hitting times used}
-  \label{fig:example_miopt_vs_rand_ensemble_evolution}
-\end{center}
-\end{figure}
-\begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/single_experiment_example_controls_evolution.pdf}
-  \caption[labelInTOC]{Different MI-OPtimal Stimulations computed 
-  as the Experiment evolves and the parameter belief distribution changes}
-  \label{fig:example_miopt_controls_evolution}
-\end{center}
-\end{figure}
- 
-
-\clearpage
-
-We now simulate $10$ independent experiments of approx. 500 hitting times each
-and visualize them in \cref{fig:online_optimization_more_examples}. Here, we see
-that the MI-optimal stimulation is indeed producing more accurate
-estimates, faster (earlier in the experiment). This is true in 7 out of the 10
-experiments, in 2 it is hard to determine whether there is a 'better' protocol
-and only once is the MI-based stimulation resulting in worse estimates than one
-of the alternatives ((f) in \cref{fig:online_optimization_more_examples}). 
- 
-\begin{figure}[h]
-\begin{center}
-\subfloat[]
-{
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=495_ensemble_distn_evolution.pdf}
-}
-\subfloat[]
-{
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=496_ensemble_distn_evolution.pdf}
-}\\
-\subfloat[]
-{
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=497_ensemble_distn_evolution.pdf}
-}
-\subfloat[]
-{
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=498_ensemble_distn_evolution.pdf}
-}\\
-\subfloat[]
-{
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=499_ensemble_distn_evolution.pdf}
-}
-\subfloat[]
-{
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=500_ensemble_distn_evolution.pdf}
-}\\
-\subfloat[]
-{
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=501_ensemble_distn_evolution.pdf}
-} 
-\subfloat[]
-{
-\includegraphics[width=0.48\textwidth] 
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=502_ensemble_distn_evolution.pdf}
-}\\
-\subfloat[]
-{
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=503_ensemble_distn_evolution.pdf}
-}
-\subfloat[] 
-{
-\includegraphics[width=0.48\textwidth]
-{Figs/HTOnlineEstimator/single_experiment_exampleNts=32_Ntrls=504_ensemble_distn_evolution.pdf}
-}
-\caption[labelInTOC]{Various examples of the perturbation-estimation protocol
-with the belief distribution plotted against the hitting time $k$,  with the
-MI-optimal stimulation (red), the constant random stimulation (green) and the zero, $\a\equiv 0\,\forall t$, stimulation (blue)}
-\label{fig:online_optimization_more_examples}
-\end{center}
-\end{figure} 
-
-The aggregated version of these results (the averaged evolution distribution
-from the independent experiments) is shown
-\cref{fig:online_optimization_aggregated_belief_evolution}, where the $N$
-distributions are averaged out over the different experiments. It is now clear 
-that the MI-Optimal procedure produces more accurate estimates much faster.
- \begin{figure}[htp]
-\begin{center}
-  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/aggregated_belief_distn_aggregated_ensemble_distn_evolution.pdf}
-  \caption[Aggregated belief distribution vs. experiment hitting time index]
-  {TODO: () Optimal Stimulation outperforms naive stimulation for estimating 
-  $\tau$. Plotted are  Aggregated belief distribution over $N=16$
-  independent belief estimation experiment. The black line indicates the 'true' value of the unknown parameter $\tau$. } 
+  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/online_updated_prior_mean_aggregated_ensemble.pdf}
+  \caption[MI-Optimal Stimulation produces more precise parameter estimates]
+  {MI-Optimal Stimulation produces more precise and more accurate parameter
+  estimates. Visualized are the mean and confidence intervals for the parameter
+  distribution of $\log (\tau)$, averaged over $N=50$ independent
+  experiments. The black line indicates the 'true' value of the unknown parameter $\tau$.
+  The solid (red,green and blue) lines indicate the mean of $\rho_{avg}$, while
+  the dashed lines indicates 2 standard deviations in either direction of the
+  mean. }  
   \label{fig:online_optimization_aggregated_belief_evolution}
 \end{center}
 \end{figure}
 
+%\usepackage{graphics} is needed for \includegraphics
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{Figs/HTOnlineEstimator/online_updated_prior_quantiles_mean_per_experiment.pdf}
+  \caption[Quantiles of the Mean Estimates]{Visualized are the median and
+  2.5/97.5th percentiles of the mean of the updated prior
+  distribution over the $N=50$ experiments. I.e.\ for each experiment and each
+  hitting time, $k$, we compute the mean of the updated prior $\rho(\tc)$ and then we plot the median
+  )crosses) of these means as well as the min and the max (dashes). Again we see
+  that the median and the min/max of the optimally stimulated estimates are much closer to the
+  true value of the parameter, $\tau$ then the estimates obtained from the
+  naive stimulations.}
+  \label{fig:online_optimization_quantiles_belief_evolution}
+\end{center}
+\end{figure}
+
+\section{Discussion}
+\label{sec:discussion}
+We introduce a method for optimal design given hitting-time observations from a
+Fokker-Planck system. Our method is based on maximizing the Mutual Information
+between the observed hitting times and the parameter posterior distribution
+of the parameters. The optimal control tends to separate
+the hitting-time distributions associated with alternative values of the unknown
+parameter, as such facilitating the identification of the parameter once an
+observation is made. 
+
+Our optimal stimulation selection uses PDE-based adjoint
+optimization methods, which can be expensive and sensitive to the various
+parameters of the optimization. 
+
+The simulations show that the resulting estimates from the
+optimally-stimulated system have higher precision and accuracy than sensible
+alternatives, such as random stimulation or 'critical' stimulation or no
+ stimulation at all.
+ 
+TODO: WITHOUT BEING VERBOSE, GO OVER WHAT HAPPENED IN THE PAPER:)
+
+Also compare with Existing Lit (e.g. Hooker paper)
+
+Stress Novelty (of hitting time problem)
+ 
+
 \clearpage
+\section{Mutual Information definition}
+\label{sec:mutual_info_defn} 
+
+There are two standard references on Information Theory, 
+\cite{Cover2006,MacKay2003}. The Mutual Information, $I$ between two random
+variables, $X,Y$ is defined, for example, in Chapter 8 of \cite{MacKay2003},
+where it says that $I(X,Y)$ represents the average reduction in uncertainty
+about $x$ that results from learning the value of $y$ or vice versa! 
+
+Here we show why our \cref{eq:J_mutual_info_objective} for the Mutual
+Information agrees with the usual definition of the $I$,
+which for the random variables, $X,\Theta$ is
+\begin{equation} 
+I(X,\Theta) = \int_\Theta \int_X p(x,\th) \cdot \log \left(
+\frac{p(x,\th)}{p(x)p(\th)}\right) \intd{x} \intd{\th}
+\label{eq:mutual_info_defn}
+\end{equation}
+ 
+First of all, the marginal distribution, $p(\th)$,  is just the prior of
+$\Theta$, $$p(\th) = \rho(\th)$$ The joint distribution is $$p(x,y) =
+L(x|\th)\rho(\th)$$ while the $X$ marginal is $$p(x) = \int_\Theta L(x|\th)\rho(\th) \intd{\th}$$
+Plugging the three expressions into the definition in
+\cref{eq:mutual_info_defn} gives:
+\begin{equation}
+I = \int_\Theta \int_X L(x|\th)\rho(\th) \cdot 
+\log \left( \frac{L(x|\th)\rho(\th) }{\int_\Theta L(x|\th)\rho(\th) \intd{\th}
+\cdot \rho(\th) } \right)
+\intd{x}\intd{\th}.
+\label{eq:mutual_info_prior_trajectory}
+\end{equation}
+And after canceling $\rho(\th)$ inside the $\log$, we get
+\cref{eq:J_mutual_info_objective} .
+
+\clearpage
+
+\section{Pseudo-Code for Algorithms}
+\begin{algorithm}
+\begin{algorithmic}
+\State Fix $\T, \ldots$ the problem parameters
+\State Fix $\{t_n\}_0^{N_t}$ a time-discretization of $[0,\T]$
+\State Fix $g_{tol}$ a convergence tolerance for the gradient
+\State Fix $K_{\max}, I_{\max}$ number of maximum iterations in outer, inner
+loops
+\State Fix $s$ the initial step-size. 
+\\ {\itshape $\#$ we use $g_{tol}=1e-5,K_{\max}=100,I_{\max}=10,s=10$}
+\State $\a_1(t) \gets (\amax-\amin) \cdot t / \T + \amin$ 
+\\{\itshape  $\#$ $\a_1(t) \sim$ initial guess for the control, linear
+interpolate between $\amin, \amax$}
+\For { $k= 1\dots K_{\max}$} 
+\\ {\itshape $\#$ This is the outer loop where we descend down different
+gradients}
+ \State Calculate $f_k,I_{k},p_k, \delta_\a I_k$ corresponding to
+	$\a_k$ from
+	\cref{eq:hamiltonian_gradient,eq:adjoint_pde_OU,eq:FP_pde_OU_PDF,eq:OC_LS_variance_density}
+	\State $N_{active}\gets$   Number of time nodes $t_n$, where either
+	$\a_k(t_n) \neq \{\amin, \amax\}$ or $\delta_\a I_k(t_n)$ points inwards
+	\If{ $|| \delta_\a I_k||_{\R^{N_{active}}} \leq g_{tol}\cdot N_{active}$}
+		  \\ {\itshape  $\#$ 'Active' gradient is small enough,
+		 consider converged:}
+		 \State BREAK
+	\EndIf
+	\\ {\itshape $\#$ Find the step size, $s$, of how far to move $\a$ in the
+	direction $\delta_\a I_k$:}
+	\For { $j= 1\dots K_{\max}$}
+	\\ {\itshape $\#$ This is the inner loop where we find how much to descend down
+	the current gradient}
+	\State $\a_{k,j} \gets \a_{k} + s_j \cdot \delta_\a I_k  $
+	\\ {\itshape $\#$ $\a_{k,j}$ is the new control strategy to try}
+	\State Calculate $f_{\th,k,j}, I_{k,j}$ corresponding to
+		$\a_{k,j}$ from
+		\cref{eq:FP_pde_OU_absorbBC,eq:I_mutual_info_objective_in_terms_of_dixf} \\
+		{\itshape $\#$ Recall $f_{\th,k,j}$ is a probability density resulting from
+		the control $a_{k,j}$ and $I_{k,j}$ is the objective value resulting from $f_{k,j}$}  
+	\If {$I_{k,j} < I_k$}
+		\\ {\itshape $\#$ We found a better (smaller) objective value}
+		\State $s \gets 2 s_j$ {\itshape $\#$ start from a more aggressive step in the
+		next iteration}
+		\State BREAK
+		\EndIf
+	\If {$j == J_{\max}$}
+		\\ {\itshape $\#$ We exhausted the step search without finding a 
+		smaller $I$, return current values}
+		\State Return $I_k, \a_k$
+	\EndIf
+ 	\\ {\itshape  $ \#$ Continue inner loop, try a smaller step:}
+	 	\State $s_{j+1}  \gets  s_j / 2$
+    \EndFor  {\itshape $\quad \#$ single step loop}
+	\If {$k == K_{\max}$}
+		\State ERROR 'Could not converge'
+	\EndIf
+    \\{\itshape $\#$ Assign the new candidate for the optimal control and
+    re-loop}
+		\State $\a_{k+1} \gets \a_{k,j}$
+\EndFor {\itshape $\quad \#$ gradient ascent loop}
+\State \Return $J_k, \a_k$
+\end{algorithmic}
+\caption{Gradient ascent algorithm for obtaining the optimal open-loop 
+control}
+\label{alg:gradient_ascent_4_OC}
+\end{algorithm}
+
+\clearpage 
+
+
+\begin{algorithm}
+\begin{algorithmic}
+\State Given  $\{w_i, \th_i\}_1^N_p$ the current particle ensemble (weight,
+locations)  
+\\ {\itshape $\#$ Observe a single hitting-time, $t_k$ from the real (or
+simulated) system conditional on the applied control $\a_k(\cdot)$}
+\\ {\itshape $\#$ Update weights with likelihood given $t_k$ and normalize:}
+\State $w_{i } \gets w_{i }\cdot g(t_k| \th_i, \a_k)$
+\State $w_{i } \gets w_{i }/ \sum w_i$
+\If{$$\frac{1}{\sum_i^{N_p} w_i^2} < \frac {N_p}{2}$$} 
+\\ {\itshape $\#$ Re-sample the ensemble:}
+\State $\m $ \gets
+$\Exp[\Th] = \sum w_i \th_i$ 
+\State $a = 0.98$, see
+\cite{Granade2012,Liu2001} 
+\State $h = \sqrt{1-a^2}$ i.e. $h \approx 0.1990$
+\State $\Xi$\gets $h^2\cdot \Var[\Th]$
+	\\ {\itshape $\#$ Re-sample each particle individually:}
+\For {$i= 1\dots N_p$}
+	\State draw $j$ with probability $w_j$ 
+% 	\\ {\itshape $\#$ the bigger $w_i$ the more likely to choose
+% 	$\th_i$}
+	\State $\m_i$ \gets  $a \th_j + (1-a) \m$
+	\State Resample $\th_i$ from $N(\m_i, \Xi)$
+	\State $w_i$ \gets $1/N_p$ 
+    \EndFor{\itshape $\quad \#   1 \ldots N_p$ particle resampling}
+    \EndIf{\itshape Conditional Resampling}
+\State \Return $w_i, \th_i$ the updated and possibly-resampled particle
+ensemble
+\end{algorithmic}
+\caption{Particle Filtering for Parameter Estimation}
+\label{alg:particle_resampling}
+\end{algorithm}
+
+\section{Code Repository}
+All the code used in the paper including code to generate the figures can be
+found on
+\href{https://github.com/aviolov/OptEstimatePython}{github @
+https://github.com/aviolov/OptEstimatePython}. Please contact the first author
+for furhter information.
 
 
 

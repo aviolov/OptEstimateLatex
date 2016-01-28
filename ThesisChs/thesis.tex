@@ -1,12 +1,10 @@
-%%This is a very basic article template.
-%%There is just one section and two subsections.
 \documentclass{report}
 
 \usepackage{amsmath}
 \usepackage{amscd}
 \usepackage{amssymb}
 \usepackage{amsfonts}
-\usepackage{amsthm}
+\usepackage{amsthm}           
 \usepackage{amsfonts}
 \usepackage{amsthm}
 
@@ -32,32 +30,51 @@
 \usepackage{slashbox}
 \usepackage{cleveref}
 
-\usepackage{aviolov_style} 
-\usepackage{local_style}
+% \usepackage{fancyhdr}
+ % \pagestyle{fancy}   
+
+% \usepackage{fancyhdr}
+% \pagestyle{fancy}
+% \setlength{\headheight}{\baselineskip}
+% \setlength{\headsep}{1.5\baselineskip}
+% \renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+% \renewcommand{\headrulewidth}{0.5pt}
+% \renewcommand{\plainheadrulewidth}{0pt}
+% \fancyhf{}
+% \fancyhead[LE,RO]{\hdf \thepage}
+% \ifthenelse{\boolean{@twoside}}{
+%   \fancyhead[LO]{\hdf \rightmark}
+% }{
+%   \fancyhead[LO]{\hdf \leftmark}
+% }
+% \fancyhead[RE]{\hdf \leftmark}
+ 
+\usepackage{aviolov_style}        
+\usepackage{local_style}   
 
 \newtheorem{thm}{Theorem}[section]
 \newtheorem{lemma}{Theorem}[thm]
-% \theoremstyle{definition}
-\newtheorem{ex}{Example}[thm]
+% \theoremstyle{definition}  
+\newtheorem{ex}{Example}[thm]    
 \newtheorem{defn}{Definition}[thm]
 
-% \includeonly{chapters/ch2_Math}
+% \includeonly{chapters/ch2_Math}     
 % \includeonly{chapters/ch2_Math,chapters/ch6_OptDesign}
 % \includeonly{chapters/ch6_OptDesign}
 % \includeonly{chapters/ch5_OptSpike}
-  
+% 
+% TODO: check for ?? on final copy 
 %%
 \begin{document}
-
 \pagenumbering{roman}
 \pagestyle{empty}
 
-\begin{titlepage}
+\begin{titlepage} 
 \centering
-\vspace*{1in}
-\begin{Large}\bfseries
+\vspace*{1in}        
+\begin{Large}\bfseries     
 Parameter Estimation, Optimal Control and Optimal Design in Stochastic Neural
-Models
+Models 
 \par
 \end{Large}
 \vspace{1.5in}
@@ -73,125 +90,54 @@ Department of Mathematics
 University of Ottawa
 \par
 \vspace{0.5in}
-%TODO: date: September 2015
+%TODO: date: January 26, 2015
 \today
 \par
 \vspace{0.5in}
 \includegraphics[width=0.15\textwidth]{./UOlogoBW.jpg}
-\par
+\par 
 \end{titlepage}
 
-\pagestyle{plain}
-\abstract{This thesis poses and solves estimation and control problems
-in computational neuroscience, in particular problems dealing with the
-stochastic nature of neural systems. The main tool used is the description of
-the system by a Fokker-Planck partial differential equation for evolution of
-probability densities. 
+\pagestyle{plain} 
+\abstract{This thesis solves estimation and control problems in computational
+neuroscience, mathematically dealing with the first-passage times of diffusion
+stochastic processes. We first derive estimation algorithms for model parameters
+from first-passage time observations, and then we derive algorithms for the
+control of first-passage times. Finally, we solve an optimal design
+problem which combines elements of the first two: we ask how to elicit
+first-passage times such as to facilitate model estimation based on said
+first-passage observations.
 
-The thesis deals with three problems in escalating degree of mathematical
-sophistication and computational difficulty
+The main mathematical tools used are the Fokker-Planck partial differential
+equation for evolution of probability densities, the Hamilton-Jacobi-Bellman
+equation of optimal control and the adjoint optimization principle from optimal
+control theory.
 
-The thesis focuses on developing computational schemes in order to solve the
-problems. The schemes are tested for a wide range of parameters to demonstrate
-their robustness}
-
-% TODO: Acknowledgements
-% \chapter*{Acknowledgements}
-% I would like to thank my supervisor Andre Longtin, Sussane Ditlevsen at KU,
-% colleagues at Ottawa and Copenhagen, parents, \ldots and Kirsten, and Daniel
-% and Bombi
- 
-\tableofcontents 
+The focus is on developing computational schemes for the
+solution of the problems. The schemes are implemented and are tested for a wide  
+range of parameters.}
 \cleardoublepage
 
-%TODO (caption[] for each table for list of tables): 
-\listoftables
-\clearpage 
-%TODO (caption[] for each figure for list of figures): 
-\listoffigures
+\chapter*{Acknowledgements}
+ I would like to thank my supervisor, Andre Longtin, Professor Susanne Ditlevsen
+ at Copenhagen University, my colleagues at Ottawa and Copenhagen, my parents,
+ and Kirsten, Daniel and Eva.
+\cleardoublepage
+  
+\tableofcontents  
+\cleardoublepage
 
-\pagenumbering{arabic}
+\listoftables
+\clearpage
+ 
+\listoffigures 
+\clearpage
+
+\pagenumbering{arabic}  
 \pagestyle{headings} 
 
-
-\chapter{Introduction}
-This thesis deals with problems in parameter estimation and
-stochastic optimal control arising in computational neuroscience. 
-
-Neuroscience is the study of how information is processed by living beings. Its
-main building block is a single neuron cell. A neural cell maintains a certain
-membrane potential, $v(t)$, an electrochemical gradient between its interior and
-exterior, which is the key mechanism in which information is processed and
-transmitted. For our purposed we will assume that $v$ is essentially uniform
-throughout the neuron - that is we will idealize the neuron as a single point in
-space. In all neural systems, information is processed and transmitted by the
-sharp, transient changes in the membrane potential called spikes (TODO: see a
-figure). Currently, the dominant theory is that the exact shape of the potential
-excursion is irrelevant, but that all information is contained entirely in the
-time occurrence of the spike or equivalently the information is in
-the duration of the interval between two subsequent spikes.
-
-There is a rich history on modelling the dynamics of the membrane potential
-starting from the Nobel-prize winning work of Hodgkin and Huxley in the 1950's.
-Their model, still widely considered as a benchmark for the dynamics of the
-membrane potential, is a 4-dimensional ordinary differential equation (ODE),
-where one of the states is the voltage itself and the other three are phenomenological
-equations describing the behaviour of ion channels responcible for the
-generation of the non-linear excursion - the spike itself. There has been many
-reductions of the Hodgkin and Huxley model to a smaller dimension, including the
-Fitzhugh-Nagumo model and the Morris-Lecar model, which still retain the basic
-excursion non-linearity of the spiking mechanism. A even-more drastic
-simplification is to linearize the dynamics and then impose the non-linear
-voltage excursion of the neural spike artificially. This leads to the leaky
-integrate-and-fire (LIF) model, which
-forms the foundation of all the models used in our work.
-
-Neural cell response, especially {\sl in vivo}, is stochastic. Given the same
-stimulus the resulting inter-spike intervals will not be the same. There are
-several reasons and explanations for why that is. The simplest one is that in
-addition to the stimulus the neuron is bombarded by extraneous, random
-stimulation, for example from other neurons. To account for this random
-behaviour the dynamics of the membrane potential, $v(t)$, are modelled as
-following a stochastic differential equation (SDE). SDEs are a generalization
-of ODEs, which allow for a stochastic force-term. 
-
-This thesis deals with two main topics - estimation of single-cell neural models
-and control of neural dynamics. Mathematically, this amounts to estimation of
-parameters in SDEs and control of SDEs. A complication arising from the
-practical aspects of neuroscience is that often experimentally the exact value
-of the voltage is difficult to observe and it is only the spikes that are
-distinctly observable. Mathematically, this implies that our estimation
-and control algorithms will often be based on observation of {\sl first
-passage} times of the system rather than detailed trajectories. This makes the problem
-significantly more challenging and requires some non-standard
-algorithms. At the same time, the study of First-Passage Times (FPTs) is a
-classic part of Stochastic Analysis and there are many known
-techniques and results that we can build on.
-
-The three problems that are discussed in this thesis can be summarized as
-such: in the first problem, we estimate parameters from spike observations; 
-in the second, we discuss how to control a neuron to spike at some pre-selected
-time; and in the third problem, we combine both approaches whereas we
-control the system in order to best estimate its parameters.
-
-The thesis is structured as follows: First, in \cref{ch:math_background} we
-introduce the mathematical background from stochastic processes, parameter
-estimation and optimal control used in the rest of the thesis; in
-\cref{sec:math_models_in_neuroscience} we discuss the standard stochastic models
-of a single neuron. The next three chapters,
-\cref{ch:estimate,ch:spike_control,ch:optimal_design} form the novel portion of
-this thesis where we discuss each of the three problems introduced above. These
-three chapters have been adapted from journal papers either accepted for
-publication or currently in review. \Cref{ch:estimate} has been published in
-TODO: (cite it); \cref{ch:spike_control} has been submitted in TODO: (cite it);
-and \cref{ch:optimal_design} is being prepared for submission at \ldots.
-Although the journal articles form the foundation of the chapters, each chapter
-has been rewritten to achieve a uniform notation and to fit into the overall
-flow of the thesis.
-
-In the Conclusion, \cref{ch:conclusion}, we summarize the main findings and
-provide a brief outlook.
-
+\cleardoublepage
+\include{chapters/intro}
 \cleardoublepage
 \include{chapters/ch2_Math}
 \cleardoublepage
@@ -201,29 +147,16 @@ provide a brief outlook.
 \cleardoublepage
 \include{chapters/ch6_OptDesign}
 \cleardoublepage
-
-\chapter{Discussion and Outlook}
-\label{ch:conclusion}
-TODO: How are the three essays related
-
-
-
-In the first task, of estimating, one can see that there remains one interesting
-problem, and that is why the estimation quality degrades with higher sinusoidal
-frequency in particular for one of the two methods (the
-Fokker-Planck / Likelihood based method).
-
-In the second task, the possible avenues for progress are much broader\ldots 
-
-The third task\ldots Hopefully, this technique can be applicable to more complex
-areas of neuroscience, physiology and  psychology, where the systems under study
-are amenable to direct external perturbation.
+\include{chapters/conclusion}
+\cleardoublepage
 
 
 
 \cleardoublepage
 % \bibliographystyle{plain}
+% \bibliographystyle{unsrt} 
 %TODO: Use JNE biblio-style???
+%TODO all authors full names?
 \bibliographystyle{bmc_article}
 %TODO: Check for ?? (include local.bib from the various sub-folders) 
 \bibliography{library,local}

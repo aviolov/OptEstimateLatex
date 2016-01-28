@@ -1,8 +1,11 @@
 \chapter{Estimation in the Sinusoidaly-driven Leaky-Integrate and Fire Model}
+% \chapter[Estimation in the Sinusoidaly-driven LIF Model]{Estimation in the
+% Sinusoidaly-driven Leaky-Integrate and Fire Model}
+% \chaptermark{Estimation in the Sinusoidaly-driven LIF Model}
 \label{ch:estimate}
 \graphicspath{{../LIFEPaper/}}
 \input{../LIFEPaper/local_style.sty}
- 
+   
 \section{Thesis Context}
  In the first of three main chapters of the thesis, we focus on the problem of
  estimating model parameters in a sinusoidally-perturbed LIF model from the
@@ -49,8 +52,8 @@ counterparts. In
 \cite{DitlevsenLansky2005,DitlevsenLansky2006} certain explicit 
 moment relations derived from the Laplace transform of the first-passage time
 distribution are applied, but these are only valid under 
-stimulation (supra-threshold regime). In \cite{Mullowney2008} inference is based on
-numerical inversion of the Laplace transform. In \cite{Zhangetal2009}, a
+stimulation (supra-threshold regime). In
+\cite{MullowneyIyengar2008} inference is based on numerical inversion of the Laplace transform. In \cite{Zhangetal2009}, a
 functional of a 3-dimensional Bessel bridge is applied to obtain a maximum
 likelihood estimator. None of these methods
 are feasible to extend to the
@@ -259,9 +262,10 @@ Super-sinusoidal&0.10&0.30&1.98 \\
 Critical&0.50&0.30&0.71 \\
 Sub-threshold&0.40&0.30&0.57 \\
 \end{tabular}
-\caption{Example of $\abg$ parameter values for the different regimes, given $\th = 1$.}
+\caption[Parameter values for model regimes]{Example of $\abg$ parameter values
+for the different regimes, given $\th = 1$.}
 \label{tab:regimes}
-\end{center}
+\end{center} 
 \end{table}
 % \begin{figure}[ht] \begin{center} \subfloat {
 % \includegraphics[width=0.49\textwidth] {Figs/FP/Illustrate_refinedsuperT.png}
@@ -303,8 +307,8 @@ Sub-threshold&0.40&0.30&0.57 \\
 \includegraphics[width=0.95\textwidth]{Figs/Trajectories/path_T=24_combined.pdf}
 % \includegraphics[width=0.95\textwidth]{Figs/Trajectories/path_T=24_combined.png}1
 \end{center}
-\caption{Example trajectories from \cref{eq:X_evolution_uo} for
-the four different parameter regimes using the parameter values given in
+\caption[Example model trajectories]{Example trajectories from
+\cref{eq:X_evolution_uo} for the four different parameter regimes using the parameter values given in
 \cref{tab:regimes}. A) supra-threshold, B) super-sinusoidal, C) critical, D)
 sub-threshold. In the supra-threshold regime
 spikes occur regularly and often; in the super-sinusoidal regime
@@ -336,8 +340,8 @@ rarely. For all regimes, $\th = 1$.}
 % {Figs/FP/Illustrate4superSin_pdf.png}
 % }
 \includegraphics[width=0.99\textwidth]{Figs/FP/regimes_pdf_combined.pdf}
-\caption{The four different parameter regimes using the parameter values given in
-\cref{tab:regimes}. Illustrated are the
+\caption[Model Regimes hitting-time densities]{The four different parameter
+regimes using the parameter values given in \cref{tab:regimes}. Illustrated are the
 probability density functions, $g_{\phi_m}(t)$, for representative $\phi_m =
 2\pi/\th \times \{0,0.25,0.5,0.75\}$. 
 Varying $\phi_m$ has,
@@ -370,8 +374,8 @@ Varying $\phi_m$ has,
 % {Figs/FP/Illustrate4superSin.png}
 % }
 \includegraphics[width=0.99\textwidth]{Figs/FP/regimes_sdf_combined.pdf}
-\caption{The four different parameter regimes using the parameter values given in
-\cref{tab:regimes}. Illustrated are the survivor
+\caption[Model Regimes hitting-time survivor distributions]{The four different
+parameter regimes using the parameter values given in \cref{tab:regimes}. Illustrated are the survivor
 distribution functions, $\G_{\phi_m}(t)$, for representative $\phi_m = 2\pi/\th
 \times \{0,0.25,0.5,0.75\}$. Varying $\phi_m$ has, for the most part, the effect
 of shifting the curves laterally, while varying $\abg$ changes their
@@ -551,8 +555,8 @@ implicit-explicit terms in time, see \cite{Karniadakis2003}).
 % {Figs/FP/SDF_phi_105.png}
 % }
 \includegraphics[width=0.95\textwidth]{Figs/FP/SDF3D_combined.pdf} 
-\caption{Example solution to \cref{eq:FP_pde_OU_absorbBC_CDF} for
-$(\a,\b,\g) = (0.5, 0.3, 0.5\sqrt{2})$; $\th= 1, \phi = \pi / 2$.
+\caption[Transition distribution example solution]{Example solution to
+\cref{eq:FP_pde_OU_absorbBC_CDF} for $(\a,\b,\g) = (0.5, 0.3, 0.5\sqrt{2})$; $\th= 1, \phi = \pi / 2$.
 In A,B,C, we show the full solution in space-time $F(x,t)$. In (d) we show
 the time solution at the upper boundary, $F(1,t)$.} 
 \label{fig:FP_pde_OU_absorbBC_CDF} 
@@ -724,8 +728,8 @@ $$ This binning is illustrated in \cref{fig:binning_visualized}.
 %   	}  
 \includegraphics[width=0.9\textwidth]{Figs/Bins/Example_composite.pdf}
   \end{center}
-\caption{ The raw $(\In, \phi_n)$ pairs (left) are binned into a set of $M$ bins
-with a representative $\phi_m$ (right) and the ISIs within each bin are treated
+\caption[Phase binning illustration]{The raw $(\In, \phi_n)$ pairs (left) are
+binned into a set of $M$ bins with a representative $\phi_m$ (right) and the ISIs within each bin are treated
 as a renewal process. In this illustration, $M=8$, $\th =
 1$ while the parameters $\abg$ are taken from the
 supra-threshold regime. }
@@ -768,9 +772,9 @@ sample sizes of $N=1000$ and $M=8$ for sample sizes of $N=100$.
 % {Figs/FP/SuperSin_M=40.png}
 % }
 % \includegraphics[width=0.99\textwidth]{Figs/FP/EffectOfM.pdf}
-\includegraphics[width=0.99\textwidth]{Figs/FP/EffectOfM_Referees.pdf}
-\caption{Effect of $M$, the number of bins, on the approximate survival
-distribution. The full-drawn blue curve is the true survivor distribution
+\includegraphics[width=\textwidth]{Figs/FP/EffectOfM_Referees.pdf}
+\caption[Effect of Bin-size]{Effect of $M$, the number of bins, on the
+approximate survival distribution. The full-drawn blue curve is the true survivor distribution
 given in \cref{eq:FP_pde_OU_absorbBC_CDF}, the red points are the approximation
 given in \cref{eq:SDF_estimate_per_bin}.  
 In the figures, the least populous (above) and most populous (below) bin for
@@ -1000,8 +1004,8 @@ work.
 \begin{figure}[htp]
 \begin{center}
 \includegraphics[width=.99\textwidth]{Figs/FP/sdf_init_vs_exact.pdf}
-\caption[labelInTOC]{The blue curves are the numerically obtained survivor
-  distributions $\G_\phi$ for the exact parameters in the four regimes (as in
+\caption[Estimation initiation]{The blue curves are the numerically
+obtained survivor distributions $\G_\phi$ for the exact parameters in the four regimes (as in
   \cref{tab:regimes}) and $\th=1$. The red curves are obtained in the following
   manner: Simulations using the true parameters were used to generate sample spikes.
   Using these samples, the initializer algorithm was used to generate estimates
@@ -1026,7 +1030,7 @@ have used an implementation of the Nelder-Mead algorithm from the SciPy library
 \cite{scipy}. The Nelder-Mead algorithm is a non-linear minimization routine
 which uses a bounding-polygon method to zero-in on the minimum and thus avoids
 the need to provide the gradient of the loss function. It is the standard
-non-gradient minimization algorithm.
+non-gradient minimization algorithm. 
 
 The estimation results are shown in
 \cref{fig:comprehensive_test_SuperT_relerrors,fig:comprehensive_test_SubT_relerrors,fig:comprehensive_test_crit_relerrors,fig:comprehensive_test_SuperSin_relerrors},
@@ -1152,8 +1156,8 @@ $\gamma=0.57$
 \hline
  \end{tabular}}\\
 \end{center}
-\caption{Averages and empirical 95\% confidence intervals of the estimates for
-$N=100$ spikes per train.}
+\caption[Estimator Performance given 100 spikes]{Averages and empirical 95\%
+confidence intervals of the estimates for $N=100$ spikes per train.}
 \label{tab:est_quantiles_100}
 \end{table}
 
@@ -1237,8 +1241,8 @@ $\gamma=0.57$
 \hline
  \end{tabular}}\\
 \end{center}
-\caption{Averages and empirical 95\% confidence intervals of the estimates for $N=1000$
-spikes per train. }
+\caption[Estimator Performance given 1000 spikes]{Averages and empirical 95\%
+confidence intervals of the estimates for $N=1000$ spikes per train. }
 \label{tab:est_quantiles_1000}
 \end{table}
 
@@ -1396,8 +1400,8 @@ spikes per train. }
 % }
 \includegraphics[width=0.99\textwidth]
 {Figs/Estimates/FP_vs_Fortet_100x100_x1000superT_est_rel_errors_joint.pdf}
-\caption{Boxplots of parameter estimates for the
-supra-threshold regime. The upper plots (A,B,C) show estimates using $N=100$ sample spikes per
+\caption[Estimates box-plots for supra-threshold regime]{Boxplots of parameter
+estimates for the supra-threshold regime. The upper plots (A,B,C) show estimates using $N=100$ sample spikes per
 estimation, while the lower plots (D,E,F) use $N=1000$. The dashed line
 indicates the true parameter value, while the red line inside the boxes
 indicates the median of the estimates.
@@ -1424,8 +1428,8 @@ interquantile range (the height of the box) from the box.}
 % {Figs/Estimates/FP_vs_Fortet_100x1000superSin_est_rel_errors.png}
 % }
 \includegraphics[width=0.99\textwidth]{Figs/Estimates/FP_vs_Fortet_100x100_x1000superSin_est_rel_errors_joint.pdf}
-\caption{Boxplots of parameter estimates for the
-super-sinusoidal regime. The upper plots (A,B,C) show estimates using $N=100$
+\caption[Estimates box-plots for super-sinusoidal regime]{Boxplots of parameter
+estimates for the super-sinusoidal regime. The upper plots (A,B,C) show estimates using $N=100$
 sample spikes per estimation, while the lower plots (D,E,F) use $N=1000$. The dashed line
 indicates the true parameter value, while the red line inside the boxes
 indicates the median of the estimates.\\
@@ -1451,8 +1455,8 @@ interquantile range (the height of the box) from the box.}
 % {Figs/Estimates/FP_vs_Fortet_100x1000crit_est_rel_errors.png}
 % }
 \includegraphics[width=0.99\textwidth]{Figs/Estimates/FP_vs_Fortet_100x100_x1000crit_est_rel_errors_joint.pdf}
-\caption{Boxplots of parameter estimates for the
-critical regime.
+\caption[Estimates box-plots for critical regime]{Boxplots of parameter
+estimates for the critical regime.
 The upper plots (A,B,C) show estimates using $N=100$ sample spikes per
 estimation, while the lower plots (D,E,F) use $N=1000$. The dashed line
 indicates the true parameter value, while the red line inside the boxes
@@ -1479,9 +1483,9 @@ interquantile range (the height of the box) from the box.}
 % \includegraphics[width=0.48\textwidth]
 % {Figs/Estimates/FP_vs_Fortet_100x1000subT_est_rel_errors.png}
 % }
-\includegraphics[width=0.99\textwidth]{Figs/Estimates/FP_vs_Fortet_100x100_x1000subT_est_rel_errors_joint.pdf}
-\caption{Boxplots of parameter estimates for the 
-sub-threshold regime.
+\includegraphics[width=\textwidth]{Figs/Estimates/FP_vs_Fortet_100x100_x1000subT_est_rel_errors_joint.pdf}
+\caption[Estimates box-plots for sub-threshold regime]{Boxplots of parameter
+estimates for the sub-threshold regime.
 The upper plots (A,B,C) show estimates using $N=100$ sample spikes per
 estimation, while the lower plots (D,E,F) use $N=1000$. The dashed line
 indicates the true parameter value, while the red line inside the boxes
@@ -1526,9 +1530,9 @@ interquantile range (the height of the box) from the box.}
 % }     
 \includegraphics[width=0.99\textwidth]
 {Figs/Estimates/FP_vs_Fortet_100x100_cross_compare_joint.pdf}
-\caption{Estimates based on samples of $N = 100$ spikes obtained from the
-Fokker-Planck algorithm against the Fortet algorithm for the four different
-parameter regimes, with parameter values given in table
+\caption[Fortet-based vs. Fokker-Planck-based algorithm performance
+with 100 spikes]{Estimates based on samples of $N = 100$ spikes obtained from
+the Fokker-Planck algorithm against the Fortet algorithm for the four different parameter regimes, with parameter values given in table
 \cref{tab:regimes}, fixing $\th=1$. Each row corresponds to one regime
 and one set of simulations. Each column corresponds to a parameter,
 with the specific value indicated above each plot.  
@@ -1568,8 +1572,9 @@ Critical; J,K,L) Sub-threshold.}
 % }  
 \includegraphics[width=0.99\textwidth]    
 {Figs/Estimates/FP_vs_Fortet_100x1000_cross_compare_joint.pdf}
-\caption{Estimates based on samples of $N = 1000$ spikes obtained from the
-Fokker-Planck algorithm against the Fortet algorithm for the four different
+\caption[Fortet-based vs. Fokker-Planck-based algorithm performance
+with 1000 spikes]{Estimates based on samples of $N = 1000$ spikes obtained from
+the Fokker-Planck algorithm against the Fortet algorithm for the four different
 parameter regimes, with parameter values given in table
 \cref{tab:regimes}, fixing $\th=1$. Each row corresponds to one regime
 and one set of simulations. Each column corresponds to a parameter,
@@ -1626,8 +1631,7 @@ Super-sinusoidal
 \end{tabular}
 }
 \end{center}
-\caption{Average times $\pm$ standard deviations in seconds for the algorithm
-in various regimes. Left: $N = 100$ spikes; right: $N = 1000$ spikes.}
+\caption{Estimator Algorithm Computational Time}
 \label{tab:walltimes}
 \end{table} 
 
@@ -1676,8 +1680,8 @@ that an underestimation of $\g$ is proportional to the overestimation of $\a$.
 % }
 \includegraphics[width=0.99\textwidth]  
 {Figs/Estimates/thetas_100x1000thetas_est_rel_errors.pdf}
-\caption{Boxplots of parameter estimates for varying $\th$ across $[1, 5, 10, 20]$ while holding $\g /
-\sqrt{1+\th^2}$ constant as to keep the parameters in the critical
+\caption[Estimates' box-plots for varying sinusoidal frequency]{Boxplots of
+parameter estimates for varying $\th$ across $[1, 5, 10, 20]$ while holding $\g / \sqrt{1+\th^2}$ constant as to keep the parameters in the critical
 regime.
 A-C) $\th=1$,  D-F) $\th=5$,        
 G-I) $\th=10$, J-L) $\th=20$.
@@ -1714,9 +1718,9 @@ interquantile range (the height of the box) from the box.}
 % } 
 \includegraphics[width=0.99\textwidth]
 {Figs/Estimates/FP_vs_Fortet_thetas_cross_compare_joint.pdf} 
-\caption{Estimates based on samples of $N = 1000$ spikes obtained from the
-Fokker-Planck algorithm against the Fortet algorithm for a parameter set in the
-critical regime, while varying $\th$ across $[1, 5, 10, 20]$ and holding 
+\caption[Fortet-based vs Fokker-Planck-based algorithms for varying
+sinusoidal frequency]{Estimates based on samples of $N = 1000$ spikes obtained
+from the Fokker-Planck algorithm against the Fortet algorithm for a parameter set in the critical regime, while varying $\th$ across $[1, 5, 10, 20]$ and holding 
 $\g / \sqrt{1+\th^2}$ and $\a$ constant.
 A,B,C) $\th=1$; D,E,F) $\th=5$; G,H,I)
 $\th=10$; J,K,L) $\th=20$. } 
@@ -1746,10 +1750,11 @@ $\th=10$; J,K,L) $\th=20$. }
 % \includegraphics[width=0.48\textwidth]
 % {Figs/Estimates/thetavariation_100x1000theta20_alphagamma_compare.png}
 % }
-\includegraphics[width=0.99\textwidth]  
+\includegraphics[width=\textwidth]  
 {Figs/Estimates/thetavariation_100x1000_alphagamma_compare_joint.pdf}
-\caption{Comparison of $\aest$ vs. $\gest$ parameter estimates while varying
-$\th$ across $[1, 5, 10, 20]$,  holding $\g / \sqrt{1+\th^2}$ constant as to
+\caption[Fortet-based vs. Fokker-Planck-based algorithm performance
+for varying sinusoidal frequency]{Comparison of $\aest$ vs.
+$\gest$ parameter estimates while varying $\th$ across $[1, 5, 10, 20]$,  holding $\g / \sqrt{1+\th^2}$ constant as to
 keep the parameters in the critical regime.
 A,B,C) $\th=1$; D,E,F) $\th=5$; G,H,I)
 $\th=10$; J,K,L) $\th=20$.   
@@ -1840,8 +1845,8 @@ $\gamma=10.01$
 \hline
 \end{tabular}}\\
 \end{center}
-\caption{Averages and empirical 95\% confidence intervals of estimates for $N=1000$
-spikes per train in the critical regime for varying $\th$ across
+\caption[Impact of sinusoidal frequency on estimators]{Averages and empirical
+95\% confidence intervals of estimates for $N=1000$ spikes per train in the critical regime for varying $\th$ across
 [1,5,10,20]. Note that the upper subtable corresponds to the third
 subtable in \cref{tab:est_quantiles_1000}. Numbers differ slightly due to statistical
 fluctuations in the simulations. }
@@ -1941,8 +1946,9 @@ ML & $-\sum_n  \log \Big( g_\phi(i_n)
 & Maximize the sum of the log-likelihoods of the observed ISIs
  		\\
 \hline  \end{tabular}
-\caption{The two estimators we compare: the ML estimator
-and  the FP estimator, which has already been discussed at length in the main text,
+\caption[Comparison of Maximum Likelihood vs.\ Fokker-Planck distributional
+algorithm]{The two estimators we compare: the ML estimator and  the FP
+estimator, which has already been discussed at length in the main text,
 \cite{Iolov2013}} \label{tab:estimators} \end{table}
 
 To compare the FP vs.\ ML estimators, we draw cross-plots between
@@ -1991,7 +1997,8 @@ As such we conclude that the FP estimates and the ML estimates behave comparably
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=1\textwidth]{Figs/Estimates/MLE_N100_cross_compare_joint.pdf}
-  \caption{Comparison between the FP vs.\ ML
+  \caption[Maximum-Likelihood vs. 'Fokker-Planck' algorithm performance with 100 spikes]
+  {Comparison between the FP vs.\ ML
   estimators in the four regimes, using $N=100$ spikes per sample. We used 8
   bins for the FP and 16 bins for the ML. In all simulations $\th = 1$.}
   \label{fig:MLCompare_N100}
@@ -2001,7 +2008,8 @@ As such we conclude that the FP estimates and the ML estimates behave comparably
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=1\textwidth]{Figs/Estimates/MLE_N1000_cross_compare_joint.pdf}
-  \caption[labelInTOC]{Comparison between the FP vs.\ ML
+  \caption[Maximum-Likelihood vs. 'Fokker-Planck' algorithm performance with
+  1000 spikes] {Comparison between the FP vs.\ ML
   estimators in the four regimes, using $N=1000$ spikes per sample. We used 8
   bins for the FP and 16 bins for the ML. In all simulations $\th = 1$.}
   \label{fig:MLCompare_N1000}
@@ -2010,8 +2018,10 @@ As such we conclude that the FP estimates and the ML estimates behave comparably
 
 \begin{figure}[htp]
 \begin{center}
-  \includegraphics[width=1\textwidth]{Figs/Estimates/MLE_N100_32bins_cross_compare_joint.pdf}
-  \caption{Same as \cref{fig:MLCompare_N100}, but using 32
+  \includegraphics[width=1\textwidth]
+  {Figs/Estimates/MLE_N100_32bins_cross_compare_joint.pdf}
+  \caption[Effect of bin-refinement on Maximum-Likelihood estimator]
+  {Same as \cref{fig:MLCompare_N100}, but using 32
   bins for ML instead of 16. $N=100$. In all simulations $\th = 1$.}
   \label{fig:MLCompare_N100_32bins}
 \end{center}
@@ -2059,7 +2069,7 @@ parameters, we usually obtained results which were not accurate. The obtained
 estimates resulted in ISIs that very well matched the data, no worse than the
 ISIs obtained from the true parameters. This leads us to believe that the
 simultaneous estimation of $\t$ along with $\abg$ using only ISI data suffers
-from identifiability problems. In \cite{Mullowney2008}, they were able to
+from identifiability problems. In \cite{MullowneyIyengar2008}, they were able to
 estimate $\t$ in the simpler non-sinusoidally-driven model, but concluded that
 adding $\t$ as an unknown dramatically reduced the accuracy in the estimation of
 the other unknown parameters. The reason is that if $\t$ is also estimated from
@@ -2082,6 +2092,9 @@ oscillation a spike has occurred. If that is the case then the binning procedure
 can be applied and the estimation methods proposed can be attempted. 
 
 
-\section{Implementation Details}
-TODO: (Extra calculations and numerics not included in the paper but that
-support it, and make another math  student likely able to reproduce them)
+\section*{Implementation Details}
+All the code used in this chapter including code to generate the figures
+can be found on
+\href{https://github.com/aviolov/SinSpikePython}{github @
+https://github.com/aviolov/SinSpikePython}. Please see the README.md file for
+for guide to the codes.

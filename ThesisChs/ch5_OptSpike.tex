@@ -3,8 +3,7 @@
 \graphicspath{{../OptSpike/}}
 \input{../OptSpike/local_style.sty}
 
- \section{Thesis Context}
-
+\section{Thesis Context}
 In the second of the three main chapters of the thesis, we discuss the control
 of spike timing in a single neuron. Depending on the ability to observe the
 detailed voltage or only the spike timing, we derive a Hamilton-Jacobi-Bellman
@@ -54,7 +53,7 @@ small noise. In \cite{Ahmadian2011} they use the Spike Response Model,
 \cite{Gerstner2002}, to control output target spike trains and implement their
 scheme on pyramidal cells in mouse cortical slices. Their method is numerically
 efficient and allows for the simultaneous control of many neurons. However, it strongly relies on the assumption
-that the noise (the value of $\beta$ in \cref{eq:X_evolution_uo} below) is small.
+that the noise (the value of $\beta$ in \cref{eq:X_evolution_uo_control} below) is small.
 They only work with open-loop control.
 The difference between the objective in \cite{Ahmadian2011} and what we consider
 below is that they maximize the probability of spiking at some given time $t^*$, whereas we minimize the mean squared
@@ -114,7 +113,7 @@ X(\ts) = \xth \implies
 X(\ts^+) = 0. & 
 \end{cases}
 \end{gathered}
-\label{eq:X_evolution_uo}
+\label{eq:X_evolution_uo_control}
 \end{equation}
 Here $X(t)$ represents the membrane electric potential at time $t$, which in
 absence of input decays to $0$ with a time constant of $\tc$, $dW$ is a Brownian
@@ -196,11 +195,11 @@ of the process being at a state $y$ at time $t$, given it was at some state $x$
 at some earlier time $s$.
 
 Crucially, we assume that the model parameters, $\m,\tc,\b$ in
-\cref{eq:X_evolution_uo,eq:current_mu_alpha} are known. This is a strong assumption and will be
+\cref{eq:X_evolution_uo_control,eq:current_mu_alpha} are known. This is a strong assumption and will be
 discussed later. 
 
 \subsection{Parameter Regimes}
-Different  parameter regimes can be envisioned given \cref{eq:X_evolution_uo},
+Different  parameter regimes can be envisioned given \cref{eq:X_evolution_uo_control},
 depending on whether the noise intensity, $\b$, is
 relatively high or low, and whether the external, uncontrollable bias current,
 $\m$, induces spikes in the absence of noise or not. 
@@ -222,17 +221,17 @@ $1.5 / \tc $ &Supra-threshold-High-noise & Supra-threshold-Low-noise \\
 $0.1 / \tc$   &Sub-threshold-High-noise & Sub-threshold-Low-noise \\
 \hline
 \end{tabular}
-\caption{Regime labels and example values. Note that for the numerical
-experiments below, we use $\tc = 0.5$}
+\caption[Parameter values for Model Regimes]{Regime labels and example values.
+Note that for the numerical experiments below, we use $\tc = 0.5$}
 \label{tab:regimes}
 \end{table}
 %\usepackage{graphics} is needed for \includegraphics
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=0.99\textwidth]{Figs/PathSimulator/path_T=14_combined.pdf}
-  \caption[labelInTOC]{Example Trajectories from \cref{eq:X_evolution_uo}
-  using the parameter values from \cref{tab:regimes}. 
-  A) Supra-Threshold-Low-Noise 
+  \caption[Example of trajectories for different model-regimes]
+  {Example Trajectories from \cref{eq:X_evolution_uo_control} using the parameter
+  values from \cref{tab:regimes}. A) Supra-Threshold-Low-Noise 
   B) Supra-Threshold-High-Noise 
   C) Sub-Threshold-Low-Noise
   D) Sub-Threshold-High-Noise. 
@@ -246,7 +245,6 @@ experiments below, we use $\tc = 0.5$}
 We now detail the Dynamic Programing approach to obtaining an optimal feedback
 control. In closed-loop, the controller can be continuously updated depending on
 the realization of the stochastic process, $X$.
-
 
 Given a time $t$ and a value $X(t) = x$ of the voltage, let $(\ts - t)$ be
 the unknown and remaining time to spike. Note that $\ts$ is a random variable.
@@ -416,10 +414,10 @@ implicit-explicit term $$(\di_x \v(x,t_k))^2 = \di_x \v(x,t_k) \cdot \di_x
 term is in the previous time $t_k$ instead of, as is conventional, the next
 $t_{k+1}$, because we are solving for $\v$ {\sl backwards} in time from
 $t_{k+1}$ to $t_k$ down to  $t_0 = 0$.
-
+ 
 The numerical scheme is implemented in Python, using the Scipy/Numpy library,
-\cite{Scipy}. For the discretization in time and space, we choose $\Delta x$ and
-$\Delta t$ in relation to the parameter regimes. In particular, we take $\Delta
+\cite{scipy}. For the discretization in time and space, we choose $\Delta x$
+and $\Delta t$ in relation to the parameter regimes. In particular, we take $\Delta
 x$ to be less than $\b$ divided by the largest possible absolute value of $(\m +
 \a - x/\tc)$ for $\a \in [\amin, \amax], x \in [\xmin, \xth]$; in our examples
 this always equals $\mu + \amax - \xmin/\tc$. This is an attempt to ensure
@@ -470,7 +468,8 @@ corresponding surface plots of $\a(x,t)$.
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[width=\textwidth]{Figs/HJB/Regimes_valuesurf.pdf}
-\caption{The numerical solution for the value function $\v(x,t)$ HJB PDE,
+\caption[Value Function numerical solution]
+{The numerical solution for the value function $\v(x,t)$ HJB PDE,
 \cref{eq:OC_LS_HJB_full}, for the four different parameter regimes.
 The desired spike time is set to $\T=1.5$.
 The control bounds are $\a \in [-2,2]$. 
@@ -491,8 +490,9 @@ D) Sub-Threshold-High-Noise  }
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=\textwidth]{Figs/HJB/Regimes_controlsurf.pdf}
-  \caption{Surface plots for $\alpha(x,t)$ analogous to the surface
-  plots for $v(x,t)$ in \cref{fig:HJB_4regimes_value_surf}. 
+  \caption[Closed-loop Optimal Control corresponding to Value Function]
+  {Surface
+  plots for $\alpha(x,t)$ analogous to the surface plots for $v(x,t)$ in \cref{fig:HJB_4regimes_value_surf}. 
 Note that the aspect of this figure is rotated
 relative to the surface plots of $w(x,t)$ in \cref{fig:HJB_4regimes_value_surf}
 because the different surfaces are best seen from different angles.}
@@ -761,12 +761,12 @@ The optimal controls obtained using algorithm \ref{alg:gradient_descent_4_OC} fo
 \begin{center}
 %   \includegraphics[width=\textwidth]{Figs/FP_Adjoint/Regimes_cs.pdf}
   \includegraphics[width=\textwidth]{Figs/FP_Adjoint/Regimes_cs_singleplot.pdf}
-  \caption[labelInTOC]{The deterministic optimal controls for each parameter
-  regime as functions of time, $t \in [0, \T]$.
+  \caption[Open-loop Optimal Control numerical solution]{The deterministic
+  optimal controls for each parameter regime as functions of time, $t \in [0, \T]$.
   The desired spike time is set to $\T=1.5$, the energy penalty, $\eps
   = 0.001$ and the bounds are $\a \in [-2,2]$.
   The initial value of the process is always the reset, i.e. $X_t=0$ at
-time $t=0$, see \cref{eq:X_evolution_uo}.
+time $t=0$, see \cref{eq:X_evolution_uo_control}.
   From left-to-right, the control curves correspond to the
   Sub-Threshold-Low-Noise, Sub-Threshold-High-Noise, Supra-Threshold-High-Noise,
   Supra-Threshold-Low-Noise regimes
@@ -885,7 +885,7 @@ since it is the controller which is now the main drive for a spike.
 \label{sec:probabilistic_numerical_test}
 Having obtained the optimal controllers, both closed- and open-loop, we evaluate
 their performance with simulated realizations of the voltage process,
-\cref{eq:X_evolution_uo}. In particular, while they both minimize the expected
+\cref{eq:X_evolution_uo_control}. In particular, while they both minimize the expected
 squared deviation of the spike-time from some desired spike time, we analyze
 the distribution of the squared deviation and the behaviour of the
 controls for different parameter regimes.
@@ -938,10 +938,9 @@ proportional to the derivative of the value function and we are minimizing,
 roughly speaking, the control attempts to push the process, $X$, to the bottom
 of the valley that is formed by the value function, $\v$. However as the
 stochastic fluctuations of $X(t)$ push it randomly to either side of that
-'valley' and in turn force the control to change signs to counter-act.
-These fluctuations are then amplified by the division by the small parameter
-$\eps$ so that the control mostly bangs up or down to its extremes
-$\amin, \amax$.
+'valley' and in turn force the control to change signs to counter-act. These
+fluctuations are then amplified by the division by the small parameter $\eps$ so
+that the control mostly bangs up or down to its extremes $\amin, \amax$.
  
 \begin{table}[h]
 \begin{center}  
@@ -953,9 +952,8 @@ $\amin, \amax$.
  \input{../OptSpike/Figs/ControlSimulator/MeanSquaredErrors__subt_ln.txt}}\\ 
  \subfloat[Sub-Threshold High-Noise]{
  \input{../OptSpike/Figs/ControlSimulator/MeanSquaredErrors__subt_HN.txt}}\\
-\caption{
-Realized and theoretical performance of the different control laws. The
-empirical performance is obtained using $N=10000$ sample paths. The theoretical
+\caption[Controller Performance]{Realized and theoretical performance of the
+different control laws. The empirical performance is obtained using $N=10000$ sample paths. The theoretical
 performance is found using the optimal value for $J$ for the open-loop
 stochastic control and the value function $\v(x=0, t =0)$ for the closed-loop
 stochastic control.}
@@ -984,8 +982,8 @@ stochastic control.}
   \includegraphics[width=\textwidth]
   {Figs/ControlSimulator/Regimes_subt_HN_errors_hist.pdf}
 }\\
-  \caption[labelInTOC]{Histogram of the spike timing error for the
-  deterministic (left) vs. open-loop stochastic (centre) vs. closed-loop
+  \caption[Controlled spike-time histograms]{Histogram of the spike timing error
+  for the deterministic (left) vs. open-loop stochastic (centre) vs. closed-loop
   stochastic (right) control laws.
   Recall that $\ts$ is the random realized spike time and $\T$ is the target
   spike time.  
@@ -1001,8 +999,8 @@ stochastic control.}
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=\textwidth]{Figs/TrainController/SingleISI_ControlError_Stats.pdf}
-  \caption[labelInTOC]{The performance of the controllers (open-loop and
-  closed-loop) as a function of the noise intensity $\b$. The target spike-time
+  \caption[Controller Performance for varying noise intensity]{The
+  performance of the controllers (open-loop and closed-loop) as a function of the noise intensity $\b$. The target spike-time
   is again $\T = 1.5$. 
   On the left, panels A,C), we show the percent of correct spikes,
   which is defined as the number of controlled spikes which occur within 10\% of
@@ -1018,8 +1016,8 @@ stochastic control.}
 \begin{center}
 \includegraphics[width=0.99\textwidth]
 {Figs/ControlSimulator/Composite_Traj.pdf} 
-\caption[]{Three examples for the controlled trajectories using the
-deterministic, open-loop stochastic and closed-loop stochastic control approaches.
+\caption[Controlled Trajectories examples]{Three examples for the controlled
+trajectories using the deterministic, open-loop stochastic and closed-loop stochastic control approaches.
 The plots on the left, A,C,E, are obtained using a value of $\eps=0.001$,
 while the plots on the right, B,D,F, use $\eps=0.1$ (for a discussion on the
 effect of $\eps$ see \cref{sec:effect_of_eps}). The black vertical line in the plots indicates the
@@ -1155,7 +1153,8 @@ under maximum excitation, i.e. $\alpha (t) = \alpha_{max}$.
   {Figs/TrainController/SUPT_ln_ol_Amax2_trains_sim_50.pdf}
   \label{fig:targettrain_ol_lownoise}
 } 
-  \caption[]{Controller performance in the Supra-Threshold Low-Noise regime,
+  \caption[Controller simulations for Supra-Threshold Low-Noise
+regime]{Controller performance in the Supra-Threshold Low-Noise regime,
   given $\a \in [-2,2]$.
   In (a) is depicted the closed-loop controller, in (b) the open-llop
   controller.
@@ -1190,8 +1189,8 @@ under maximum excitation, i.e. $\alpha (t) = \alpha_{max}$.
    \label{fig:targettrain_ol_highnoise} 
   \includegraphics[width=\textwidth]{Figs/TrainController/SUPT_HN_ol_Amax2_trains_sim_50.pdf}
   }
-\caption[]{Controller performance in the Supra-Threshold High-Noise regime
-given $\a \in [-2,2]$. 
+\caption[Controller simulations for Supra-Threshold High-Noise
+regime]{Controller performance in the Supra-Threshold High-Noise regime given $\a \in [-2,2]$. 
   In (a) is depicted the closed-loop controller, in (b) the open-llop
   controller.
   In A) panels, the blue curve is the empirical firing
@@ -1220,7 +1219,8 @@ given $\a \in [-2,2]$.
 \includegraphics[width=\textwidth]
   {Figs/TrainController/SUPT_HN_ol_Amax4_trains_sim_50.pdf}
 }
- \caption[ ]{Same as \cref{fig:targettrain_highnoise}, but with the control
+ \caption[Controller simulations for Supra-Threshold High-Noise regime with
+ relaxed control-constraints] {Same as \cref{fig:targettrain_highnoise}, but with the control
   constraints, $[\amin, \amax]$ increased to $[-4,4]$ instead of $[-2,2]$.}
   \label{fig:targettrain_cl_highnoise_aplus}     
 \end{center}
@@ -1234,7 +1234,7 @@ the established Morris-Lecar model \cite{MorrisLecar1981}, a
 Hodgkin-Huxley type of conductance-based model. To mimick an
 experimental situation we will not assume that we know the model nor
 the parameters, and simply use the LIF model
-\eqref{eq:X_evolution_uo}--\eqref{eq:current_mu_alpha} where
+\eqref{eq:X_evolution_uo_control}--\eqref{eq:current_mu_alpha} where
 parameters 
 are estimated from data sampled before the control is initiated. First we estimate parameters for the LIF
 model from observations of the Morris-Lecar model. Then we control the Morris-Lecar
@@ -1325,7 +1325,7 @@ to spikes of the neuron.
 
 Assume discrete observations of the membrane potential, here generated
 by the Morris-Lecar model as described above. These have to be related to the LIF model
-\eqref{eq:X_evolution_uo}--\eqref{eq:current_mu_alpha}, which 
+\eqref{eq:X_evolution_uo_control}--\eqref{eq:current_mu_alpha}, which 
 assumes that spikes are point events. Thus, the first problem is to
 partition the data into sub-threshold fluctuations and spikes. To make
 the method more robust we operate with two thresholds. A lower
@@ -1355,7 +1355,7 @@ model. In a real experimental setting it will probably be shorter,
 being the sum of the spike duration and the refractory period, 
 maybe 10 ms.
 
-The LIF model \eqref{eq:X_evolution_uo}--\eqref{eq:current_mu_alpha}  is
+The LIF model \eqref{eq:X_evolution_uo_control}--\eqref{eq:current_mu_alpha}  is
 non-dimensional and normalized, resetting at 0 and spiking at a threshold of 1.
 Therefore the data have to be transformed. First we non-dimensionalize time by
 the transformation $t=s/\meanI$, where $s$ is the time-scale of the
@@ -1375,8 +1375,8 @@ an experiment).
 \begin{figure}
 \begin{center}
   \includegraphics[width=\textwidth]{Figs/MLBox/ML_estimates_annotated.pdf} 
-  \caption[labelInTOC]{Annotating (spike-segmenting) the raw Morris-Lecar data. 
-  The top panel shows a trajectory of $V_s$ from the Morris-Lecar model. 
+  \caption[Spike-annotation for Morrir-Lecar model trajectory]{Annotating
+  (spike-segmenting) the raw Morris-Lecar data. The top panel shows a trajectory of $V_s$ from the Morris-Lecar model. 
   The middle plot shows the data segments that are used to estimate the LIF
   parameters from Morris-Lecar data. 
   The bottom plot shows the stereotypical spike shape and justifies why 40 ms
@@ -1384,7 +1384,7 @@ an experiment).
   \label{fig:ML_estimates_data} 
 \end{center}
 \end{figure} 
-Assume $\alpha(\cdot)=0$ and discrete observations of model \eqref{eq:X_evolution_uo}--\eqref{eq:current_mu_alpha}, $X_n^{(k)}$, for $k=1,\ldots ,
+Assume $\alpha(\cdot)=0$ and discrete observations of model \eqref{eq:X_evolution_uo_control}--\eqref{eq:current_mu_alpha}, $X_n^{(k)}$, for $k=1,\ldots ,
 K$, where $K$ is the number of interspike intervals, and $n=0,1, \ldots
 , N_k$, where $N_k+1$ is the number of observations in the $k$th
 interspike interval. 
@@ -1464,8 +1464,8 @@ the model at hand, thus providing a robust control.
 \includegraphics[width=\textwidth] 
 {Figs/MLTrainController/MLSim_raster_cl_Amax10.pdf}
 }
-\caption[labelInTOC]{Closed-loop control of the Morris-Lecar
-  dynamics. In (a) are plots of the trajectory and the control, in (b)
+\caption[Closed-loop control of Morris-Lecar model]{Closed-loop control of the
+Morris-Lecar dynamics. In (a) are plots of the trajectory and the control, in (b)
   is a raster plot of realized spikes. The upper spike train above the
 solid line is the target spike train}
 \label{fig:ML_controled_simulation_cl}
@@ -1486,8 +1486,8 @@ solid line is the target spike train}
 \includegraphics[width=\textwidth]
 {Figs/MLTrainController/MLSim_raster_ol_Amax10_spikesonly_C20.pdf} 
 }
-\caption[labelInTOC]{Open-loop control of the Morris-Lecar
-  dynamics. In (a) are plots of the trajectory and the control, in (b)
+\caption[Open-loop control of Morris-Lecar model]{Open-loop control of the
+Morris-Lecar dynamics. In (a) are plots of the trajectory and the control, in (b)
   is a raster plot of realized spikes. The upper spike train above the
 solid line is the target spike train}
 \label{fig:ML_controled_simulation_ol}
@@ -1551,8 +1551,8 @@ $t$. We do not explore this further here.
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=\textwidth]{Figs/HJB/RegimesHighEps_controlsurf.pdf}
-  \caption[labelInTOC]{The effect of the energy parameter $\e$ on the
-  closed-loop control. This is the same as \cref{fig:HJB__4regimes_control_surf}, but for
+  \caption[Value Function solution with higher energy-penalty]{The effect of the
+  energy parameter $\e$ on the closed-loop control. This is the same as \cref{fig:HJB__4regimes_control_surf}, but for
   the higher value of $\eps = 0.1$.
   The desired spike time is set to
   $\T=1.5$ and the control bounds are $\a \in [-2,2]$. 
@@ -1571,8 +1571,8 @@ $t$. We do not explore this further here.
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=\textwidth]{Figs/FP_Adjoint/RegimesHighEps_cs_singleplot.pdf}
-  \caption[labelInTOC]{The effect of the energy parameter $\e$ on the open-loop
-  control. This is the same as \cref{fig:FBK_Regimes_cs}, but with the higher
+  \caption[Open-loop Optimal Control solution for higher energy penalty]{The
+  effect of the energy parameter $\e$ on the open-loop control. This is the same as \cref{fig:FBK_Regimes_cs}, but with the higher
   value of $\eps =0.1$. 
   The desired spike time is set to $\T=1.5$ and the bounds are $\a \in [-2,2]$.}
     \label{fig:FBK_Regimes_cs_different_es} 
@@ -1719,7 +1719,7 @@ Let
 \end{array}
 \end{equation}
 where as before, $\ts-\T$ is the remaining time-to-spike in
-\cref{eq:X_evolution_uo}, with the voltage being $X(\T) = x$ at the desired
+\cref{eq:X_evolution_uo_control}, with the voltage being $X(\T) = x$ at the desired
 spike-time $t=\T$ and applying the control $\a(t) = \amax$ afterwards.
 Naturally, the $\Ti$'s depend on $x$ and are affected by the value of the
 various parameters, $\a,\b,\tc$. We only  need $\Ttwo$ for the TCs in
@@ -1899,7 +1899,10 @@ control}
 \end{algorithm}
 
 
+\section*{Implementation Details}
+All the code used in this chapter including code to generate the figures
+can be found on
+\href{https://github.com/aviolov/OptSpikePython}{github @
+https://github.com/aviolov/OptSpikePython}. Please see the README.md file for
+for guide to the codes.
 
-\section{Implementation Details}
-TODO: (Extra calculations and numerics not included in the paper but that
-support it, and make another math  student likely able to reproduce them)
