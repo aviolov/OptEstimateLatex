@@ -1,0 +1,156 @@
+\documentclass[12pt]{article}
+
+\setlength{\textwidth}{17cm}
+\setlength{\textheight}{23cm}
+\setlength{\oddsidemargin}{0cm}
+\setlength{\evensidemargin}{0cm}
+\setlength{\topmargin}{-.5cm}
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+ 
+
+\usepackage{algpseudocode} 
+\usepackage{algorithm}
+\usepackage{subfig}
+ \usepackage{listings} 
+ \usepackage{color}
+\usepackage{hyperref} 
+\usepackage{cleveref}
+
+\usepackage{aviolov_style}
+\usepackage{local_style} 
+
+\def \tf {{t_f}} 
+\def \topt {{ t_{opt}}}
+
+\usepackage{xr}
+\externaldocument{MI_hittingtimes_draft}
+
+\begin{document}
+
+\section{Numerical Algorithms}
+\begin{algorithm}
+\begin{algorithmic}
+\caption{Gradient ascent algorithm for obtaining the optimal control.
+The gradient of the objective with respect to the control is computed up to
+$K_{max}$ times and at each iteration $k$, the $k$th control, $\a_k(t)$ is incremented in
+the direction of the $k$th gradient in order to achieve an improvement in the
+objective value $I_{k+1}  = I(\a_{k+1}) > I_k$.}
+\label{alg:gradient_ascent_4_OC}
+\State Fix $t_f, t_{opt}, \m, \s$ the problem parameters
+\State Fix $\{t_n\}_0^{N_t}$ a time-discretization of $[0,t_f]$
+\State Fix $g_{tol}$ a convergence tolerance for the gradient
+\State Fix $K_{\max}, J_{\max}$ number of maximum iterations in outer, inner
+loops
+\State Fix $s$ the initial step-size for incrementing $\a$. 
+\\ {\itshape $\#$ we use $g_{tol}=10^{-5},K_{\max}=100,I_{\max}=10,s=10$}
+\State $\a_1(t) \gets (\amax-\amin) \cdot t / t_{opt} + \amin$ 
+\\{\itshape  $\#$ $\a_1(t) \sim$ initial guess for the control, linear
+interpolate between $\amin, \amax$}
+\For { $k= 1\dots K_{\max}$} 
+\\ {\itshape $\#$ This is the outer loop corresponding to the $k$th ascend up
+the gradient} \State Calculate $f_{\th,k},I_{k},p_{\th,k}, \delta_\a I_k$ corresponding to $\a_k$ from
+	\cref{eq:FP_pde_OU_absorbBC,eq:I_mutual_info_objective_in_terms_of_dixf,eq:adjoint_pde_OU,eq:objective_gradient_continuous}
+	\State $N_{active}\gets$   Number of time nodes $t_n$, where either
+	$\a_k(t_n) \neq \{\amin, \amax\}$ or $\delta_\a I_k(t_n)$ points inwards
+	\If{ $|| \delta_\a I_k||_{\R^{N_{active}}} \leq g_{tol}\cdot N_{active}$}
+		  \\ {\itshape  $\#$ 'Active' gradient is small enough,
+		 consider converged:}
+		 \State BREAK
+	\EndIf
+	\\ {\itshape $\#$ Find the step size, $s$, for how far to move $\a$ in the
+	direction $\delta_\a I_k$:}
+			  \algstore{myalg}
+    \end{algorithmic}
+    \end{algorithm}
+% % %     ###############
+The algorithm continues on the next page.  
+\begin{algorithm}                     
+\begin{algorithmic} [1]              
+\algrestore{myalg}  
+	\For { $j= 1\dots J_{\max}$}
+	\\ {\itshape $\#$ This is the inner loop where we find how much to ascend down
+	the current gradient}
+	\State $\a_{k,j} \gets \a_{k} + s_j \cdot \delta_\a I_k  $
+	\\ {\itshape $\#$ $\a_{k,j}$ is the new control strategy to try, we threshold
+	it so it stays within control bounds}
+	 \State Calculate $f_{\th,k,j}, I_{k,j}$
+	corresponding to $\a_{k,j}$ from
+		\cref{eq:FP_pde_OU_absorbBC,eq:I_mutual_info_objective_in_terms_of_dixf}
+		\\ {\itshape $\#$ Recall $f_{\th,k,j}$ is a probability density resulting from
+		the control $a_{k,j}$ and $I_{k,j}$ is the objective value resulting from $f_{k,j}$}
+	\If {$I_{k,j} > I_k$}
+		\\ {\itshape $\#$ We found a better (larger) objective value}
+		\State $s \gets 2 s_j$ {\itshape $\#$ start from a bigger step in the
+		next iteration}
+		\State BREAK
+		\EndIf
+	\If {$j == J_{\max}$}
+		\\ {\itshape $\#$ We exhausted the step search without finding a 
+		smaller $I$, return current values}
+		\State Return $I_k, \a_k$
+	\EndIf
+ 	\\ {\itshape  $ \#$ Continue inner loop, try a smaller step, half the size:}
+	 	\State $s_{j+1}  \gets  s_j / 2$
+    \EndFor  {\itshape $\quad \#$ single step (inner) loop}
+	\If {$k == K_{\max}$}
+		\State ERROR 'Could not converge'
+	\EndIf
+    \\{\itshape $\#$ Assign the new candidate for the optimal control and
+    re-loop}
+		\State $\a_{k+1} \gets \a_{k,j}$
+\EndFor {\itshape $\quad \#$ gradient ascent (outer) loop}
+\State \Return $I_k, \a_k$
+\end{algorithmic}
+\end{algorithm}
+
+\clearpage
+
+\begin{algorithm}
+\begin{algorithmic}
+\State Given  $\{w_i, \th_i\}_1^{N_p}$ the current particle ensemble (weight,
+locations)  
+\\ {\itshape $\#$ Observe a single hitting time, $t_k$ from the real (or
+simulated) system conditional on the applied control $\a_k(\cdot)$}
+\\ {\itshape $\#$ Update weights with likelihood given $t_k$ and normalize:}
+\State $w_{i } \gets w_{i }\cdot g(t_k| \th_i, \a_k)$
+\State $w_{i } \gets w_{i }/ \sum w_i$
+\If{$$\frac{1}{\sum_i^{N_p} w_i^2} < \frac {N_p}{2}$$} 
+\\ {\itshape $\#$ Re-sample the ensemble:}
+\State $\m$ \gets $\Exp[\Th] = \sum w_i \th_i$ 
+\State $a = 0.98$, see
+\cite{Granade2012,Liu2001} 
+\State $h = \sqrt{1-a^2}$ i.e.\ $h \approx 0.1990$
+\State $\Xi$ \gets $h^2\cdot \Var[\Th]$
+	\\ {\itshape $\#$ Re-sample each particle individually:}
+\For {$i= 1\dots N_p$}
+	\State draw $j$ with probability $w_j$ 
+% \\ {\itshape $\#$ the bigger $w_i$ the more likely to choose $\th_i$}
+	\State $\m_i$ \gets  $a \th_j + (1-a) \m$
+	\State Resample $\th_i$ from $N(\m_i, \Xi)$
+	\State $w_i$ \gets $1/N_p$ 
+    \EndFor{\itshape $\quad \#   1 \ldots N_p$ particle resampling}
+    \EndIf{\itshape Conditional Resampling}
+\State \Return $w_i, \th_i$ the updated and possibly-resampled particle
+ensemble
+\end{algorithmic}
+\caption{Particle Filtering for Parameter Estimation}
+\label{alg:particle_resampling}
+\end{algorithm}
+
+
+\section{Code Repository}
+All the code used in the paper including code to generate the figures can be
+found on
+\href{https://github.com/aviolov/OptEstimatePython}{github @
+https://github.com/aviolov/OptEstimatePython}. Please contact the first author
+for further information.
+
+
+
+\end{document}
